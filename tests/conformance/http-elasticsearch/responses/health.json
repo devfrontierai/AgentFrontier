@@ -1,0 +1,6 @@
+{
+  "cluster_name": "fixture-cluster",
+  "status": "green",
+  "number_of_nodes": 1,
+  "active_shards": 4
+}

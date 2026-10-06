@@ -1,0 +1,28 @@
+{
+  "description": "HTTP engine on a catalog API with a two-level hierarchy (catalog, schema): bearer token auth, a selection of catalogs, system schemas excluded, cursor paging through tables, per-table columns, and lineage per table.",
+  "server": {
+    "routes": "routes.json"
+  },
+  "connection": {
+    "id": "conf-uc",
+    "name": "Conformance Unity Catalog",
+    "type": "unity_catalog",
+    "properties": {
+      "baseUrl": "{{baseUrl}}",
+      "catalogs": [
+        "main"
+      ]
+    },
+    "auth": {
+      "method": "token",
+      "token": "test-token"
+    }
+  },
+  "pipeline": {
+    "aspects": [
+      "metadata",
+      "lineage"
+    ]
+  },
+  "expected": "expected.jsonl"
+}

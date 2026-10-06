@@ -1,0 +1,29 @@
+{
+  "description": "HTTP engine on a search cluster: basic auth, indices as datasets with system indices filtered, nested mappings flattened to dotted fields with tree records, version from the root document (no variant switch for Elasticsearch).",
+  "server": {
+    "routes": "routes.json"
+  },
+  "connection": {
+    "id": "conf-es",
+    "name": "Conformance Elasticsearch",
+    "type": "elasticsearch",
+    "properties": {
+      "baseUrl": "{{baseUrl}}"
+    },
+    "auth": {
+      "method": "username_password",
+      "username": "elastic",
+      "password": "changeme"
+    }
+  },
+  "pipeline": {
+    "aspects": [
+      "metadata"
+    ]
+  },
+  "sample": {
+    "dataset": "customers",
+    "limit": 2
+  },
+  "expected": "expected.jsonl"
+}

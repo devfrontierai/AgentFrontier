@@ -1,0 +1,234 @@
+{
+  "specVersion": "1",
+  "description": "The canonical records every AgentFrontier implementation emits. Operations in a source definition map their results onto these fields; anything that does not map lands in the record's `properties` map. Hierarchy level values (for example `database`, `schema`, `folder`) are added to every record by the engine and are not listed here.",
+  "types": {
+    "string": "text; numbers and booleans are converted with their plain text form",
+    "long": "64-bit integer; numeric text is parsed, anything else becomes null",
+    "integer": "32-bit integer, same rules as long",
+    "double": "floating point; numeric text is parsed",
+    "boolean": "true/false; also accepts t/f, yes/no, y/n, on/off, 1/0 (any case)",
+    "list": "ordered list; arrays are kept, text is split on commas and trimmed, a single scalar becomes a one-item list",
+    "any": "kept as returned"
+  },
+  "aspects": {
+    "metadata": "Structure: the source, its containers, datasets, fields, keys, indexes and routines.",
+    "lineage": "Which datasets (and fields) are derived from which.",
+    "governance": "Who can do what: principals, grants, access policies and tags.",
+    "statistics": "Profiles of the data: null fractions, distinct counts, widths.",
+    "usage": "How the data is used: query history and access logs.",
+    "data": "Rows of the data itself (samples and read-only queries)."
+  },
+  "entities": {
+    "source": {
+      "aspect": "metadata",
+      "description": "The system as a whole. One per session.",
+      "fields": {
+        "product": "string",
+        "version": "string",
+        "banner": "string",
+        "variant": "string",
+        "definition": "string",
+        "login": "string",
+        "comment": "string"
+      }
+    },
+    "container": {
+      "aspect": "metadata",
+      "description": "A level of the source's hierarchy: database, schema, catalog, bucket, folder, project, namespace. `level` names which.",
+      "fields": {
+        "level": "string",
+        "name": "string",
+        "comment": "string",
+        "owner": "string",
+        "sizeBytes": "long",
+        "createdAt": "string"
+      }
+    },
+    "dataset": {
+      "aspect": "metadata",
+      "description": "Something that holds records: table, view, file, index, collection, API endpoint, topic.",
+      "fields": {
+        "name": "string",
+        "type": "string",
+        "comment": "string",
+        "owner": "string",
+        "rowCount": "long",
+        "sizeBytes": "long",
+        "definition": "string",
+        "isPartition": "boolean",
+        "partitionOf": "string",
+        "format": "string",
+        "location": "string",
+        "createdAt": "string",
+        "updatedAt": "string"
+      },
+      "enums": {
+        "type": {
+          "values": ["table", "view", "materialized_view", "partitioned_table", "foreign_table", "external_table", "temporary_table", "system_table", "file", "index", "collection", "endpoint", "topic", "other"],
+          "synonyms": {
+            "base_table": "table",
+            "dynamic_table": "table",
+            "event_table": "table",
+            "system_view": "view",
+            "local_temporary": "temporary_table",
+            "global_temporary": "temporary_table",
+            "synonym": "other"
+          }
+        }
+      }
+    },
+    "field": {
+      "aspect": "metadata",
+      "description": "A column of a table or a property of a document. Nested properties use a dotted `name` and set `parent`.",
+      "fields": {
+        "dataset": "string",
+        "name": "string",
+        "ordinal": "integer",
+        "dataType": "string",
+        "nullable": "boolean",
+        "defaultValue": "string",
+        "comment": "string",
+        "isGenerated": "boolean",
+        "maxLength": "long",
+        "numericPrecision": "integer",
+        "numericScale": "integer",
+        "parent": "string"
+      }
+    },
+    "constraint": {
+      "aspect": "metadata",
+      "description": "Primary key, unique key, foreign key or check. A foreign key's target is `refDataset` plus `ref<Level>` for each hierarchy level (refDatabase, refSchema, ...).",
+      "fields": {
+        "dataset": "string",
+        "name": "string",
+        "type": "string",
+        "columns": "list",
+        "refDataset": "string",
+        "refColumns": "list",
+        "definition": "string"
+      },
+      "enums": {
+        "type": {
+          "values": ["primary_key", "unique", "foreign_key", "check"],
+          "synonyms": {"p": "primary_key", "u": "unique", "f": "foreign_key", "c": "check", "r": "foreign_key", "primary": "primary_key", "unique_key": "unique", "foreign": "foreign_key"}
+        }
+      }
+    },
+    "index": {
+      "aspect": "metadata",
+      "fields": {
+        "dataset": "string",
+        "name": "string",
+        "isUnique": "boolean",
+        "isPrimary": "boolean",
+        "method": "string",
+        "columns": "list",
+        "definition": "string"
+      }
+    },
+    "routine": {
+      "aspect": "metadata",
+      "description": "Function or procedure.",
+      "fields": {
+        "name": "string",
+        "type": "string",
+        "language": "string",
+        "arguments": "string",
+        "returns": "string",
+        "comment": "string",
+        "owner": "string",
+        "definition": "string"
+      }
+    },
+    "lineage": {
+      "aspect": "lineage",
+      "description": "`dataset` (downstream, in the scope's location) is derived from `upstreamDataset` (located by `upstream<Level>`, for example upstreamSchema). Field-level edges also set `field` and `upstreamField`.",
+      "fields": {
+        "dataset": "string",
+        "upstreamDataset": "string",
+        "kind": "string",
+        "field": "string",
+        "upstreamField": "string",
+        "transformation": "string"
+      }
+    },
+    "principal": {
+      "aspect": "governance",
+      "description": "User, role, group or service account.",
+      "fields": {
+        "name": "string",
+        "type": "string",
+        "canLogin": "boolean",
+        "superuser": "boolean",
+        "memberOf": "list",
+        "comment": "string"
+      }
+    },
+    "grant": {
+      "aspect": "governance",
+      "description": "A privilege a principal holds on an object.",
+      "fields": {
+        "principal": "string",
+        "privilege": "string",
+        "objectType": "string",
+        "dataset": "string",
+        "field": "string",
+        "grantor": "string",
+        "grantable": "boolean"
+      }
+    },
+    "policy": {
+      "aspect": "governance",
+      "description": "Row access, masking, retention or other access rule.",
+      "fields": {
+        "name": "string",
+        "type": "string",
+        "dataset": "string",
+        "field": "string",
+        "definition": "string",
+        "enabled": "boolean",
+        "appliesTo": "list",
+        "comment": "string"
+      }
+    },
+    "tag": {
+      "aspect": "governance",
+      "description": "A tag or classification attached to an object.",
+      "fields": {
+        "name": "string",
+        "value": "string",
+        "objectType": "string",
+        "dataset": "string",
+        "field": "string"
+      }
+    },
+    "statistic": {
+      "aspect": "statistics",
+      "description": "Profile of a dataset or field. `distinctCount` below zero means a fraction of the row count (PostgreSQL convention).",
+      "fields": {
+        "dataset": "string",
+        "field": "string",
+        "rowCount": "long",
+        "nullFraction": "double",
+        "distinctCount": "double",
+        "avgWidth": "double",
+        "min": "string",
+        "max": "string"
+      }
+    },
+    "usage": {
+      "aspect": "usage",
+      "description": "One query or access event.",
+      "fields": {
+        "queryId": "string",
+        "queryText": "string",
+        "user": "string",
+        "startedAt": "string",
+        "durationMs": "long",
+        "rowsProduced": "long",
+        "datasets": "list",
+        "status": "string"
+      }
+    }
+  }
+}

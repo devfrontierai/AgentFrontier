@@ -1,0 +1,26 @@
+{
+  "tables": [
+    {
+      "name": "customers",
+      "catalog_name": "main",
+      "schema_name": "sales",
+      "table_type": "MANAGED",
+      "data_source_format": "DELTA",
+      "owner": "analysts",
+      "storage_location": "s3://bucket/customers",
+      "created_at": 1704067200000,
+      "comment": "One row per customer"
+    },
+    {
+      "name": "orders",
+      "catalog_name": "main",
+      "schema_name": "sales",
+      "table_type": "EXTERNAL",
+      "data_source_format": "PARQUET",
+      "owner": "analysts",
+      "storage_location": "s3://bucket/orders",
+      "created_at": 1704153600000
+    }
+  ],
+  "next_page_token": "t2"
+}

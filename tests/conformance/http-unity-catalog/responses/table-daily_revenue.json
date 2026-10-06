@@ -1,0 +1,17 @@
+{
+  "name": "daily_revenue",
+  "columns": [
+    {
+      "name": "d",
+      "type_text": "date",
+      "position": 0,
+      "nullable": true
+    },
+    {
+      "name": "sum(total)",
+      "type_text": "decimal(20,2)",
+      "position": 1,
+      "nullable": true
+    }
+  ]
+}

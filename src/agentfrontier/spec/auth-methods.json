@@ -1,0 +1,220 @@
+{
+  "specVersion": "1",
+  "description": "Every way of authenticating that AgentFrontier understands. A source definition lists the method ids it supports and, per protocol, how each method's fields map onto the driver or the HTTP request. Fields of type `secret` and `secret_text` are never logged and must be stored encrypted. `provider` names code that derives extra values at connect time (for example an OAuth access token); `static` means the fields are used as given.",
+  "fieldTypes": ["string", "integer", "boolean", "select", "text", "list", "secret", "secret_text"],
+  "methods": [
+    {
+      "id": "none",
+      "name": "No authentication",
+      "description": "Open source, or authenticated by the network (VPN, private link, local file).",
+      "provider": "static",
+      "fields": []
+    },
+    {
+      "id": "username_only",
+      "name": "Username only (no password)",
+      "description": "Trust, peer or ident logins and local development databases.",
+      "provider": "static",
+      "fields": [
+        {"key": "username", "label": "Username", "type": "string", "required": true}
+      ]
+    },
+    {
+      "id": "username_password",
+      "name": "Username and password",
+      "description": "Classic database login; HTTP sources send it as Basic authentication.",
+      "provider": "static",
+      "fields": [
+        {"key": "username", "label": "Username", "type": "string", "required": true},
+        {"key": "password", "label": "Password", "type": "secret", "required": true}
+      ]
+    },
+    {
+      "id": "token",
+      "name": "Access token / personal access token",
+      "description": "Bearer token, PAT or programmatic access token. Database sources usually send it in place of the password (RDS IAM, Entra ID tokens).",
+      "provider": "static",
+      "fields": [
+        {"key": "username", "label": "Username", "type": "string", "required": false, "help": "Only if the source pairs the token with a user."},
+        {"key": "token", "label": "Token", "type": "secret", "required": true}
+      ]
+    },
+    {
+      "id": "api_key",
+      "name": "API key",
+      "description": "Static key for SaaS and HTTP APIs, sent in a header or a query parameter.",
+      "provider": "static",
+      "fields": [
+        {"key": "apiKey", "label": "API key", "type": "secret", "required": true},
+        {"key": "headerName", "label": "Header name", "type": "string", "required": false, "help": "Overrides the header the source definition uses by default."},
+        {"key": "apiKeyId", "label": "Key id", "type": "string", "required": false, "help": "For sources whose keys come as an id plus a secret."}
+      ]
+    },
+    {
+      "id": "key_pair",
+      "name": "Key pair (private key)",
+      "description": "RSA key pair authentication, for example Snowflake service users.",
+      "provider": "static",
+      "fields": [
+        {"key": "username", "label": "Username", "type": "string", "required": true},
+        {"key": "privateKey", "label": "Private key (PEM)", "type": "secret_text", "required": true, "help": "PKCS#8 PEM, encrypted or not."},
+        {"key": "privateKeyPassphrase", "label": "Private key passphrase", "type": "secret", "required": false}
+      ]
+    },
+    {
+      "id": "oauth2_client_credentials",
+      "name": "OAuth 2.0 client credentials",
+      "description": "Machine-to-machine OAuth: the SDK fetches and refreshes the access token itself.",
+      "provider": "oauth2_client_credentials",
+      "fields": [
+        {"key": "tokenUrl", "label": "Token URL", "type": "string", "required": false, "help": "Leave empty to use the source definition's default endpoint."},
+        {"key": "clientId", "label": "Client ID", "type": "string", "required": true},
+        {"key": "clientSecret", "label": "Client secret", "type": "secret", "required": true},
+        {"key": "scope", "label": "Scope", "type": "string", "required": false},
+        {"key": "audience", "label": "Audience", "type": "string", "required": false}
+      ]
+    },
+    {
+      "id": "oauth2_refresh_token",
+      "name": "OAuth 2.0 refresh token",
+      "description": "A user-delegated grant (authorization code flow done once, elsewhere); the SDK exchanges the refresh token for access tokens.",
+      "provider": "oauth2_refresh_token",
+      "fields": [
+        {"key": "tokenUrl", "label": "Token URL", "type": "string", "required": false},
+        {"key": "clientId", "label": "Client ID", "type": "string", "required": true},
+        {"key": "clientSecret", "label": "Client secret", "type": "secret", "required": false},
+        {"key": "refreshToken", "label": "Refresh token", "type": "secret", "required": true},
+        {"key": "scope", "label": "Scope", "type": "string", "required": false}
+      ]
+    },
+    {
+      "id": "oauth2_access_token",
+      "name": "OAuth 2.0 access token",
+      "description": "A pre-issued, short-lived OAuth access token.",
+      "provider": "static",
+      "fields": [
+        {"key": "username", "label": "Username", "type": "string", "required": false},
+        {"key": "accessToken", "label": "Access token", "type": "secret", "required": true}
+      ]
+    },
+    {
+      "id": "aws_iam",
+      "name": "AWS IAM",
+      "description": "Access keys, optionally assuming a role (S3, Redshift, Athena, Glue, RDS IAM).",
+      "provider": "static",
+      "fields": [
+        {"key": "accessKeyId", "label": "Access key ID", "type": "string", "required": false, "help": "Empty to use the default credential chain."},
+        {"key": "secretAccessKey", "label": "Secret access key", "type": "secret", "required": false},
+        {"key": "sessionToken", "label": "Session token", "type": "secret", "required": false},
+        {"key": "roleArn", "label": "Role ARN to assume", "type": "string", "required": false},
+        {"key": "region", "label": "Region", "type": "string", "required": false},
+        {"key": "profile", "label": "Profile", "type": "string", "required": false}
+      ]
+    },
+    {
+      "id": "azure_service_principal",
+      "name": "Azure service principal",
+      "description": "Entra ID app registration (ADLS, Synapse, Azure SQL, Microsoft Graph for OneDrive and SharePoint).",
+      "provider": "static",
+      "fields": [
+        {"key": "tenantId", "label": "Tenant ID", "type": "string", "required": true},
+        {"key": "clientId", "label": "Client ID", "type": "string", "required": true},
+        {"key": "clientSecret", "label": "Client secret", "type": "secret", "required": true}
+      ]
+    },
+    {
+      "id": "azure_managed_identity",
+      "name": "Azure managed identity",
+      "description": "The identity of the Azure resource the SDK runs on.",
+      "provider": "static",
+      "fields": [
+        {"key": "clientId", "label": "User-assigned identity client ID", "type": "string", "required": false}
+      ]
+    },
+    {
+      "id": "azure_ad_password",
+      "name": "Entra ID user and password",
+      "description": "Entra ID (Azure AD) user login, for example to Azure SQL or Synapse.",
+      "provider": "static",
+      "fields": [
+        {"key": "username", "label": "User principal name", "type": "string", "required": true},
+        {"key": "password", "label": "Password", "type": "secret", "required": true},
+        {"key": "tenantId", "label": "Tenant ID", "type": "string", "required": false}
+      ]
+    },
+    {
+      "id": "gcp_service_account",
+      "name": "GCP service account",
+      "description": "Service account key JSON (BigQuery, GCS, Cloud SQL).",
+      "provider": "static",
+      "fields": [
+        {"key": "serviceAccountJson", "label": "Service account JSON", "type": "secret_text", "required": true},
+        {"key": "projectId", "label": "Project ID", "type": "string", "required": false, "help": "Defaults to the project in the key."}
+      ]
+    },
+    {
+      "id": "client_certificate",
+      "name": "Client certificate (mTLS)",
+      "description": "TLS client certificate authentication.",
+      "provider": "static",
+      "fields": [
+        {"key": "username", "label": "Username", "type": "string", "required": false},
+        {"key": "clientCertificate", "label": "Client certificate (PEM)", "type": "text", "required": true},
+        {"key": "clientKey", "label": "Client key (PEM, PKCS#8)", "type": "secret_text", "required": true},
+        {"key": "clientKeyPassword", "label": "Client key password", "type": "secret", "required": false},
+        {"key": "rootCertificate", "label": "CA certificate (PEM)", "type": "text", "required": false}
+      ]
+    },
+    {
+      "id": "kerberos",
+      "name": "Kerberos",
+      "description": "GSSAPI / Kerberos (Hadoop, Hive, enterprise databases).",
+      "provider": "static",
+      "fields": [
+        {"key": "principal", "label": "Principal", "type": "string", "required": true},
+        {"key": "keytabBase64", "label": "Keytab (base64)", "type": "secret_text", "required": false},
+        {"key": "realm", "label": "Realm", "type": "string", "required": false},
+        {"key": "kdc", "label": "KDC host", "type": "string", "required": false},
+        {"key": "serviceName", "label": "Service name", "type": "string", "required": false}
+      ]
+    },
+    {
+      "id": "windows_integrated",
+      "name": "Windows integrated / NTLM",
+      "description": "Windows authentication (SQL Server). Empty username uses the identity of the running process.",
+      "provider": "static",
+      "fields": [
+        {"key": "domain", "label": "Domain", "type": "string", "required": false},
+        {"key": "username", "label": "Username", "type": "string", "required": false},
+        {"key": "password", "label": "Password", "type": "secret", "required": false}
+      ]
+    },
+    {
+      "id": "connection_string",
+      "name": "Connection string",
+      "description": "A complete connection string or JDBC URL that already carries the credentials.",
+      "provider": "static",
+      "fields": [
+        {"key": "connectionString", "label": "Connection string", "type": "secret", "required": true}
+      ]
+    },
+    {
+      "id": "ssh_key",
+      "name": "SSH key",
+      "description": "SFTP and SSH based file systems.",
+      "provider": "static",
+      "fields": [
+        {"key": "username", "label": "Username", "type": "string", "required": true},
+        {"key": "privateKey", "label": "Private key", "type": "secret_text", "required": true},
+        {"key": "passphrase", "label": "Passphrase", "type": "secret", "required": false}
+      ]
+    },
+    {
+      "id": "custom",
+      "name": "Custom",
+      "description": "Free-form fields whose meaning the source definition decides. Every value is treated as a secret.",
+      "provider": "static",
+      "fields": []
+    }
+  ]
+}

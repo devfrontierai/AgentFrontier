@@ -1,0 +1,61 @@
+{
+  "specVersion": "1",
+  "description": "Default graph model for the neo4j sink. Each entity maps to one or more Cypher statements that receive `$rows` (a batch) plus `$source` and `$runId`. Every row carries `props` (the record's scalar fields, extras flattened in, nulls dropped, maps as JSON text) and the helper uids the sink computes (see docs/sinks.md): uid, parentUid, datasetUid, fieldUid, refUid, columnUids, refColumnUids, upstreamUid, principalUid. Copy this file and point the sink's `mapping` at the copy to project records into a different graph model.",
+  "setup": [
+    "CREATE CONSTRAINT af_source_uid IF NOT EXISTS FOR (n:Source) REQUIRE n.uid IS UNIQUE",
+    "CREATE CONSTRAINT af_container_uid IF NOT EXISTS FOR (n:Container) REQUIRE n.uid IS UNIQUE",
+    "CREATE CONSTRAINT af_dataset_uid IF NOT EXISTS FOR (n:Dataset) REQUIRE n.uid IS UNIQUE",
+    "CREATE CONSTRAINT af_field_uid IF NOT EXISTS FOR (n:Field) REQUIRE n.uid IS UNIQUE",
+    "CREATE CONSTRAINT af_index_uid IF NOT EXISTS FOR (n:Index) REQUIRE n.uid IS UNIQUE",
+    "CREATE CONSTRAINT af_routine_uid IF NOT EXISTS FOR (n:Routine) REQUIRE n.uid IS UNIQUE",
+    "CREATE CONSTRAINT af_principal_uid IF NOT EXISTS FOR (n:Principal) REQUIRE n.uid IS UNIQUE",
+    "CREATE CONSTRAINT af_policy_uid IF NOT EXISTS FOR (n:Policy) REQUIRE n.uid IS UNIQUE",
+    "CREATE CONSTRAINT af_tag_uid IF NOT EXISTS FOR (n:Tag) REQUIRE n.uid IS UNIQUE"
+  ],
+  "entities": {
+    "source": [
+      "UNWIND $rows AS row MERGE (n:Source {uid: row.uid}) SET n += row.props, n.lastSeenRun = $runId"
+    ],
+    "container": [
+      "UNWIND $rows AS row MERGE (n:Container {uid: row.uid}) SET n += row.props, n.lastSeenRun = $runId WITH n, row OPTIONAL MATCH (s:Source {uid: row.parentUid}) OPTIONAL MATCH (c:Container {uid: row.parentUid}) WITH n, coalesce(c, s) AS p WHERE p IS NOT NULL MERGE (p)-[:CONTAINS]->(n)"
+    ],
+    "dataset": [
+      "UNWIND $rows AS row MERGE (n:Dataset {uid: row.uid}) SET n += row.props, n.lastSeenRun = $runId WITH n, row OPTIONAL MATCH (s:Source {uid: row.parentUid}) OPTIONAL MATCH (c:Container {uid: row.parentUid}) WITH n, coalesce(c, s) AS p WHERE p IS NOT NULL MERGE (p)-[:CONTAINS]->(n)"
+    ],
+    "field": [
+      "UNWIND $rows AS row MERGE (n:Field {uid: row.uid}) SET n += row.props, n.lastSeenRun = $runId WITH n, row MATCH (d:Dataset {uid: row.datasetUid}) MERGE (d)-[:HAS_FIELD]->(n)"
+    ],
+    "constraint": [
+      {"when": {"type": "primary_key"}, "cypher": "UNWIND $rows AS row MATCH (d:Dataset {uid: row.datasetUid}) SET d.primaryKey = row.props.columns WITH row UNWIND row.columnUids AS fu MATCH (f:Field {uid: fu}) SET f.isPrimaryKey = true"},
+      {"when": {"type": "unique"}, "cypher": "UNWIND $rows AS row UNWIND row.columnUids AS fu MATCH (f:Field {uid: fu}) WHERE size(row.columnUids) = 1 SET f.isUnique = true"},
+      {"when": {"type": "foreign_key"}, "cypher": "UNWIND $rows AS row MATCH (d:Dataset {uid: row.datasetUid}) MERGE (r:Dataset {uid: row.refUid}) MERGE (d)-[e:REFERENCES {name: row.props.name}]->(r) SET e.columns = row.props.columns, e.refColumns = row.props.refColumns, e.lastSeenRun = $runId WITH row UNWIND range(0, size(row.columnUids) - 1) AS i MATCH (a:Field {uid: row.columnUids[i]}) SET a.isForeignKey = true WITH row, i, a WHERE i < size(row.refColumnUids) MERGE (b:Field {uid: row.refColumnUids[i]}) MERGE (a)-[:REFERENCES]->(b)"}
+    ],
+    "index": [
+      "UNWIND $rows AS row MERGE (n:Index {uid: row.uid}) SET n += row.props, n.lastSeenRun = $runId WITH n, row MATCH (d:Dataset {uid: row.datasetUid}) MERGE (d)-[:HAS_INDEX]->(n)"
+    ],
+    "routine": [
+      "UNWIND $rows AS row MERGE (n:Routine {uid: row.uid}) SET n += row.props, n.lastSeenRun = $runId WITH n, row OPTIONAL MATCH (s:Source {uid: row.parentUid}) OPTIONAL MATCH (c:Container {uid: row.parentUid}) WITH n, coalesce(c, s) AS p WHERE p IS NOT NULL MERGE (p)-[:CONTAINS]->(n)"
+    ],
+    "lineage": [
+      "UNWIND $rows AS row MERGE (d:Dataset {uid: row.datasetUid}) MERGE (u:Dataset {uid: row.upstreamUid}) MERGE (d)-[e:DERIVED_FROM]->(u) SET e.kind = row.props.kind, e.lastSeenRun = $runId"
+    ],
+    "principal": [
+      "UNWIND $rows AS row MERGE (n:Principal {uid: row.uid}) SET n += row.props, n.lastSeenRun = $runId WITH n, row UNWIND coalesce(row.props.memberOf, []) AS m MERGE (g:Principal {uid: $source + '/principal/' + m}) ON CREATE SET g.name = m, g.source = $source MERGE (n)-[:MEMBER_OF]->(g)"
+    ],
+    "grant": [
+      "UNWIND $rows AS row MERGE (p:Principal {uid: row.principalUid}) ON CREATE SET p.name = row.props.principal, p.source = $source WITH p, row MATCH (d:Dataset {uid: row.datasetUid}) MERGE (p)-[g:HAS_PRIVILEGE {privilege: row.props.privilege}]->(d) SET g.grantable = row.props.grantable, g.lastSeenRun = $runId"
+    ],
+    "policy": [
+      "UNWIND $rows AS row MERGE (n:Policy {uid: row.uid}) SET n += row.props, n.lastSeenRun = $runId WITH n, row MATCH (d:Dataset {uid: row.datasetUid}) MERGE (n)-[:APPLIES_TO]->(d)"
+    ],
+    "tag": [
+      "UNWIND $rows AS row MERGE (t:Tag {uid: $source + '/tag/' + row.props.name + '=' + coalesce(row.props.value, '')}) SET t.name = row.props.name, t.value = row.props.value, t.source = $source WITH t, row OPTIONAL MATCH (f:Field {uid: row.fieldUid}) OPTIONAL MATCH (d:Dataset {uid: row.datasetUid}) WITH t, coalesce(f, d) AS o WHERE o IS NOT NULL MERGE (o)-[:TAGGED]->(t)"
+    ],
+    "statistic": [
+      "UNWIND $rows AS row MATCH (f:Field {uid: row.fieldUid}) SET f.nullFraction = row.props.nullFraction, f.distinctCount = row.props.distinctCount, f.avgWidth = row.props.avgWidth"
+    ]
+  },
+  "cleanup": [
+    "MATCH (n) WHERE n.source = $source AND n.lastSeenRun IS NOT NULL AND n.lastSeenRun <> $runId AND (n:Container OR n:Dataset OR n:Field OR n:Index OR n:Routine OR n:Policy) DETACH DELETE n"
+  ]
+}

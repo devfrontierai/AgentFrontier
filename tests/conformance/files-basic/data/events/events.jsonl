@@ -1,0 +1,4 @@
+{"id": 1, "type": "click", "user": {"id": 7, "country": "IN"}, "tags": ["a", "b"], "value": 1}
+{"id": 2, "type": "view", "user": {"id": 8}, "tags": [], "value": 2.5}
+
+{"id": 3, "type": "click", "user": null, "value": null, "extra": "x"}

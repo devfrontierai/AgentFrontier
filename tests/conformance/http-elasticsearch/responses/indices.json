@@ -1,0 +1,29 @@
+[
+  {
+    "index": ".kibana_1",
+    "health": "green",
+    "status": "open",
+    "docs.count": "12",
+    "store.size": "40960",
+    "creation.date.string": "2024-01-01T00:00:00.000Z",
+    "uuid": "k1"
+  },
+  {
+    "index": "customers",
+    "health": "green",
+    "status": "open",
+    "docs.count": "2",
+    "store.size": "10240",
+    "creation.date.string": "2024-02-01T00:00:00.000Z",
+    "uuid": "c1"
+  },
+  {
+    "index": "orders",
+    "health": "yellow",
+    "status": "open",
+    "docs.count": "3",
+    "store.size": "20480",
+    "creation.date.string": "2024-02-02T00:00:00.000Z",
+    "uuid": "o1"
+  }
+]

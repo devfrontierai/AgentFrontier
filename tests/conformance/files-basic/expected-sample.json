@@ -1,0 +1,15 @@
+[ {
+  "email" : "ann@example.com",
+  "id" : "1",
+  "name" : "Ann",
+  "score" : "9.5",
+  "signup_date" : "2024-01-05",
+  "vip" : "true"
+}, {
+  "email" : "",
+  "id" : "2",
+  "name" : "Bob",
+  "score" : "7",
+  "signup_date" : "2024-02-11",
+  "vip" : "false"
+} ]

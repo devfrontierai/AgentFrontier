@@ -1,0 +1,20 @@
+{
+  "name": "customers",
+  "columns": [
+    {
+      "name": "id",
+      "type_text": "bigint",
+      "type_name": "LONG",
+      "position": 0,
+      "nullable": false,
+      "comment": "Customer id"
+    },
+    {
+      "name": "name",
+      "type_text": "string",
+      "type_name": "STRING",
+      "position": 1,
+      "nullable": true
+    }
+  ]
+}

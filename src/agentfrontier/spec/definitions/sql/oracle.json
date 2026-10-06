@@ -1,0 +1,302 @@
+{
+  "specVersion": "1",
+  "id": "oracle",
+  "name": "Oracle Database",
+  "protocol": "sql",
+  "category": "relational",
+  "status": "verified",
+  "description": "Oracle Database 12c and later (11g through overlays), including Autonomous Database and Oracle 23ai Free. One connection is one database (or pluggable database), so the hierarchy has one level, schema. Reads the ALL_ dictionary views, which every user can query and which show exactly what that user may see.",
+  "dialect": "oracle",
+  "properties": [
+    {"key": "host", "label": "Host", "type": "string", "required": true, "default": "localhost"},
+    {"key": "port", "label": "Port", "type": "integer", "default": "1521"},
+    {"key": "service", "label": "Service name", "type": "string", "required": true, "help": "For example ORCLPDB1 or FREEPDB1."},
+    {"key": "connectTimeoutSeconds", "label": "Connect timeout (s)", "type": "integer", "default": "10"}
+  ],
+  "auth": ["username_password", "connection_string"],
+  "connection": {
+    "jdbc": {
+      "driver": "oracle.jdbc.OracleDriver",
+      "artifact": "com.oracle.database.jdbc:ojdbc11:23.9.0.25.07",
+      "url": "jdbc:oracle:thin:@//{{host}}:{{port}}/{{service}}",
+      "properties": {
+        "oracle.net.CONNECT_TIMEOUT": "{{connectTimeoutSeconds|mul:1000}}",
+        "v$session.program": "agentfrontier"
+      },
+      "auth": {
+        "username_password": {"properties": {"user": "{{auth.username}}", "password": "{{auth.password}}"}},
+        "connection_string": {"url": "{{auth.connectionString}}"}
+      }
+    },
+    "python": {
+      "module": "oracledb",
+      "package": "oracledb>=2.0",
+      "connect": {
+        "dsn": "{{host}}:{{port}}/{{service}}",
+        "tcp_connect_timeout": "{{connectTimeoutSeconds}}",
+        "program": "agentfrontier"
+      },
+      "auth": {
+        "username_password": {"connect": {"user": "{{auth.username}}", "password": "{{auth.password}}"}},
+        "connection_string": {"connect": {"dsn": "{{auth.connectionString|removePrefix:jdbc:oracle:thin:@}}"}}
+      }
+    }
+  },
+  "session": {
+    "quote": "\"",
+    "maxBatch": 1000
+  },
+  "version": {
+    "sql": "select version_full as version, product || ' ' || version_full as banner from product_component_version where product like 'Oracle%'",
+    "alternatives": [
+      {"sql": "select version as version, product || ' ' || version as banner from product_component_version where product like 'Oracle%'"}
+    ]
+  },
+  "variants": [
+    {"match": "Autonomous", "variant": "autonomous"}
+  ],
+  "hierarchy": [
+    {"level": "schema", "label": "Schema", "list": "schemas"}
+  ],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "sql": "select user as login, sys_context('USERENV', 'CON_NAME') as container, sys_context('USERENV', 'DB_NAME') as db_name from dual"
+    },
+    "source": {
+      "entity": "source",
+      "sql": "select 'Oracle Database' as product, version_full as version, product || ' ' || version_full as banner, user as login from product_component_version where product like 'Oracle%'"
+    },
+    "schemas": {
+      "entity": "container",
+      "sql": [
+        "select u.username as name, to_char(u.created, 'YYYY-MM-DD\"T\"HH24:MI:SS') as created_at",
+        "from all_users u",
+        "where u.oracle_maintained = 'N'",
+        "order by u.username"
+      ]
+    },
+    "datasets": {
+      "entity": "dataset",
+      "scope": "schema",
+      "paging": {"mode": "keyset", "key": "name"},
+      "sql": [
+        "select o.object_name as name,",
+        "       case when o.object_type = 'VIEW' then 'view'",
+        "            when o.object_type = 'MATERIALIZED VIEW' then 'materialized_view'",
+        "            when t.partitioned = 'YES' then 'partitioned_table'",
+        "            when t.temporary = 'Y' then 'temporary_table'",
+        "            else 'table' end as type,",
+        "       tc.comments as \"comment\", o.owner as owner, t.num_rows as row_count,",
+        "       v.text_vc as definition,",
+        "       to_char(o.created, 'YYYY-MM-DD\"T\"HH24:MI:SS') as created_at,",
+        "       to_char(o.last_ddl_time, 'YYYY-MM-DD\"T\"HH24:MI:SS') as updated_at",
+        "from all_objects o",
+        "left join all_tables t on t.owner = o.owner and t.table_name = o.object_name and o.object_type = 'TABLE'",
+        "left join all_views v on v.owner = o.owner and v.view_name = o.object_name and o.object_type = 'VIEW'",
+        "left join all_tab_comments tc on tc.owner = o.owner and tc.table_name = o.object_name",
+        "where o.owner = {{schema}} and o.object_type in ('TABLE', 'VIEW', 'MATERIALIZED VIEW')",
+        "  and o.secondary = 'N' and o.object_name not like 'BIN$%'",
+        "  and not (o.object_type = 'TABLE' and exists (select 1 from all_mviews m",
+        "           where m.owner = o.owner and m.mview_name = o.object_name))",
+        "  [[and o.object_name > {{after}}]]",
+        "order by o.object_name",
+        "fetch first {{limit|int}} rows only"
+      ]
+    },
+    "fields": {
+      "entity": "field",
+      "scope": "datasets",
+      "sql": [
+        "select c.table_name as dataset, c.column_id as ordinal, c.column_name as name,",
+        "       c.data_type || case",
+        "         when c.data_type in ('VARCHAR2', 'NVARCHAR2', 'CHAR', 'NCHAR') then '(' || c.char_length || ')'",
+        "         when c.data_type = 'RAW' then '(' || c.data_length || ')'",
+        "         when c.data_type = 'NUMBER' and c.data_precision is not null",
+        "           then '(' || c.data_precision || ',' || nvl(c.data_scale, 0) || ')' end as data_type,",
+        "       c.nullable as nullable, c.data_default as default_value, cc.comments as \"comment\",",
+        "       case when c.identity_column = 'YES' or c.virtual_column = 'YES' then 'Y' else 'N' end as is_generated,",
+        "       c.char_length as max_length, c.data_precision as numeric_precision, c.data_scale as numeric_scale",
+        "from all_tab_cols c",
+        "left join all_col_comments cc",
+        "  on cc.owner = c.owner and cc.table_name = c.table_name and cc.column_name = c.column_name",
+        "where c.owner = {{schema}} and c.table_name in ({{datasets}}) and c.hidden_column = 'NO'",
+        "order by c.table_name, c.column_id"
+      ]
+    },
+    "constraints": {
+      "entity": "constraint",
+      "scope": "datasets",
+      "sql": [
+        "select c.table_name as dataset, c.constraint_name as name,",
+        "       case c.constraint_type when 'P' then 'primary_key' when 'U' then 'unique'",
+        "                              when 'R' then 'foreign_key' else 'check' end as type,",
+        "       cc.column_name as columns, r.owner as ref_schema, r.table_name as ref_dataset,",
+        "       rc.column_name as ref_columns, nvl(cc.position, 0) as seq, c.search_condition_vc as definition",
+        "from all_constraints c",
+        "join all_cons_columns cc",
+        "  on cc.owner = c.owner and cc.constraint_name = c.constraint_name and cc.table_name = c.table_name",
+        "left join all_constraints r on r.owner = c.r_owner and r.constraint_name = c.r_constraint_name",
+        "left join all_cons_columns rc",
+        "  on rc.owner = r.owner and rc.constraint_name = r.constraint_name and rc.position = cc.position",
+        "where c.owner = {{schema}} and c.table_name in ({{datasets}}) and c.constraint_type in ('P', 'U', 'R', 'C')",
+        "  and not (c.constraint_type = 'C' and c.search_condition_vc like '% IS NOT NULL')",
+        "order by c.table_name, c.constraint_name, cc.position"
+      ],
+      "collect": {"by": ["dataset", "name"], "lists": ["columns", "refColumns"], "orderBy": "seq"}
+    },
+    "indexes": {
+      "entity": "index",
+      "scope": "datasets",
+      "sql": [
+        "select i.table_name as dataset, i.index_name as name,",
+        "       case when i.uniqueness = 'UNIQUE' then 'Y' else 'N' end as is_unique,",
+        "       case when exists (select 1 from all_constraints k where k.owner = i.table_owner",
+        "                          and k.index_name = i.index_name and k.constraint_type = 'P') then 'Y' else 'N' end as is_primary,",
+        "       lower(i.index_type) as method, ic.column_name as columns, ic.column_position as seq",
+        "from all_indexes i",
+        "join all_ind_columns ic on ic.index_owner = i.owner and ic.index_name = i.index_name",
+        "where i.table_owner = {{schema}} and i.table_name in ({{datasets}})",
+        "order by i.table_name, i.index_name, ic.column_position"
+      ],
+      "collect": {"by": ["dataset", "name"], "lists": ["columns"], "orderBy": "seq"}
+    },
+    "routines": {
+      "entity": "routine",
+      "scope": "schema",
+      "sql": [
+        "select o.object_name as name, lower(o.object_type) as type, 'PL/SQL' as language, o.owner as owner",
+        "from all_objects o",
+        "where o.owner = {{schema}} and o.object_type in ('FUNCTION', 'PROCEDURE', 'PACKAGE')",
+        "order by o.object_name"
+      ]
+    },
+    "lineage": {
+      "entity": "lineage",
+      "scope": "schema",
+      "sql": [
+        "select d.name as dataset, d.referenced_owner as upstream_schema, d.referenced_name as upstream_dataset,",
+        "       'view_dependency' as kind",
+        "from all_dependencies d",
+        "where d.owner = {{schema}} and d.type in ('VIEW', 'MATERIALIZED VIEW')",
+        "  and d.referenced_type in ('TABLE', 'VIEW', 'MATERIALIZED VIEW')",
+        "order by 1, 2, 3"
+      ]
+    },
+    "principals": {
+      "entity": "principal",
+      "scope": "source",
+      "sql": [
+        "select u.username as name, 'user' as type,",
+        "       case when u.account_status = 'OPEN' then 'Y' else 'N' end as can_login",
+        "from dba_users u",
+        "where u.oracle_maintained = 'N'",
+        "order by u.username"
+      ],
+      "alternatives": [
+        {"sql": "select u.username as name, 'user' as type from all_users u where u.oracle_maintained = 'N' order by u.username"}
+      ]
+    },
+    "grants": {
+      "entity": "grant",
+      "scope": "schema",
+      "sql": [
+        "select p.table_name as dataset, p.grantee as principal, p.privilege as privilege,",
+        "       lower(p.type) as object_type, p.grantor as grantor, p.grantable as grantable",
+        "from all_tab_privs p",
+        "where p.table_schema = {{schema}}",
+        "order by 1, 2, 3"
+      ]
+    },
+    "policies": {
+      "entity": "policy",
+      "scope": "schema",
+      "sql": [
+        "select p.object_name as dataset, p.policy_name as name, 'row_access' as type,",
+        "       p.pf_owner || '.' || nvl2(p.package, p.package || '.', '') || p.function as definition,",
+        "       p.enable as enabled",
+        "from all_policies p",
+        "where p.object_owner = {{schema}}",
+        "order by 1, 2"
+      ]
+    },
+    "statistics": {
+      "entity": "statistic",
+      "scope": "datasets",
+      "sql": [
+        "select s.table_name as dataset, s.column_name as field,",
+        "       case when t.num_rows > 0 then s.num_nulls / t.num_rows end as null_fraction,",
+        "       s.num_distinct as distinct_count, s.avg_col_len as avg_width",
+        "from all_tab_col_statistics s",
+        "join all_tables t on t.owner = s.owner and t.table_name = s.table_name",
+        "where s.owner = {{schema}} and s.table_name in ({{datasets}})",
+        "order by 1, 2"
+      ]
+    },
+    "sample": {
+      "entity": "row",
+      "aspect": "data",
+      "scope": "dataset",
+      "sql": "select * from {{schema|ident}}.{{dataset|ident}} fetch first {{limit|int}} rows only"
+    }
+  },
+  "overlays": [
+    {
+      "when": {"version": "<12"},
+      "description": "Oracle 11g: no FETCH FIRST, no oracle_maintained, no identity columns, no search_condition_vc, no text_vc.",
+      "hierarchy": [
+        {"level": "schema", "label": "Schema", "list": "schemas",
+         "exclude": ["SYS", "SYSTEM", "OUTLN", "DBSNMP", "APPQOSSYS", "XDB", "ANONYMOUS", "CTXSYS", "MDSYS", "ORDSYS",
+                     "ORDDATA", "OLAPSYS", "WMSYS", "EXFSYS", "SYSMAN", "MGMT_VIEW", "APEX_*", "FLOWS_*", "DIP",
+                     "ORACLE_OCM", "XS$NULL", "SI_INFORMTN_SCHEMA", "SPATIAL_*", "ORDPLUGINS", "LBACSYS", "OJVMSYS",
+                     "GSMADMIN_INTERNAL", "AUDSYS", "DVSYS", "DVF"]}
+      ],
+      "operations": {
+        "schemas": {"sql": "select u.username as name from all_users u order by u.username"},
+        "datasets": {"sql": [
+          "select * from (",
+          "  select o.object_name as name,",
+          "         case when o.object_type = 'VIEW' then 'view'",
+          "              when o.object_type = 'MATERIALIZED VIEW' then 'materialized_view'",
+          "              when t.partitioned = 'YES' then 'partitioned_table'",
+          "              else 'table' end as type,",
+          "         tc.comments as \"comment\", o.owner as owner, t.num_rows as row_count",
+          "  from all_objects o",
+          "  left join all_tables t on t.owner = o.owner and t.table_name = o.object_name and o.object_type = 'TABLE'",
+          "  left join all_tab_comments tc on tc.owner = o.owner and tc.table_name = o.object_name",
+          "  where o.owner = {{schema}} and o.object_type in ('TABLE', 'VIEW', 'MATERIALIZED VIEW')",
+          "    and o.secondary = 'N' and o.object_name not like 'BIN$%'",
+          "    [[and o.object_name > {{after}}]]",
+          "  order by o.object_name",
+          ") where rownum <= {{limit|int}}"
+        ]},
+        "fields": {"sql": [
+          "select c.table_name as dataset, c.column_id as ordinal, c.column_name as name, c.data_type as data_type,",
+          "       c.nullable as nullable, cc.comments as \"comment\", c.char_length as max_length,",
+          "       c.data_precision as numeric_precision, c.data_scale as numeric_scale",
+          "from all_tab_columns c",
+          "left join all_col_comments cc",
+          "  on cc.owner = c.owner and cc.table_name = c.table_name and cc.column_name = c.column_name",
+          "where c.owner = {{schema}} and c.table_name in ({{datasets}})",
+          "order by c.table_name, c.column_id"
+        ]},
+        "constraints": {"sql": [
+          "select c.table_name as dataset, c.constraint_name as name,",
+          "       case c.constraint_type when 'P' then 'primary_key' when 'U' then 'unique' else 'foreign_key' end as type,",
+          "       cc.column_name as columns, r.owner as ref_schema, r.table_name as ref_dataset,",
+          "       rc.column_name as ref_columns, cc.position as seq",
+          "from all_constraints c",
+          "join all_cons_columns cc",
+          "  on cc.owner = c.owner and cc.constraint_name = c.constraint_name and cc.table_name = c.table_name",
+          "left join all_constraints r on r.owner = c.r_owner and r.constraint_name = c.r_constraint_name",
+          "left join all_cons_columns rc",
+          "  on rc.owner = r.owner and rc.constraint_name = r.constraint_name and rc.position = cc.position",
+          "where c.owner = {{schema}} and c.table_name in ({{datasets}}) and c.constraint_type in ('P', 'U', 'R')",
+          "order by c.table_name, c.constraint_name, cc.position"
+        ]},
+        "principals": {"sql": "select u.username as name, 'user' as type from all_users u order by u.username", "alternatives": null},
+        "sample": {"sql": "select * from {{schema|ident}}.{{dataset|ident}} where rownum <= {{limit|int}}"}
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "tables": [
+    {
+      "name": "daily_revenue",
+      "catalog_name": "main",
+      "schema_name": "sales",
+      "table_type": "VIEW",
+      "owner": "analysts",
+      "view_definition": "SELECT date(ordered_at) d, sum(total) FROM main.sales.orders GROUP BY 1"
+    }
+  ]
+}

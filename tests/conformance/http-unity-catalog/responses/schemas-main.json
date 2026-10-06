@@ -1,0 +1,15 @@
+{
+  "schemas": [
+    {
+      "name": "information_schema",
+      "catalog_name": "main",
+      "owner": "system"
+    },
+    {
+      "name": "sales",
+      "catalog_name": "main",
+      "owner": "analysts",
+      "comment": "Sales data"
+    }
+  ]
+}

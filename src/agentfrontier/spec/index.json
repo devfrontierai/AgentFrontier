@@ -1,0 +1,21 @@
+{
+  "specVersion": "1",
+  "description": "Files of the built-in spec. Implementations read this list instead of scanning directories, which some packaging formats (nested jars, zip imports) cannot do. A test in each implementation fails when this list and the folders disagree.",
+  "definitions": [
+    "files/local_files.json",
+    "http/elasticsearch.json",
+    "http/opensearch.json",
+    "http/unity_catalog.json",
+    "sql/mysql.json",
+    "sql/oracle.json",
+    "sql/postgresql.json",
+    "sql/postgresql.pre10.json",
+    "sql/redshift.json",
+    "sql/snowflake.json",
+    "sql/sqlite.json",
+    "sql/sqlserver.json"
+  ],
+  "sinks": [
+    "neo4j-default.json"
+  ]
+}

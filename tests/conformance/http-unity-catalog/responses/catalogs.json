@@ -1,0 +1,16 @@
+{
+  "catalogs": [
+    {
+      "name": "main",
+      "comment": "Main catalog",
+      "owner": "admin",
+      "catalog_type": "MANAGED_CATALOG"
+    },
+    {
+      "name": "samples",
+      "comment": "Sample data",
+      "owner": "system",
+      "catalog_type": "SYSTEM_CATALOG"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+id,name,email,signup_date,vip,score
+1,Ann,ann@example.com,2024-01-05,true,9.5
+2,Bob,,2024-02-11,false,7
+3,"Cy, Jr.",cy@example.com,2024-03-01,FALSE,

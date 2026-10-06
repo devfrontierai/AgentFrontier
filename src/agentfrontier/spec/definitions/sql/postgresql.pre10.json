@@ -1,0 +1,48 @@
+{
+  "specVersion": "1",
+  "overlay": "postgresql",
+  "when": {
+    "version": "<10"
+  },
+  "description": "PostgreSQL 9.x: no declarative partitioning (relispartition, relkind 'p') and no identity columns (attidentity). Kept in its own file to show that a version-specific query set can be added or patched without touching the main definition.",
+  "operations": {
+    "datasets": {
+      "sql": [
+        "select c.relname as name,",
+        "       case c.relkind when 'r' then 'table' when 'v' then 'view' when 'm' then 'materialized_view'",
+        "                      when 'f' then 'foreign_table' else 'other' end as type,",
+        "       obj_description(c.oid, 'pg_class') as comment,",
+        "       pg_get_userbyid(c.relowner) as owner,",
+        "       case when c.reltuples > 0 then c.reltuples::bigint",
+        "            when coalesce(s.n_live_tup, 0) > 0 then s.n_live_tup",
+        "            when c.reltuples = 0 then 0 end as row_count,",
+        "       case when c.relkind in ('r', 'm') then",
+        "            (c.relpages::bigint + coalesce(tc.relpages, 0)::bigint) * current_setting('block_size')::bigint end as size_bytes,",
+        "       case when c.relkind in ('v', 'm') then pg_get_viewdef(c.oid, true) end as definition,",
+        "       false as is_partition",
+        "from pg_class c",
+        "join pg_namespace n on n.oid = c.relnamespace",
+        "left join pg_class tc on tc.oid = c.reltoastrelid",
+        "left join pg_stat_all_tables s on s.relid = c.oid",
+        "where n.nspname = {{schema}} and c.relkind in ('r', 'v', 'm', 'f')",
+        "  [[and c.relname > {{after}}]]",
+        "order by c.relname",
+        "limit {{limit|int}}"
+      ]
+    },
+    "fields": {
+      "sql": [
+        "select c.relname as dataset, a.attnum as ordinal, a.attname as name,",
+        "       format_type(a.atttypid, a.atttypmod) as data_type, not a.attnotnull as nullable,",
+        "       pg_get_expr(d.adbin, d.adrelid) as default_value, col_description(c.oid, a.attnum) as comment,",
+        "       coalesce(pg_get_expr(d.adbin, d.adrelid), '') like 'nextval(%' as is_generated",
+        "from pg_attribute a",
+        "join pg_class c on c.oid = a.attrelid",
+        "join pg_namespace n on n.oid = c.relnamespace",
+        "left join pg_attrdef d on d.adrelid = a.attrelid and d.adnum = a.attnum",
+        "where n.nspname = {{schema}} and c.relname in ({{datasets}}) and a.attnum > 0 and not a.attisdropped",
+        "order by c.relname, a.attnum"
+      ]
+    }
+  }
+}

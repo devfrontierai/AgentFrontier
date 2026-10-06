@@ -1,0 +1,141 @@
+{
+  "specVersion": "1",
+  "id": "sqlite",
+  "name": "SQLite",
+  "protocol": "sql",
+  "category": "relational",
+  "status": "verified",
+  "description": "A SQLite database file. SQLite has no databases or schemas to walk, so the hierarchy is empty and tables sit directly under the source. Opened with query_only, so nothing can be written.",
+  "dialect": "sqlite",
+  "properties": [
+    {"key": "path", "label": "Database file", "type": "string", "required": true, "help": "Path to the .db / .sqlite file."}
+  ],
+  "auth": ["none"],
+  "connection": {
+    "jdbc": {
+      "driver": "org.sqlite.JDBC",
+      "artifact": "org.xerial:sqlite-jdbc:3.50.3.0",
+      "url": "jdbc:sqlite:{{path}}",
+      "auth": {"none": {}}
+    },
+    "python": {
+      "module": "sqlite3",
+      "connect": {"database": "{{path}}"},
+      "auth": {"none": {}}
+    }
+  },
+  "session": {
+    "quote": "\"",
+    "maxBatch": 500,
+    "init": ["pragma query_only = 1"]
+  },
+  "version": {
+    "sql": "select sqlite_version() as version, 'SQLite ' || sqlite_version() as banner"
+  },
+  "hierarchy": [],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "sql": "select sqlite_version() as version, (select count(*) from sqlite_master where type = 'table') as tables"
+    },
+    "source": {
+      "entity": "source",
+      "sql": "select 'SQLite' as product, sqlite_version() as version, 'SQLite ' || sqlite_version() as banner"
+    },
+    "datasets": {
+      "entity": "dataset",
+      "scope": "source",
+      "paging": {"mode": "keyset", "key": "name"},
+      "sql": [
+        "select m.name as name, m.type as type, case when m.type = 'view' then m.sql end as definition",
+        "from sqlite_master m",
+        "where m.type in ('table', 'view') and m.name not like 'sqlite\\_%' escape '\\'",
+        "  [[and m.name > {{after}}]]",
+        "order by m.name",
+        "limit {{limit|int}}"
+      ]
+    },
+    "fields": {
+      "entity": "field",
+      "scope": "datasets",
+      "sql": [
+        "select m.name as dataset, p.cid + 1 as ordinal, p.name as name, p.type as data_type,",
+        "       case when p.\"notnull\" = 1 or p.pk > 0 then 0 else 1 end as nullable,",
+        "       p.dflt_value as default_value, case when p.hidden in (2, 3) then 1 else 0 end as is_generated",
+        "from sqlite_master m, pragma_table_xinfo(m.name) p",
+        "where m.name in ({{datasets}}) and p.hidden <> 1",
+        "order by m.name, p.cid"
+      ]
+    },
+    "primary_keys": {
+      "entity": "constraint",
+      "scope": "datasets",
+      "sql": [
+        "select m.name as dataset, 'pk_' || m.name as name, 'primary_key' as type, p.name as columns, p.pk as seq",
+        "from sqlite_master m, pragma_table_info(m.name) p",
+        "where m.type = 'table' and m.name in ({{datasets}}) and p.pk > 0",
+        "order by m.name, p.pk"
+      ],
+      "collect": {"by": ["dataset", "name"], "lists": ["columns"], "orderBy": "seq"}
+    },
+    "unique_keys": {
+      "entity": "constraint",
+      "scope": "datasets",
+      "sql": [
+        "select m.name as dataset, il.name as name, 'unique' as type, ii.name as columns, ii.seqno as seq",
+        "from sqlite_master m, pragma_index_list(m.name) il, pragma_index_info(il.name) ii",
+        "where m.type = 'table' and m.name in ({{datasets}}) and il.origin = 'u'",
+        "order by m.name, il.name, ii.seqno"
+      ],
+      "collect": {"by": ["dataset", "name"], "lists": ["columns"], "orderBy": "seq"}
+    },
+    "foreign_keys": {
+      "entity": "constraint",
+      "scope": "datasets",
+      "sql": [
+        "select m.name as dataset, 'fk_' || m.name || '_' || f.id as name, 'foreign_key' as type,",
+        "       f.\"from\" as columns, f.\"table\" as ref_dataset, f.\"to\" as ref_columns, f.seq as seq",
+        "from sqlite_master m, pragma_foreign_key_list(m.name) f",
+        "where m.type = 'table' and m.name in ({{datasets}})",
+        "order by m.name, f.id, f.seq"
+      ],
+      "collect": {"by": ["dataset", "name"], "lists": ["columns", "refColumns"], "orderBy": "seq"}
+    },
+    "indexes": {
+      "entity": "index",
+      "scope": "datasets",
+      "sql": [
+        "select m.name as dataset, il.name as name, il.\"unique\" as is_unique,",
+        "       case when il.origin = 'pk' then 1 else 0 end as is_primary, ii.name as columns, ii.seqno as seq,",
+        "       s.sql as definition",
+        "from sqlite_master m, pragma_index_list(m.name) il, pragma_index_info(il.name) ii",
+        "left join sqlite_master s on s.type = 'index' and s.name = il.name",
+        "where m.type = 'table' and m.name in ({{datasets}})",
+        "order by m.name, il.name, ii.seqno"
+      ],
+      "collect": {"by": ["dataset", "name"], "lists": ["columns"], "orderBy": "seq"}
+    },
+    "sample": {
+      "entity": "row",
+      "aspect": "data",
+      "scope": "dataset",
+      "sql": "select * from {{dataset|ident}} limit {{limit|int}}"
+    }
+  },
+  "overlays": [
+    {
+      "when": {"version": "<3.26"},
+      "description": "pragma_table_xinfo (which reports generated columns) arrived in SQLite 3.26.",
+      "operations": {
+        "fields": {"sql": [
+          "select m.name as dataset, p.cid + 1 as ordinal, p.name as name, p.type as data_type,",
+          "       case when p.\"notnull\" = 1 or p.pk > 0 then 0 else 1 end as nullable,",
+          "       p.dflt_value as default_value, 0 as is_generated",
+          "from sqlite_master m, pragma_table_info(m.name) p",
+          "where m.name in ({{datasets}})",
+          "order by m.name, p.cid"
+        ]}
+      }
+    }
+  ]
+}

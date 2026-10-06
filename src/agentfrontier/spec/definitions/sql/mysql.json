@@ -1,0 +1,242 @@
+{
+  "specVersion": "1",
+  "id": "mysql",
+  "name": "MySQL",
+  "protocol": "sql",
+  "category": "relational",
+  "status": "verified",
+  "description": "MySQL 5.7 and later, MariaDB 10.3 and later (detected from the version banner), and compatible services (Aurora MySQL, Cloud SQL, Azure Database for MySQL, PlanetScale). A MySQL database is what other systems call a schema, so the hierarchy has one level, database. Reads information_schema; one connection serves every database.",
+  "aliases": ["mariadb", "aurora_mysql"],
+  "dialect": "mysql",
+  "properties": [
+    {"key": "host", "label": "Host", "type": "string", "required": true, "default": "localhost"},
+    {"key": "port", "label": "Port", "type": "integer", "default": "3306"},
+    {"key": "database", "label": "Database", "type": "string", "help": "Database to read. Empty and no list below: every database you can see."},
+    {"key": "databases", "label": "Databases to read", "type": "list", "help": "*: every database you can see. Or a list; wildcards allowed."},
+    {"key": "sslMode", "label": "SSL mode", "type": "select", "options": ["DISABLED", "PREFERRED", "REQUIRED", "VERIFY_CA", "VERIFY_IDENTITY"]},
+    {"key": "allowPublicKeyRetrieval", "label": "Allow public key retrieval", "type": "boolean", "default": "false", "help": "Needed for caching_sha2_password logins without TLS."},
+    {"key": "connectTimeoutSeconds", "label": "Connect timeout (s)", "type": "integer", "default": "10"}
+  ],
+  "auth": ["username_password", "username_only", "token", "connection_string"],
+  "connection": {
+    "jdbc": {
+      "driver": "com.mysql.cj.jdbc.Driver",
+      "artifact": "com.mysql:mysql-connector-j:9.4.0",
+      "url": "jdbc:mysql://{{host}}:{{port}}/{{database|default:}}",
+      "properties": {
+        "connectTimeout": "{{connectTimeoutSeconds|mul:1000}}",
+        "sslMode": "{{sslMode}}",
+        "allowPublicKeyRetrieval": "{{allowPublicKeyRetrieval}}",
+        "useInformationSchema": "true",
+        "nullDatabaseMeansCurrent": "true",
+        "connectionAttributes": "program_name:agentfrontier"
+      },
+      "auth": {
+        "username_password": {"properties": {"user": "{{auth.username}}", "password": "{{auth.password}}"}},
+        "username_only": {"properties": {"user": "{{auth.username}}"}},
+        "token": {"properties": {"user": "{{auth.username}}", "password": "{{auth.token}}", "sslMode": "{{sslMode|default:REQUIRED}}"}},
+        "connection_string": {"url": "{{auth.connectionString}}"}
+      }
+    },
+    "python": {
+      "module": "pymysql",
+      "package": "pymysql>=1.1",
+      "connect": {
+        "host": "{{host}}",
+        "port": "{{port}}",
+        "database": "{{database}}",
+        "connect_timeout": "{{connectTimeoutSeconds}}",
+        "program_name": "agentfrontier"
+      },
+      "auth": {
+        "username_password": {"connect": {"user": "{{auth.username}}", "password": "{{auth.password}}"}},
+        "username_only": {"connect": {"user": "{{auth.username}}"}},
+        "token": {"connect": {"user": "{{auth.username}}", "password": "{{auth.token}}"}}
+      }
+    }
+  },
+  "session": {
+    "quote": "`",
+    "maxBatch": 1000,
+    "init": ["set session transaction read only"]
+  },
+  "version": {
+    "sql": "select version() as version, concat(@@version_comment, ' ', version()) as banner"
+  },
+  "variants": [
+    {"match": "MariaDB", "variant": "mariadb"}
+  ],
+  "hierarchy": [
+    {"level": "database", "label": "Database", "list": "databases", "value": "{{database}}", "select": "databases",
+     "exclude": ["information_schema", "mysql", "performance_schema", "sys"]}
+  ],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "sql": "select current_user() as login, database() as current_database, version() as version"
+    },
+    "source": {
+      "entity": "source",
+      "sql": "select 'MySQL' as product, version() as version, concat(@@version_comment, ' ', version()) as banner, current_user() as login"
+    },
+    "databases": {
+      "entity": "container",
+      "sql": [
+        "select s.schema_name as name, s.default_character_set_name as charset,",
+        "       (select sum(t.data_length + t.index_length) from information_schema.tables t",
+        "         where t.table_schema = s.schema_name) as size_bytes",
+        "from information_schema.schemata s",
+        "order by s.schema_name"
+      ]
+    },
+    "datasets": {
+      "entity": "dataset",
+      "scope": "database",
+      "paging": {"mode": "keyset", "key": "name"},
+      "sql": [
+        "select t.table_name as name,",
+        "       case t.table_type when 'BASE TABLE' then 'table' when 'VIEW' then 'view' when 'SYSTEM VIEW' then 'view'",
+        "                         else lower(t.table_type) end as type,",
+        "       nullif(t.table_comment, '') as comment, t.table_rows as row_count,",
+        "       t.data_length + t.index_length as size_bytes, t.create_time as created_at, t.update_time as updated_at,",
+        "       t.engine as engine, v.view_definition as definition",
+        "from information_schema.tables t",
+        "left join information_schema.views v on v.table_schema = t.table_schema and v.table_name = t.table_name",
+        "where t.table_schema = {{database}}",
+        "  [[and cast(t.table_name as binary) > cast({{after}} as binary)]]",
+        "order by cast(t.table_name as binary)",
+        "limit {{limit|int}}"
+      ]
+    },
+    "fields": {
+      "entity": "field",
+      "scope": "datasets",
+      "sql": [
+        "select c.table_name as dataset, c.ordinal_position as ordinal, c.column_name as name, c.column_type as data_type,",
+        "       c.is_nullable as nullable, c.column_default as default_value, nullif(c.column_comment, '') as comment,",
+        "       c.extra like '%auto_increment%' or c.generation_expression <> '' as is_generated,",
+        "       c.character_maximum_length as max_length, c.numeric_precision as numeric_precision,",
+        "       c.numeric_scale as numeric_scale",
+        "from information_schema.columns c",
+        "where c.table_schema = {{database}} and c.table_name in ({{datasets}})",
+        "order by c.table_name, c.ordinal_position"
+      ]
+    },
+    "constraints": {
+      "entity": "constraint",
+      "scope": "datasets",
+      "sql": [
+        "select k.table_name as dataset, k.constraint_name as name,",
+        "       lower(replace(tc.constraint_type, ' ', '_')) as type, k.column_name as columns,",
+        "       k.referenced_table_schema as ref_database, k.referenced_table_name as ref_dataset,",
+        "       k.referenced_column_name as ref_columns, k.ordinal_position as seq",
+        "from information_schema.table_constraints tc",
+        "join information_schema.key_column_usage k",
+        "  on k.constraint_schema = tc.constraint_schema and k.constraint_name = tc.constraint_name",
+        " and k.table_name = tc.table_name",
+        "where tc.table_schema = {{database}} and tc.table_name in ({{datasets}})",
+        "  and tc.constraint_type in ('PRIMARY KEY', 'UNIQUE', 'FOREIGN KEY')",
+        "order by k.table_name, k.constraint_name, k.ordinal_position"
+      ],
+      "collect": {"by": ["dataset", "name"], "lists": ["columns", "refColumns"], "orderBy": "seq"}
+    },
+    "indexes": {
+      "entity": "index",
+      "scope": "datasets",
+      "sql": [
+        "select s.table_name as dataset, s.index_name as name, s.non_unique = 0 as is_unique,",
+        "       s.index_name = 'PRIMARY' as is_primary, lower(s.index_type) as method, s.column_name as columns,",
+        "       s.seq_in_index as seq",
+        "from information_schema.statistics s",
+        "where s.table_schema = {{database}} and s.table_name in ({{datasets}})",
+        "order by s.table_name, s.index_name, s.seq_in_index"
+      ],
+      "collect": {"by": ["dataset", "name"], "lists": ["columns"], "orderBy": "seq"}
+    },
+    "routines": {
+      "entity": "routine",
+      "scope": "database",
+      "sql": [
+        "select r.routine_name as name, lower(r.routine_type) as type, 'SQL' as language,",
+        "       r.dtd_identifier as returns, nullif(r.routine_comment, '') as comment, r.definer as owner",
+        "from information_schema.routines r",
+        "where r.routine_schema = {{database}}",
+        "order by r.routine_name"
+      ]
+    },
+    "lineage": {
+      "entity": "lineage",
+      "scope": "database",
+      "when": {"version": ">=8.0.13"},
+      "sql": [
+        "select u.view_name as dataset, u.table_schema as upstream_database, u.table_name as upstream_dataset,",
+        "       'view_dependency' as kind",
+        "from information_schema.view_table_usage u",
+        "where u.view_schema = {{database}}",
+        "order by 1, 2, 3"
+      ]
+    },
+    "grants": {
+      "entity": "grant",
+      "scope": "database",
+      "sql": [
+        "select p.table_name as dataset, p.grantee as principal, p.privilege_type as privilege,",
+        "       'table' as object_type, p.is_grantable as grantable",
+        "from information_schema.table_privileges p",
+        "where p.table_schema = {{database}}",
+        "union all",
+        "select null, p.grantee, p.privilege_type, 'database', p.is_grantable",
+        "from information_schema.schema_privileges p",
+        "where p.table_schema = {{database}}",
+        "order by 1, 2, 3"
+      ]
+    },
+    "principals": {
+      "entity": "principal",
+      "scope": "source",
+      "onError": "warn",
+      "sql": [
+        "select concat(u.user, '@', u.host) as name, 'user' as type, u.account_locked = 'N' as can_login,",
+        "       u.super_priv = 'Y' as superuser",
+        "from mysql.user u",
+        "order by 1"
+      ]
+    },
+    "sample": {
+      "entity": "row",
+      "aspect": "data",
+      "scope": "dataset",
+      "sql": "select * from {{database|ident}}.{{dataset|ident}} limit {{limit|int}}"
+    }
+  },
+  "overlays": [
+    {
+      "when": {"version": "<5.7"},
+      "description": "generation_expression arrived in MySQL 5.7.",
+      "operations": {
+        "fields": {"sql": [
+          "select c.table_name as dataset, c.ordinal_position as ordinal, c.column_name as name, c.column_type as data_type,",
+          "       c.is_nullable as nullable, c.column_default as default_value, nullif(c.column_comment, '') as comment,",
+          "       c.extra like '%auto_increment%' as is_generated, c.character_maximum_length as max_length,",
+          "       c.numeric_precision as numeric_precision, c.numeric_scale as numeric_scale",
+          "from information_schema.columns c",
+          "where c.table_schema = {{database}} and c.table_name in ({{datasets}})",
+          "order by c.table_name, c.ordinal_position"
+        ]}
+      }
+    },
+    {
+      "when": {"variant": "mariadb"},
+      "description": "MariaDB has no view_table_usage and keeps users in mysql.global_priv; account_locked is not in mysql.user.",
+      "operations": {
+        "lineage": null,
+        "principals": {"sql": [
+          "select concat(u.user, '@', u.host) as name, case when u.is_role = 'Y' then 'role' else 'user' end as type,",
+          "       u.super_priv = 'Y' as superuser",
+          "from mysql.user u",
+          "order by 1"
+        ]}
+      }
+    }
+  ]
+}

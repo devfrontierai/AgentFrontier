@@ -1,0 +1,25 @@
+{
+  "specVersion": "1",
+  "id": "opensearch",
+  "name": "OpenSearch",
+  "extends": "elasticsearch",
+  "category": "search",
+  "status": "verified",
+  "description": "OpenSearch 1.x and 2.x (and Amazon OpenSearch Service with basic auth). Same REST shapes as Elasticsearch for indices and mappings; adds roles and role mappings from the security plugin when it is enabled.",
+  "variants": [],
+  "operations": {
+    "source": {
+      "fields": {"product": {"value": "OpenSearch"}}
+    },
+    "principals": {
+      "entity": "principal",
+      "scope": "source",
+      "onError": "warn",
+      "request": {"path": "/_plugins/_security/api/roles"},
+      "records": {"path": "$", "entries": true},
+      "fields": {"name": "key"},
+      "set": {"type": "role"},
+      "extras": "drop"
+    }
+  }
+}

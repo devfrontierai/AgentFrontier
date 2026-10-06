@@ -1,0 +1,17 @@
+{"banner":"elasticsearch 8.11.0 You Know, for Search","comment":"fixture-cluster","definition":"elasticsearch","entity":"source","name":"Conformance Elasticsearch","product":"Elasticsearch","source":"conf-es","version":"8.11.0"}
+{"createdAt":"2024-02-01T00:00:00.000Z","entity":"dataset","name":"customers","properties":{"health":"green","status":"open","uuid":"c1"},"rowCount":2,"sizeBytes":10240,"source":"conf-es","type":"index"}
+{"createdAt":"2024-02-02T00:00:00.000Z","entity":"dataset","name":"orders","properties":{"health":"yellow","status":"open","uuid":"o1"},"rowCount":3,"sizeBytes":20480,"source":"conf-es","type":"index"}
+{"dataType":"date","dataset":"customers","entity":"field","name":"signup","ordinal":6,"properties":{"format":"yyyy-MM-dd"},"source":"conf-es"}
+{"dataType":"geo_point","dataset":"customers","entity":"field","name":"address.location","ordinal":5,"parent":"address","source":"conf-es"}
+{"dataType":"integer","dataset":"orders","entity":"field","name":"items.qty","ordinal":7,"parent":"items","source":"conf-es"}
+{"dataType":"keyword","dataset":"customers","entity":"field","name":"address.city","ordinal":4,"parent":"address","source":"conf-es"}
+{"dataType":"keyword","dataset":"customers","entity":"field","name":"email","ordinal":2,"source":"conf-es"}
+{"dataType":"keyword","dataset":"orders","entity":"field","name":"items.sku","ordinal":6,"parent":"items","source":"conf-es"}
+{"dataType":"long","dataset":"orders","entity":"field","name":"customer.id","ordinal":3,"parent":"customer","source":"conf-es"}
+{"dataType":"long","dataset":"orders","entity":"field","name":"id","ordinal":1,"source":"conf-es"}
+{"dataType":"nested","dataset":"orders","entity":"field","name":"items","ordinal":5,"source":"conf-es"}
+{"dataType":"object","dataset":"customers","entity":"field","name":"address","ordinal":3,"source":"conf-es"}
+{"dataType":"object","dataset":"orders","entity":"field","name":"customer","ordinal":2,"source":"conf-es"}
+{"dataType":"scaled_float","dataset":"orders","entity":"field","name":"total","ordinal":8,"source":"conf-es"}
+{"dataType":"text","dataset":"customers","entity":"field","name":"name","ordinal":1,"properties":{"analyzer":"standard"},"source":"conf-es"}
+{"dataType":"text","dataset":"orders","entity":"field","name":"customer.name","ordinal":4,"parent":"customer","source":"conf-es"}

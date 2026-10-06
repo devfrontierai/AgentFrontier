@@ -1,0 +1,54 @@
+{
+  "specVersion": "1",
+  "id": "local_files",
+  "name": "Local or mounted file system",
+  "protocol": "files",
+  "category": "file_storage",
+  "status": "verified",
+  "description": "A folder on a local or mounted file system (including network shares and synced OneDrive / SharePoint folders). Folders that hold matching files are containers, files are datasets, and fields are inferred from CSV, TSV, JSON and JSON Lines content.",
+  "properties": [
+    {"key": "root", "label": "Root folder", "type": "string", "required": true},
+    {"key": "include", "label": "Include", "type": "list", "default": "**/*.csv,**/*.tsv,**/*.json,**/*.jsonl,**/*.ndjson", "help": "Glob patterns relative to the root."},
+    {"key": "exclude", "label": "Exclude", "type": "list", "help": "Glob patterns relative to the root, for example **/tmp/**."}
+  ],
+  "options": [
+    {"key": "sampleRows", "label": "Rows to sample for schema inference", "type": "integer", "default": "1000"}
+  ],
+  "auth": ["none"],
+  "connection": {
+    "files": {
+      "storage": "local",
+      "root": "{{root}}",
+      "auth": {"none": {}}
+    }
+  },
+  "hierarchy": [
+    {"level": "folder", "label": "Folder", "list": "folders"}
+  ],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "files": {"op": "stat"}
+    },
+    "folders": {
+      "entity": "container",
+      "files": {"op": "folders", "include": "{{include}}", "exclude": "{{exclude}}"}
+    },
+    "datasets": {
+      "entity": "dataset",
+      "scope": "folder",
+      "files": {"op": "files", "include": "{{include}}", "exclude": "{{exclude}}"}
+    },
+    "fields": {
+      "entity": "field",
+      "scope": "dataset",
+      "files": {"op": "schema", "sampleRows": "{{options.sampleRows}}"}
+    },
+    "sample": {
+      "entity": "row",
+      "aspect": "data",
+      "scope": "dataset",
+      "files": {"op": "rows", "limit": "{{limit}}"}
+    }
+  }
+}

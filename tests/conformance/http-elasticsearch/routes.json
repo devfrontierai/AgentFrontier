@@ -1,0 +1,36 @@
+{
+  "require": {
+    "headers": {
+      "Authorization": "Basic ZWxhc3RpYzpjaGFuZ2VtZQ=="
+    }
+  },
+  "routes": [
+    {
+      "path": "/",
+      "body": "responses/root.json"
+    },
+    {
+      "path": "/_cluster/health",
+      "body": "responses/health.json"
+    },
+    {
+      "path": "/_cat/indices",
+      "query": {
+        "format": "json"
+      },
+      "body": "responses/indices.json"
+    },
+    {
+      "path": "/customers/_mapping",
+      "body": "responses/mapping-customers.json"
+    },
+    {
+      "path": "/orders/_mapping",
+      "body": "responses/mapping-orders.json"
+    },
+    {
+      "path": "/customers/_search",
+      "body": "responses/search-customers.json"
+    }
+  ]
+}

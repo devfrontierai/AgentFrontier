@@ -1,0 +1,39 @@
+{"columns":["customer_id"],"dataset":"orders","definition":"CREATE INDEX idx_orders_customer on orders(customer_id)","entity":"index","isPrimary":false,"isUnique":false,"name":"idx_orders_customer","source":"conf-sqlite"}
+{"columns":["customer_id"],"dataset":"orders","entity":"constraint","name":"fk_orders_0","refColumns":["id"],"refDataset":"customers","source":"conf-sqlite","type":"foreign_key"}
+{"columns":["email"],"dataset":"customers","entity":"constraint","name":"sqlite_autoindex_customers_1","source":"conf-sqlite","type":"unique"}
+{"columns":["email"],"dataset":"customers","entity":"index","isPrimary":false,"isUnique":true,"name":"sqlite_autoindex_customers_1","source":"conf-sqlite"}
+{"columns":["id"],"dataset":"customers","entity":"constraint","name":"pk_customers","source":"conf-sqlite","type":"primary_key"}
+{"columns":["id"],"dataset":"orders","entity":"constraint","name":"pk_orders","source":"conf-sqlite","type":"primary_key"}
+{"columns":["order_id","line_no"],"dataset":"order_items","entity":"constraint","name":"pk_order_items","source":"conf-sqlite","type":"primary_key"}
+{"columns":["order_id","line_no"],"dataset":"order_items","entity":"index","isPrimary":true,"isUnique":true,"name":"sqlite_autoindex_order_items_1","source":"conf-sqlite"}
+{"columns":["order_id","sku"],"dataset":"order_items","definition":"CREATE UNIQUE INDEX ux_items_order_sku on order_items(order_id, sku)","entity":"index","isPrimary":false,"isUnique":true,"name":"ux_items_order_sku","source":"conf-sqlite"}
+{"columns":["order_id"],"dataset":"order_items","entity":"constraint","name":"fk_order_items_1","refColumns":["id"],"refDataset":"orders","source":"conf-sqlite","type":"foreign_key"}
+{"columns":["sku"],"dataset":"order_items","entity":"constraint","name":"fk_order_items_0","refColumns":["sku"],"refDataset":"products","source":"conf-sqlite","type":"foreign_key"}
+{"columns":["sku"],"dataset":"products","entity":"constraint","name":"pk_products","source":"conf-sqlite","type":"primary_key"}
+{"columns":["sku"],"dataset":"products","entity":"index","isPrimary":true,"isUnique":true,"name":"sqlite_autoindex_products_1","source":"conf-sqlite"}
+{"dataType":"INTEGER","dataset":"customer_orders","entity":"field","isGenerated":false,"name":"id","nullable":true,"ordinal":1,"source":"conf-sqlite"}
+{"dataType":"INTEGER","dataset":"customers","entity":"field","isGenerated":false,"name":"id","nullable":false,"ordinal":1,"source":"conf-sqlite"}
+{"dataType":"INTEGER","dataset":"order_items","defaultValue":"1","entity":"field","isGenerated":false,"name":"qty","nullable":false,"ordinal":4,"source":"conf-sqlite"}
+{"dataType":"INTEGER","dataset":"order_items","entity":"field","isGenerated":false,"name":"line_no","nullable":false,"ordinal":2,"source":"conf-sqlite"}
+{"dataType":"INTEGER","dataset":"order_items","entity":"field","isGenerated":false,"name":"order_id","nullable":false,"ordinal":1,"source":"conf-sqlite"}
+{"dataType":"INTEGER","dataset":"orders","entity":"field","isGenerated":false,"name":"customer_id","nullable":false,"ordinal":2,"source":"conf-sqlite"}
+{"dataType":"INTEGER","dataset":"orders","entity":"field","isGenerated":false,"name":"id","nullable":false,"ordinal":1,"source":"conf-sqlite"}
+{"dataType":"REAL","dataset":"products","entity":"field","isGenerated":false,"name":"price","nullable":false,"ordinal":3,"source":"conf-sqlite"}
+{"dataType":"REAL","dataset":"products","entity":"field","isGenerated":true,"name":"price_with_tax","nullable":true,"ordinal":4,"source":"conf-sqlite"}
+{"dataType":"TEXT","dataset":"customer_orders","entity":"field","isGenerated":false,"name":"name","nullable":true,"ordinal":2,"source":"conf-sqlite"}
+{"dataType":"TEXT","dataset":"customers","defaultValue":"'basic'","entity":"field","isGenerated":false,"name":"tier","nullable":true,"ordinal":5,"source":"conf-sqlite"}
+{"dataType":"TEXT","dataset":"customers","defaultValue":"datetime('now')","entity":"field","isGenerated":false,"name":"created_at","nullable":true,"ordinal":4,"source":"conf-sqlite"}
+{"dataType":"TEXT","dataset":"customers","entity":"field","isGenerated":false,"name":"email","nullable":false,"ordinal":2,"source":"conf-sqlite"}
+{"dataType":"TEXT","dataset":"customers","entity":"field","isGenerated":false,"name":"name","nullable":true,"ordinal":3,"source":"conf-sqlite"}
+{"dataType":"TEXT","dataset":"order_items","entity":"field","isGenerated":false,"name":"sku","nullable":false,"ordinal":3,"source":"conf-sqlite"}
+{"dataType":"TEXT","dataset":"orders","defaultValue":"'new'","entity":"field","isGenerated":false,"name":"status","nullable":false,"ordinal":4,"source":"conf-sqlite"}
+{"dataType":"TEXT","dataset":"orders","entity":"field","isGenerated":false,"name":"ordered_at","nullable":false,"ordinal":3,"source":"conf-sqlite"}
+{"dataType":"TEXT","dataset":"products","entity":"field","isGenerated":false,"name":"sku","nullable":false,"ordinal":1,"source":"conf-sqlite"}
+{"dataType":"TEXT","dataset":"products","entity":"field","isGenerated":false,"name":"title","nullable":false,"ordinal":2,"source":"conf-sqlite"}
+{"dataset":"customer_orders","entity":"field","isGenerated":false,"name":"orders","nullable":true,"ordinal":3,"source":"conf-sqlite"}
+{"definition":"CREATE VIEW customer_orders as\n  select c.id, c.name, count(o.id) as orders from customers c left join orders o on o.customer_id = c.id group by c.id, c.name","entity":"dataset","name":"customer_orders","source":"conf-sqlite","type":"view"}
+{"definition":"sqlite","entity":"source","name":"Conformance SQLite","product":"SQLite","source":"conf-sqlite"}
+{"entity":"dataset","name":"customers","source":"conf-sqlite","type":"table"}
+{"entity":"dataset","name":"order_items","source":"conf-sqlite","type":"table"}
+{"entity":"dataset","name":"orders","source":"conf-sqlite","type":"table"}
+{"entity":"dataset","name":"products","source":"conf-sqlite","type":"table"}

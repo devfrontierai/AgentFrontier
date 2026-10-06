@@ -1,0 +1,16 @@
+{"catalog":"main","comment":"Customer id","dataType":"bigint","dataset":"customers","entity":"field","name":"id","nullable":false,"ordinal":1,"schema":"sales","source":"conf-uc"}
+{"catalog":"main","comment":"Main catalog","entity":"container","level":"catalog","name":"main","owner":"admin","properties":{"catalogType":"MANAGED_CATALOG"},"source":"conf-uc"}
+{"catalog":"main","comment":"One row per customer","createdAt":"2024-01-01T00:00:00Z","entity":"dataset","format":"DELTA","location":"s3://bucket/customers","name":"customers","owner":"analysts","schema":"sales","source":"conf-uc","type":"table"}
+{"catalog":"main","comment":"Sales data","entity":"container","level":"schema","name":"sales","owner":"analysts","schema":"sales","source":"conf-uc"}
+{"catalog":"main","createdAt":"2024-01-02T00:00:00Z","entity":"dataset","format":"PARQUET","location":"s3://bucket/orders","name":"orders","owner":"analysts","schema":"sales","source":"conf-uc","type":"external_table"}
+{"catalog":"main","dataType":"bigint","dataset":"orders","entity":"field","name":"customer_id","nullable":false,"ordinal":2,"schema":"sales","source":"conf-uc"}
+{"catalog":"main","dataType":"bigint","dataset":"orders","entity":"field","name":"id","nullable":false,"ordinal":1,"schema":"sales","source":"conf-uc"}
+{"catalog":"main","dataType":"date","dataset":"daily_revenue","entity":"field","name":"d","nullable":true,"ordinal":1,"schema":"sales","source":"conf-uc"}
+{"catalog":"main","dataType":"decimal(10,2)","dataset":"orders","entity":"field","name":"total","nullable":true,"ordinal":4,"schema":"sales","source":"conf-uc"}
+{"catalog":"main","dataType":"decimal(20,2)","dataset":"daily_revenue","entity":"field","name":"sum(total)","nullable":true,"ordinal":2,"schema":"sales","source":"conf-uc"}
+{"catalog":"main","dataType":"string","dataset":"customers","entity":"field","name":"name","nullable":true,"ordinal":2,"schema":"sales","source":"conf-uc"}
+{"catalog":"main","dataType":"timestamp","dataset":"orders","entity":"field","name":"ordered_at","nullable":true,"ordinal":3,"properties":{"partitionIndex":0},"schema":"sales","source":"conf-uc"}
+{"catalog":"main","dataset":"daily_revenue","entity":"lineage","kind":"table_lineage","schema":"sales","source":"conf-uc","upstreamCatalog":"main","upstreamDataset":"orders","upstreamSchema":"sales"}
+{"catalog":"main","dataset":"orders","entity":"lineage","kind":"table_lineage","schema":"sales","source":"conf-uc","upstreamCatalog":"main","upstreamDataset":"raw_orders","upstreamSchema":"raw"}
+{"catalog":"main","definition":"SELECT date(ordered_at) d, sum(total) FROM main.sales.orders GROUP BY 1","entity":"dataset","name":"daily_revenue","owner":"analysts","schema":"sales","source":"conf-uc","type":"view"}
+{"comment":"fixture-metastore","definition":"unity_catalog","entity":"source","name":"Conformance Unity Catalog","product":"Databricks Unity Catalog","properties":{"cloud":"aws","metastore":"fixture-metastore","region":"us-west-2"},"source":"conf-uc"}

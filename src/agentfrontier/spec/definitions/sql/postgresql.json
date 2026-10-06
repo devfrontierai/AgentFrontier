@@ -1,0 +1,533 @@
+{
+  "specVersion": "1",
+  "id": "postgresql",
+  "name": "PostgreSQL",
+  "protocol": "sql",
+  "category": "relational",
+  "status": "verified",
+  "description": "PostgreSQL 9.6 and later, and compatible services (Aurora, AlloyDB, Cloud SQL, Azure Flexible Server, Neon, Supabase). Reads pg_catalog directly rather than information_schema, which is slow on large catalogs and hides objects the user does not own. Takes no relation locks: sizes come from relpages, not pg_total_relation_size.",
+  "aliases": [
+    "postgres",
+    "aurora_postgresql",
+    "alloydb",
+    "supabase",
+    "neon"
+  ],
+  "dialect": "postgresql",
+  "properties": [
+    {
+      "key": "host",
+      "label": "Host",
+      "type": "string",
+      "required": true,
+      "default": "localhost"
+    },
+    {
+      "key": "port",
+      "label": "Port",
+      "type": "integer",
+      "default": "5432"
+    },
+    {
+      "key": "database",
+      "label": "Database",
+      "type": "string",
+      "default": "postgres",
+      "help": "Database to connect to first."
+    },
+    {
+      "key": "databases",
+      "label": "Databases to read",
+      "type": "list",
+      "help": "Empty: only the database above. *: every database you may connect to. Or a list; wildcards allowed."
+    },
+    {
+      "key": "sslmode",
+      "label": "SSL mode",
+      "type": "select",
+      "options": [
+        "disable",
+        "allow",
+        "prefer",
+        "require",
+        "verify-ca",
+        "verify-full"
+      ],
+      "help": "Driver default (prefer) when empty."
+    },
+    {
+      "key": "connectTimeoutSeconds",
+      "label": "Connect timeout (s)",
+      "type": "integer",
+      "default": "10"
+    }
+  ],
+  "options": [
+    {
+      "key": "includePartitions",
+      "label": "Include partitions",
+      "type": "boolean",
+      "default": "false",
+      "help": "Partition children are skipped by default; their parents are kept."
+    }
+  ],
+  "auth": [
+    "username_password",
+    "username_only",
+    "token",
+    "client_certificate",
+    "connection_string"
+  ],
+  "connection": {
+    "jdbc": {
+      "driver": "org.postgresql.Driver",
+      "artifact": "org.postgresql:postgresql:42.7.11",
+      "url": "jdbc:postgresql://{{host}}:{{port}}/{{database}}",
+      "properties": {
+        "ApplicationName": "agentfrontier",
+        "connectTimeout": "{{connectTimeoutSeconds}}",
+        "loginTimeout": "{{connectTimeoutSeconds}}",
+        "readOnlyMode": "always",
+        "sslmode": "{{sslmode}}"
+      },
+      "auth": {
+        "username_password": {
+          "properties": {
+            "user": "{{auth.username}}",
+            "password": "{{auth.password}}"
+          }
+        },
+        "username_only": {
+          "properties": {
+            "user": "{{auth.username}}"
+          }
+        },
+        "token": {
+          "properties": {
+            "user": "{{auth.username}}",
+            "password": "{{auth.token}}",
+            "sslmode": "{{sslmode|default:require}}"
+          }
+        },
+        "client_certificate": {
+          "properties": {
+            "user": "{{auth.username}}",
+            "sslcert": "{{auth.clientCertificate|file}}",
+            "sslkey": "{{auth.clientKey|file}}",
+            "sslpassword": "{{auth.clientKeyPassword}}",
+            "sslrootcert": "{{auth.rootCertificate|file}}",
+            "sslmode": "{{sslmode|default:verify-full}}"
+          }
+        },
+        "connection_string": {
+          "url": "{{auth.connectionString}}"
+        }
+      }
+    },
+    "python": {
+      "module": "psycopg",
+      "package": "psycopg[binary]>=3.1",
+      "connect": {
+        "host": "{{host}}",
+        "port": "{{port}}",
+        "dbname": "{{database}}",
+        "application_name": "agentfrontier",
+        "connect_timeout": "{{connectTimeoutSeconds}}",
+        "sslmode": "{{sslmode}}"
+      },
+      "auth": {
+        "username_password": {
+          "connect": {
+            "user": "{{auth.username}}",
+            "password": "{{auth.password}}"
+          }
+        },
+        "username_only": {
+          "connect": {
+            "user": "{{auth.username}}"
+          }
+        },
+        "token": {
+          "connect": {
+            "user": "{{auth.username}}",
+            "password": "{{auth.token}}",
+            "sslmode": "{{sslmode|default:require}}"
+          }
+        },
+        "client_certificate": {
+          "connect": {
+            "user": "{{auth.username}}",
+            "sslcert": "{{auth.clientCertificate|file}}",
+            "sslkey": "{{auth.clientKey|file}}",
+            "sslpassword": "{{auth.clientKeyPassword}}",
+            "sslrootcert": "{{auth.rootCertificate|file}}",
+            "sslmode": "{{sslmode|default:verify-full}}"
+          }
+        },
+        "connection_string": {
+          "dsn": "{{auth.connectionString|removePrefix:jdbc:}}"
+        }
+      }
+    }
+  },
+  "session": {
+    "quote": "\"",
+    "maxBatch": 1000,
+    "init": [
+      "set session characteristics as transaction read only"
+    ]
+  },
+  "version": {
+    "sql": "select version() as banner, current_setting('server_version') as version"
+  },
+  "variants": [
+    {
+      "match": "Redshift",
+      "definition": "redshift"
+    },
+    {
+      "match": "CockroachDB",
+      "variant": "cockroachdb"
+    },
+    {
+      "probe": "select aurora_version()",
+      "variant": "aurora"
+    }
+  ],
+  "hierarchy": [
+    {
+      "level": "database",
+      "label": "Database",
+      "list": "databases",
+      "value": "{{database}}",
+      "select": "databases",
+      "connect": "database"
+    },
+    {
+      "level": "schema",
+      "label": "Schema",
+      "list": "schemas",
+      "exclude": [
+        "pg_catalog",
+        "information_schema",
+        "pg_toast",
+        "pg_temp_*",
+        "pg_toast_temp_*"
+      ]
+    }
+  ],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "sql": "select current_user as login, current_database() as database, (select count(*) from pg_namespace where nspname not like 'pg\\_%' and nspname <> 'information_schema') as schemas"
+    },
+    "source": {
+      "entity": "source",
+      "sql": "select 'PostgreSQL' as product, current_setting('server_version') as version, version() as banner, current_user as login"
+    },
+    "databases": {
+      "entity": "container",
+      "sql": [
+        "select d.datname as name, shobj_description(d.oid, 'pg_database') as comment,",
+        "       pg_get_userbyid(d.datdba) as owner, pg_database_size(d.oid) as size_bytes",
+        "from pg_database d",
+        "where not d.datistemplate and d.datallowconn and has_database_privilege(d.datname, 'CONNECT')",
+        "order by d.datname"
+      ]
+    },
+    "schemas": {
+      "entity": "container",
+      "scope": "database",
+      "sql": [
+        "select n.nspname as name, obj_description(n.oid, 'pg_namespace') as comment, pg_get_userbyid(n.nspowner) as owner",
+        "from pg_namespace n",
+        "order by n.nspname"
+      ]
+    },
+    "datasets": {
+      "entity": "dataset",
+      "scope": "schema",
+      "paging": {
+        "mode": "keyset",
+        "key": "name"
+      },
+      "sql": [
+        "select c.relname as name,",
+        "       case c.relkind when 'r' then 'table' when 'v' then 'view' when 'm' then 'materialized_view'",
+        "                      when 'p' then 'partitioned_table' when 'f' then 'foreign_table' else 'other' end as type,",
+        "       obj_description(c.oid, 'pg_class') as comment,",
+        "       pg_get_userbyid(c.relowner) as owner,",
+        "       case when c.reltuples > 0 then c.reltuples::bigint",
+        "            when coalesce(s.n_live_tup, 0) > 0 then s.n_live_tup",
+        "            when c.reltuples = 0 then 0 end as row_count,",
+        "       case when c.relkind in ('r', 'm') then",
+        "            (c.relpages::bigint + coalesce(tc.relpages, 0)::bigint) * current_setting('block_size')::bigint end as size_bytes,",
+        "       case when c.relkind in ('v', 'm') then pg_get_viewdef(c.oid, true) end as definition,",
+        "       c.relispartition as is_partition,",
+        "       case when c.relispartition then",
+        "            (select pn.nspname || '.' || pc.relname from pg_inherits i",
+        "               join pg_class pc on pc.oid = i.inhparent",
+        "               join pg_namespace pn on pn.oid = pc.relnamespace",
+        "              where i.inhrelid = c.oid limit 1) end as partition_of",
+        "from pg_class c",
+        "join pg_namespace n on n.oid = c.relnamespace",
+        "left join pg_class tc on tc.oid = c.reltoastrelid",
+        "left join pg_stat_all_tables s on s.relid = c.oid",
+        "where n.nspname = {{schema}} and c.relkind in ('r', 'v', 'm', 'f', 'p')",
+        "  and ({{options.includePartitions}} or not c.relispartition)",
+        "  [[and c.relname > {{after}}]]",
+        "order by c.relname collate \"C\"",
+        "limit {{limit|int}}"
+      ]
+    },
+    "fields": {
+      "entity": "field",
+      "scope": "datasets",
+      "sql": [
+        "select c.relname as dataset, a.attnum as ordinal, a.attname as name,",
+        "       format_type(a.atttypid, a.atttypmod) as data_type, not a.attnotnull as nullable,",
+        "       pg_get_expr(d.adbin, d.adrelid) as default_value, col_description(c.oid, a.attnum) as comment,",
+        "       a.attidentity <> '' or a.attgenerated <> ''",
+        "         or coalesce(pg_get_expr(d.adbin, d.adrelid), '') like 'nextval(%' as is_generated",
+        "from pg_attribute a",
+        "join pg_class c on c.oid = a.attrelid",
+        "join pg_namespace n on n.oid = c.relnamespace",
+        "left join pg_attrdef d on d.adrelid = a.attrelid and d.adnum = a.attnum",
+        "where n.nspname = {{schema}} and c.relname in ({{datasets}}) and a.attnum > 0 and not a.attisdropped",
+        "order by c.relname, a.attnum"
+      ]
+    },
+    "constraints": {
+      "entity": "constraint",
+      "scope": "datasets",
+      "sql": [
+        "select c.relname as dataset, con.conname as name, con.contype as type,",
+        "       array(select a.attname from unnest(con.conkey) with ordinality k(num, ord)",
+        "             join pg_attribute a on a.attrelid = con.conrelid and a.attnum = k.num order by k.ord) as columns,",
+        "       case when con.contype = 'f' then current_database() end as ref_database,",
+        "       fn.nspname as ref_schema, fc.relname as ref_dataset,",
+        "       array(select a.attname from unnest(con.confkey) with ordinality k(num, ord)",
+        "             join pg_attribute a on a.attrelid = con.confrelid and a.attnum = k.num order by k.ord) as ref_columns,",
+        "       pg_get_constraintdef(con.oid) as definition",
+        "from pg_constraint con",
+        "join pg_class c on c.oid = con.conrelid",
+        "join pg_namespace n on n.oid = c.relnamespace",
+        "left join pg_class fc on fc.oid = con.confrelid",
+        "left join pg_namespace fn on fn.oid = fc.relnamespace",
+        "where n.nspname = {{schema}} and c.relname in ({{datasets}}) and con.contype in ('p', 'u', 'f', 'c')",
+        "  and (con.conparentid = 0 or con.contype <> 'f')",
+        "order by c.relname, con.conname"
+      ]
+    },
+    "indexes": {
+      "entity": "index",
+      "scope": "datasets",
+      "sql": [
+        "select t.relname as dataset, i.relname as name, ix.indisunique as is_unique, ix.indisprimary as is_primary,",
+        "       am.amname as method,",
+        "       array(select a.attname from unnest(ix.indkey) with ordinality k(num, ord)",
+        "             join pg_attribute a on a.attrelid = ix.indrelid and a.attnum = k.num order by k.ord) as columns,",
+        "       pg_get_indexdef(ix.indexrelid) as definition",
+        "from pg_index ix",
+        "join pg_class t on t.oid = ix.indrelid",
+        "join pg_class i on i.oid = ix.indexrelid",
+        "join pg_namespace n on n.oid = t.relnamespace",
+        "join pg_am am on am.oid = i.relam",
+        "where n.nspname = {{schema}} and t.relname in ({{datasets}})",
+        "order by t.relname, i.relname"
+      ]
+    },
+    "routines": {
+      "entity": "routine",
+      "scope": "schema",
+      "sql": [
+        "select p.proname as name,",
+        "       case p.prokind when 'f' then 'function' when 'p' then 'procedure' when 'a' then 'aggregate' when 'w' then 'window' end as type,",
+        "       l.lanname as language, pg_get_function_arguments(p.oid) as arguments,",
+        "       pg_get_function_result(p.oid) as returns, obj_description(p.oid, 'pg_proc') as comment,",
+        "       pg_get_userbyid(p.proowner) as owner",
+        "from pg_proc p",
+        "join pg_namespace n on n.oid = p.pronamespace",
+        "join pg_language l on l.oid = p.prolang",
+        "where n.nspname = {{schema}}",
+        "order by p.proname, p.oid"
+      ]
+    },
+    "lineage": {
+      "entity": "lineage",
+      "scope": "schema",
+      "sql": [
+        "select distinct v.relname as dataset, current_database() as upstream_database, tn.nspname as upstream_schema,",
+        "       t.relname as upstream_dataset, 'view_dependency' as kind",
+        "from pg_depend d",
+        "join pg_rewrite r on r.oid = d.objid",
+        "join pg_class v on v.oid = r.ev_class",
+        "join pg_namespace vn on vn.oid = v.relnamespace",
+        "join pg_class t on t.oid = d.refobjid",
+        "join pg_namespace tn on tn.oid = t.relnamespace",
+        "where d.classid = 'pg_rewrite'::regclass and d.refclassid = 'pg_class'::regclass",
+        "  and d.deptype = 'n' and v.oid <> t.oid and v.relkind in ('v', 'm')",
+        "  and t.relkind in ('r', 'v', 'm', 'f', 'p') and vn.nspname = {{schema}}",
+        "order by 1, 3, 4"
+      ]
+    },
+    "principals": {
+      "entity": "principal",
+      "scope": "source",
+      "sql": [
+        "select r.rolname as name, case when r.rolcanlogin then 'user' else 'role' end as type,",
+        "       r.rolcanlogin as can_login, r.rolsuper as superuser,",
+        "       array(select b.rolname from pg_auth_members m join pg_roles b on b.oid = m.roleid",
+        "             where m.member = r.oid order by 1) as member_of,",
+        "       shobj_description(r.oid, 'pg_authid') as comment",
+        "from pg_roles r",
+        "where r.rolname !~ '^pg_'",
+        "order by r.rolname"
+      ]
+    },
+    "grants": {
+      "entity": "grant",
+      "scope": "schema",
+      "sql": [
+        "select c.relname as dataset, coalesce(g.rolname, 'PUBLIC') as principal, a.privilege_type as privilege,",
+        "       case c.relkind when 'v' then 'view' when 'm' then 'materialized_view' else 'table' end as object_type,",
+        "       gr.rolname as grantor, a.is_grantable as grantable",
+        "from pg_class c",
+        "join pg_namespace n on n.oid = c.relnamespace",
+        "cross join lateral aclexplode(c.relacl) a",
+        "left join pg_roles g on g.oid = a.grantee",
+        "left join pg_roles gr on gr.oid = a.grantor",
+        "where n.nspname = {{schema}} and c.relkind in ('r', 'v', 'm', 'f', 'p') and c.relacl is not null",
+        "order by 1, 2, 3"
+      ]
+    },
+    "policies": {
+      "entity": "policy",
+      "scope": "schema",
+      "sql": [
+        "select pol.polname as name, 'row_access' as type, c.relname as dataset,",
+        "       pg_get_expr(pol.polqual, pol.polrelid) as definition, c.relrowsecurity as enabled,",
+        "       array(select rolname from pg_roles where oid = any(pol.polroles) order by 1) as applies_to,",
+        "       case pol.polcmd when 'r' then 'SELECT' when 'a' then 'INSERT' when 'w' then 'UPDATE'",
+        "                       when 'd' then 'DELETE' else 'ALL' end as command",
+        "from pg_policy pol",
+        "join pg_class c on c.oid = pol.polrelid",
+        "join pg_namespace n on n.oid = c.relnamespace",
+        "where n.nspname = {{schema}}",
+        "order by c.relname, pol.polname"
+      ]
+    },
+    "statistics": {
+      "entity": "statistic",
+      "scope": "datasets",
+      "sql": [
+        "select s.tablename as dataset, s.attname as field, s.null_frac as null_fraction,",
+        "       s.n_distinct as distinct_count, s.avg_width as avg_width",
+        "from pg_stats s",
+        "where s.schemaname = {{schema}} and s.tablename in ({{datasets}})",
+        "order by s.tablename, s.attname"
+      ]
+    },
+    "sample": {
+      "entity": "row",
+      "aspect": "data",
+      "scope": "dataset",
+      "sql": "select * from {{schema|ident}}.{{dataset|ident}} limit {{limit|int}}"
+    }
+  },
+  "overlays": [
+    {
+      "when": {
+        "version": "<12"
+      },
+      "description": "attgenerated arrived in PostgreSQL 12, and before 12 the name type takes no COLLATE clause (it always compares bytewise, which is the order keyset paging needs).",
+      "operations": {
+        "datasets": {
+          "sql": [
+            "select c.relname as name,",
+            "       case c.relkind when 'r' then 'table' when 'v' then 'view' when 'm' then 'materialized_view'",
+            "                      when 'p' then 'partitioned_table' when 'f' then 'foreign_table' else 'other' end as type,",
+            "       obj_description(c.oid, 'pg_class') as comment,",
+            "       pg_get_userbyid(c.relowner) as owner,",
+            "       case when c.reltuples > 0 then c.reltuples::bigint",
+            "            when coalesce(s.n_live_tup, 0) > 0 then s.n_live_tup",
+            "            when c.reltuples = 0 then 0 end as row_count,",
+            "       case when c.relkind in ('r', 'm') then",
+            "            (c.relpages::bigint + coalesce(tc.relpages, 0)::bigint) * current_setting('block_size')::bigint end as size_bytes,",
+            "       case when c.relkind in ('v', 'm') then pg_get_viewdef(c.oid, true) end as definition,",
+            "       c.relispartition as is_partition,",
+            "       case when c.relispartition then",
+            "            (select pn.nspname || '.' || pc.relname from pg_inherits i",
+            "               join pg_class pc on pc.oid = i.inhparent",
+            "               join pg_namespace pn on pn.oid = pc.relnamespace",
+            "              where i.inhrelid = c.oid limit 1) end as partition_of",
+            "from pg_class c",
+            "join pg_namespace n on n.oid = c.relnamespace",
+            "left join pg_class tc on tc.oid = c.reltoastrelid",
+            "left join pg_stat_all_tables s on s.relid = c.oid",
+            "where n.nspname = {{schema}} and c.relkind in ('r', 'v', 'm', 'f', 'p')",
+            "  and ({{options.includePartitions}} or not c.relispartition)",
+            "  [[and c.relname > {{after}}]]",
+            "order by c.relname",
+            "limit {{limit|int}}"
+          ]
+        },
+        "fields": {
+          "sql": [
+            "select c.relname as dataset, a.attnum as ordinal, a.attname as name,",
+            "       format_type(a.atttypid, a.atttypmod) as data_type, not a.attnotnull as nullable,",
+            "       pg_get_expr(d.adbin, d.adrelid) as default_value, col_description(c.oid, a.attnum) as comment,",
+            "       a.attidentity <> '' or coalesce(pg_get_expr(d.adbin, d.adrelid), '') like 'nextval(%' as is_generated",
+            "from pg_attribute a",
+            "join pg_class c on c.oid = a.attrelid",
+            "join pg_namespace n on n.oid = c.relnamespace",
+            "left join pg_attrdef d on d.adrelid = a.attrelid and d.adnum = a.attnum",
+            "where n.nspname = {{schema}} and c.relname in ({{datasets}}) and a.attnum > 0 and not a.attisdropped",
+            "order by c.relname, a.attnum"
+          ]
+        }
+      }
+    },
+    {
+      "when": {
+        "version": "<11"
+      },
+      "description": "conparentid and prokind arrived in PostgreSQL 11.",
+      "operations": {
+        "constraints": {
+          "sql": [
+            "select c.relname as dataset, con.conname as name, con.contype as type,",
+            "       array(select a.attname from unnest(con.conkey) with ordinality k(num, ord)",
+            "             join pg_attribute a on a.attrelid = con.conrelid and a.attnum = k.num order by k.ord) as columns,",
+            "       case when con.contype = 'f' then current_database() end as ref_database,",
+            "       fn.nspname as ref_schema, fc.relname as ref_dataset,",
+            "       array(select a.attname from unnest(con.confkey) with ordinality k(num, ord)",
+            "             join pg_attribute a on a.attrelid = con.confrelid and a.attnum = k.num order by k.ord) as ref_columns,",
+            "       pg_get_constraintdef(con.oid) as definition",
+            "from pg_constraint con",
+            "join pg_class c on c.oid = con.conrelid",
+            "join pg_namespace n on n.oid = c.relnamespace",
+            "left join pg_class fc on fc.oid = con.confrelid",
+            "left join pg_namespace fn on fn.oid = fc.relnamespace",
+            "where n.nspname = {{schema}} and c.relname in ({{datasets}}) and con.contype in ('p', 'u', 'f', 'c')",
+            "order by c.relname, con.conname"
+          ]
+        },
+        "routines": {
+          "sql": [
+            "select p.proname as name,",
+            "       case when p.proisagg then 'aggregate' when p.proiswindow then 'window' else 'function' end as type,",
+            "       l.lanname as language, pg_get_function_arguments(p.oid) as arguments,",
+            "       pg_get_function_result(p.oid) as returns, obj_description(p.oid, 'pg_proc') as comment,",
+            "       pg_get_userbyid(p.proowner) as owner",
+            "from pg_proc p",
+            "join pg_namespace n on n.oid = p.pronamespace",
+            "join pg_language l on l.oid = p.prolang",
+            "where n.nspname = {{schema}}",
+            "order by p.proname, p.oid"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "customers": {
+    "mappings": {
+      "properties": {
+        "name": {
+          "type": "text",
+          "analyzer": "standard",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            }
+          }
+        },
+        "email": {
+          "type": "keyword"
+        },
+        "address": {
+          "properties": {
+            "city": {
+              "type": "keyword"
+            },
+            "location": {
+              "type": "geo_point"
+            }
+          }
+        },
+        "signup": {
+          "type": "date",
+          "format": "yyyy-MM-dd"
+        }
+      }
+    }
+  }
+}

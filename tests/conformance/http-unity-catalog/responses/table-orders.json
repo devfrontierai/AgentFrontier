@@ -1,0 +1,30 @@
+{
+  "name": "orders",
+  "columns": [
+    {
+      "name": "id",
+      "type_text": "bigint",
+      "position": 0,
+      "nullable": false
+    },
+    {
+      "name": "customer_id",
+      "type_text": "bigint",
+      "position": 1,
+      "nullable": false
+    },
+    {
+      "name": "ordered_at",
+      "type_text": "timestamp",
+      "position": 2,
+      "nullable": true,
+      "partition_index": 0
+    },
+    {
+      "name": "total",
+      "type_text": "decimal(10,2)",
+      "position": 3,
+      "nullable": true
+    }
+  ]
+}

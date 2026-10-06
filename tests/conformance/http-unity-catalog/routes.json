@@ -1,0 +1,72 @@
+{
+  "require": {
+    "headers": {
+      "Authorization": "Bearer test-token"
+    }
+  },
+  "routes": [
+    {
+      "path": "/api/2.1/unity-catalog/metastore_summary",
+      "body": "responses/metastore.json"
+    },
+    {
+      "path": "/api/2.1/unity-catalog/catalogs",
+      "body": "responses/catalogs.json"
+    },
+    {
+      "path": "/api/2.1/unity-catalog/schemas",
+      "query": {
+        "catalog_name": "main"
+      },
+      "body": "responses/schemas-main.json"
+    },
+    {
+      "path": "/api/2.1/unity-catalog/tables",
+      "query": {
+        "catalog_name": "main",
+        "schema_name": "sales",
+        "page_token": "t2"
+      },
+      "body": "responses/tables-sales-2.json"
+    },
+    {
+      "path": "/api/2.1/unity-catalog/tables",
+      "query": {
+        "catalog_name": "main",
+        "schema_name": "sales",
+        "page_token": null
+      },
+      "body": "responses/tables-sales-1.json"
+    },
+    {
+      "path": "/api/2.1/unity-catalog/tables/main.sales.customers",
+      "body": "responses/table-customers.json"
+    },
+    {
+      "path": "/api/2.1/unity-catalog/tables/main.sales.orders",
+      "body": "responses/table-orders.json"
+    },
+    {
+      "path": "/api/2.1/unity-catalog/tables/main.sales.daily_revenue",
+      "body": "responses/table-daily_revenue.json"
+    },
+    {
+      "path": "/api/2.0/lineage-tracking/table-lineage",
+      "query": {
+        "table_name": "main.sales.orders"
+      },
+      "body": "responses/lineage-orders.json"
+    },
+    {
+      "path": "/api/2.0/lineage-tracking/table-lineage",
+      "query": {
+        "table_name": "main.sales.daily_revenue"
+      },
+      "body": "responses/lineage-daily_revenue.json"
+    },
+    {
+      "path": "/api/2.0/lineage-tracking/table-lineage",
+      "body": "responses/lineage-none.json"
+    }
+  ]
+}

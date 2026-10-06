@@ -1,0 +1,12 @@
+{
+  "upstreams": [
+    {
+      "tableInfo": {
+        "name": "raw_orders",
+        "catalog_name": "main",
+        "schema_name": "raw",
+        "table_type": "TABLE"
+      }
+    }
+  ]
+}

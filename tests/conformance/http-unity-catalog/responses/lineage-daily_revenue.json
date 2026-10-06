@@ -1,0 +1,12 @@
+{
+  "upstreams": [
+    {
+      "tableInfo": {
+        "name": "orders",
+        "catalog_name": "main",
+        "schema_name": "sales",
+        "table_type": "TABLE"
+      }
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "orders": {
+    "mappings": {
+      "properties": {
+        "id": {
+          "type": "long"
+        },
+        "customer": {
+          "properties": {
+            "id": {
+              "type": "long"
+            },
+            "name": {
+              "type": "text"
+            }
+          }
+        },
+        "items": {
+          "type": "nested",
+          "properties": {
+            "sku": {
+              "type": "keyword"
+            },
+            "qty": {
+              "type": "integer"
+            }
+          }
+        },
+        "total": {
+          "type": "scaled_float",
+          "scaling_factor": 100
+        }
+      }
+    }
+  }
+}

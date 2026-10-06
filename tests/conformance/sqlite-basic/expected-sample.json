@@ -1,0 +1,11 @@
+[ {
+  "price" : 25.0,
+  "price_with_tax" : 30.0,
+  "sku" : "A-1",
+  "title" : "Kettle"
+}, {
+  "price" : 12.5,
+  "price_with_tax" : 15.0,
+  "sku" : "B-2",
+  "title" : "Teapot"
+} ]

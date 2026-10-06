@@ -1,0 +1,199 @@
+{
+  "specVersion": "1",
+  "id": "elasticsearch",
+  "name": "Elasticsearch",
+  "protocol": "http",
+  "category": "search",
+  "status": "experimental",
+  "description": "Elasticsearch 7 and 8 over its REST API. Indices are datasets; their mappings, flattened to dotted names, are fields. A cluster that answers as OpenSearch switches to the opensearch definition automatically.",
+  "properties": [
+    {
+      "key": "baseUrl",
+      "label": "Base URL",
+      "type": "string",
+      "required": true,
+      "default": "http://localhost:9200"
+    },
+    {
+      "key": "verifyTls",
+      "label": "Verify TLS certificates",
+      "type": "boolean",
+      "default": "true"
+    },
+    {
+      "key": "timeoutSeconds",
+      "label": "Request timeout (s)",
+      "type": "integer",
+      "default": "30"
+    }
+  ],
+  "options": [
+    {
+      "key": "includeSystemIndices",
+      "label": "Include system indices",
+      "type": "boolean",
+      "default": "false"
+    }
+  ],
+  "auth": [
+    "none",
+    "username_password",
+    "api_key",
+    "token"
+  ],
+  "connection": {
+    "http": {
+      "baseUrl": "{{baseUrl}}",
+      "timeoutSeconds": "{{timeoutSeconds}}",
+      "verifyTls": "{{verifyTls}}",
+      "headers": {
+        "Accept": "application/json"
+      },
+      "retry": {
+        "attempts": 3,
+        "on": [
+          429,
+          502,
+          503,
+          504
+        ],
+        "backoffMs": 500
+      },
+      "auth": {
+        "none": {},
+        "username_password": {
+          "basic": {
+            "username": "{{auth.username}}",
+            "password": "{{auth.password}}"
+          }
+        },
+        "api_key": {
+          "headers": {
+            "Authorization": "ApiKey {{auth.apiKey}}"
+          }
+        },
+        "token": {
+          "headers": {
+            "Authorization": "Bearer {{auth.token}}"
+          }
+        }
+      }
+    }
+  },
+  "version": {
+    "request": {
+      "path": "/"
+    },
+    "fields": {
+      "version": "$.version.number",
+      "banner": {
+        "template": "{{version.distribution|default:elasticsearch}} {{version.number}} {{tagline}}"
+      }
+    }
+  },
+  "variants": [
+    {
+      "match": "opensearch",
+      "definition": "opensearch"
+    }
+  ],
+  "hierarchy": [],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "request": {
+        "path": "/_cluster/health"
+      },
+      "fields": {
+        "cluster": "$.cluster_name",
+        "status": "$.status",
+        "nodes": "$.number_of_nodes"
+      }
+    },
+    "source": {
+      "entity": "source",
+      "request": {
+        "path": "/"
+      },
+      "fields": {
+        "product": {
+          "value": "Elasticsearch"
+        },
+        "version": "$.version.number",
+        "comment": "$.cluster_name"
+      },
+      "extras": "drop"
+    },
+    "datasets": {
+      "entity": "dataset",
+      "scope": "source",
+      "request": {
+        "path": "/_cat/indices",
+        "query": {
+          "format": "json",
+          "bytes": "b",
+          "s": "index",
+          "h": "index,health,status,docs.count,store.size,creation.date.string,uuid"
+        }
+      },
+      "records": "$[*]",
+      "fields": {
+        "name": "index",
+        "rowCount": "docs.count",
+        "sizeBytes": "store.size",
+        "createdAt": "creation.date.string",
+        "health": "health",
+        "status": "status",
+        "uuid": "uuid"
+      },
+      "set": {
+        "type": "index"
+      },
+      "extras": "drop",
+      "filter": {
+        "name": {
+          "exclude": [
+            ".*"
+          ],
+          "unless": "includeSystemIndices"
+        }
+      }
+    },
+    "fields": {
+      "entity": "field",
+      "scope": "dataset",
+      "request": {
+        "path": "/{{dataset|url}}/_mapping"
+      },
+      "records": {
+        "path": "$.*.mappings.properties",
+        "tree": {
+          "children": "properties",
+          "separator": "."
+        }
+      },
+      "fields": {
+        "dataType": {
+          "from": "type",
+          "default": "object"
+        },
+        "ordinal": "position",
+        "analyzer": "analyzer",
+        "format": "format"
+      },
+      "extras": "drop"
+    },
+    "sample": {
+      "entity": "row",
+      "aspect": "data",
+      "scope": "dataset",
+      "request": {
+        "path": "/{{dataset|url}}/_search",
+        "query": {
+          "size": "{{limit}}"
+        }
+      },
+      "records": "$.hits.hits[*]._source"
+    }
+  }
+}

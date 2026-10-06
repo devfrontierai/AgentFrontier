@@ -1,0 +1,240 @@
+{
+  "specVersion": "1",
+  "id": "unity_catalog",
+  "name": "Databricks Unity Catalog",
+  "protocol": "http",
+  "category": "catalog",
+  "status": "experimental",
+  "description": "Databricks Unity Catalog through its REST API: catalogs, schemas, tables and views with their columns, and table lineage. Shows a catalog service read as a source purely from configuration. Exercised against recorded responses; not yet run against a live workspace.",
+  "properties": [
+    {
+      "key": "baseUrl",
+      "label": "Workspace URL",
+      "type": "string",
+      "required": true,
+      "help": "https://<workspace>.cloud.databricks.com"
+    },
+    {
+      "key": "catalogs",
+      "label": "Catalogs to read",
+      "type": "list",
+      "help": "Empty or *: every catalog you can see. Or a list; wildcards allowed."
+    },
+    {
+      "key": "timeoutSeconds",
+      "label": "Request timeout (s)",
+      "type": "integer",
+      "default": "30"
+    }
+  ],
+  "options": [
+    {
+      "key": "lineage",
+      "label": "Read table lineage",
+      "type": "boolean",
+      "default": "true",
+      "help": "One request per table."
+    }
+  ],
+  "auth": [
+    "token",
+    "oauth2_client_credentials"
+  ],
+  "connection": {
+    "http": {
+      "baseUrl": "{{baseUrl}}",
+      "timeoutSeconds": "{{timeoutSeconds}}",
+      "headers": {
+        "Accept": "application/json"
+      },
+      "retry": {
+        "attempts": 3,
+        "on": [
+          429,
+          503
+        ],
+        "backoffMs": 1000
+      },
+      "auth": {
+        "token": {
+          "headers": {
+            "Authorization": "Bearer {{auth.token}}"
+          }
+        },
+        "oauth2_client_credentials": {
+          "oauth2": {
+            "tokenUrl": "{{baseUrl}}/oidc/v1/token",
+            "scope": "all-apis"
+          },
+          "headers": {
+            "Authorization": "Bearer {{token.accessToken}}"
+          }
+        }
+      }
+    }
+  },
+  "hierarchy": [
+    {
+      "level": "catalog",
+      "label": "Catalog",
+      "list": "catalogs",
+      "select": "catalogs"
+    },
+    {
+      "level": "schema",
+      "label": "Schema",
+      "list": "schemas",
+      "exclude": [
+        "information_schema"
+      ]
+    }
+  ],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "request": {
+        "path": "/api/2.1/unity-catalog/metastore_summary"
+      },
+      "fields": {
+        "metastore": "$.name",
+        "region": "$.region",
+        "cloud": "$.cloud"
+      },
+      "extras": "drop"
+    },
+    "source": {
+      "entity": "source",
+      "request": {
+        "path": "/api/2.1/unity-catalog/metastore_summary"
+      },
+      "fields": {
+        "product": {
+          "value": "Databricks Unity Catalog"
+        },
+        "comment": "$.name",
+        "metastore": "$.name",
+        "region": "$.region",
+        "cloud": "$.cloud"
+      },
+      "extras": "drop"
+    },
+    "catalogs": {
+      "entity": "container",
+      "request": {
+        "path": "/api/2.1/unity-catalog/catalogs"
+      },
+      "records": "$.catalogs[*]",
+      "fields": {
+        "name": "name",
+        "comment": "comment",
+        "owner": "owner",
+        "catalogType": "catalog_type"
+      },
+      "extras": "drop"
+    },
+    "schemas": {
+      "entity": "container",
+      "scope": "catalog",
+      "request": {
+        "path": "/api/2.1/unity-catalog/schemas",
+        "query": {
+          "catalog_name": "{{catalog}}"
+        }
+      },
+      "records": "$.schemas[*]",
+      "fields": {
+        "name": "name",
+        "comment": "comment",
+        "owner": "owner"
+      },
+      "extras": "drop"
+    },
+    "datasets": {
+      "entity": "dataset",
+      "scope": "schema",
+      "paging": {
+        "mode": "cursor",
+        "next": "$.next_page_token",
+        "size": 100
+      },
+      "request": {
+        "path": "/api/2.1/unity-catalog/tables",
+        "query": {
+          "catalog_name": "{{catalog}}",
+          "schema_name": "{{schema}}",
+          "max_results": "{{limit}}",
+          "page_token": "{{cursor}}"
+        }
+      },
+      "records": "$.tables[*]",
+      "fields": {
+        "name": "name",
+        "type": {
+          "from": "table_type",
+          "values": {
+            "MANAGED": "table",
+            "EXTERNAL": "external_table",
+            "VIEW": "view",
+            "MATERIALIZED_VIEW": "materialized_view",
+            "STREAMING_TABLE": "table"
+          },
+          "else": "other"
+        },
+        "comment": "comment",
+        "owner": "owner",
+        "format": "data_source_format",
+        "location": "storage_location",
+        "definition": "view_definition",
+        "createdAt": {
+          "template": "{{created_at|epochMs}}"
+        },
+        "updatedAt": {
+          "template": "{{updated_at|epochMs}}"
+        }
+      },
+      "extras": "drop"
+    },
+    "fields": {
+      "entity": "field",
+      "scope": "dataset",
+      "request": {
+        "path": "/api/2.1/unity-catalog/tables/{{catalog|url}}.{{schema|url}}.{{dataset|url}}"
+      },
+      "records": "$.columns[*]",
+      "fields": {
+        "name": "name",
+        "dataType": "type_text",
+        "ordinal": {
+          "template": "{{position|add:1}}"
+        },
+        "nullable": "nullable",
+        "comment": "comment",
+        "partitionIndex": "partition_index"
+      },
+      "extras": "drop"
+    },
+    "lineage": {
+      "entity": "lineage",
+      "scope": "dataset",
+      "enabledBy": "lineage",
+      "onError": "warn",
+      "request": {
+        "path": "/api/2.0/lineage-tracking/table-lineage",
+        "query": {
+          "table_name": "{{catalog}}.{{schema}}.{{dataset}}",
+          "include_entity_lineage": "false"
+        }
+      },
+      "records": "$.upstreams[*].tableInfo",
+      "fields": {
+        "upstreamDataset": "name",
+        "upstreamCatalog": "catalog_name",
+        "upstreamSchema": "schema_name"
+      },
+      "set": {
+        "kind": "table_lineage"
+      },
+      "extras": "drop"
+    }
+  }
+}

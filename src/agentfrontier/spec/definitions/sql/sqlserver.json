@@ -1,0 +1,265 @@
+{
+  "specVersion": "1",
+  "id": "sqlserver",
+  "name": "Microsoft SQL Server",
+  "protocol": "sql",
+  "category": "relational",
+  "status": "experimental",
+  "description": "SQL Server 2016 and later, Azure SQL Database and Azure SQL Managed Instance (detected from the version banner). Database and schema levels; one connection per database. Reads the sys catalog views. Not yet run against a real server.",
+  "aliases": ["mssql", "azure_sql"],
+  "dialect": "tsql",
+  "properties": [
+    {"key": "host", "label": "Host", "type": "string", "required": true, "default": "localhost"},
+    {"key": "port", "label": "Port", "type": "integer", "default": "1433"},
+    {"key": "database", "label": "Database", "type": "string", "default": "master"},
+    {"key": "databases", "label": "Databases to read", "type": "list", "help": "Empty: only the database above. *: every database you can access. Or a list; wildcards allowed."},
+    {"key": "encrypt", "label": "Encrypt", "type": "select", "options": ["true", "false", "strict"], "default": "true"},
+    {"key": "trustServerCertificate", "label": "Trust server certificate", "type": "boolean", "default": "false"},
+    {"key": "connectTimeoutSeconds", "label": "Connect timeout (s)", "type": "integer", "default": "15"}
+  ],
+  "auth": ["username_password", "azure_ad_password", "azure_service_principal", "azure_managed_identity", "windows_integrated", "token", "connection_string"],
+  "connection": {
+    "jdbc": {
+      "driver": "com.microsoft.sqlserver.jdbc.SQLServerDriver",
+      "artifact": "com.microsoft.sqlserver:mssql-jdbc:12.10.1.jre11",
+      "url": "jdbc:sqlserver://{{host}}:{{port}}",
+      "properties": {
+        "databaseName": "{{database}}",
+        "encrypt": "{{encrypt}}",
+        "trustServerCertificate": "{{trustServerCertificate}}",
+        "loginTimeout": "{{connectTimeoutSeconds}}",
+        "applicationName": "agentfrontier",
+        "applicationIntent": "ReadOnly"
+      },
+      "auth": {
+        "username_password": {"properties": {"user": "{{auth.username}}", "password": "{{auth.password}}"}},
+        "azure_ad_password": {"properties": {"authentication": "ActiveDirectoryPassword", "user": "{{auth.username}}", "password": "{{auth.password}}"}},
+        "azure_service_principal": {"properties": {"authentication": "ActiveDirectoryServicePrincipal", "user": "{{auth.clientId}}", "password": "{{auth.clientSecret}}"}},
+        "azure_managed_identity": {"properties": {"authentication": "ActiveDirectoryManagedIdentity", "user": "{{auth.clientId}}"}},
+        "windows_integrated": {"properties": {"integratedSecurity": "true", "authenticationScheme": "NTLM", "domain": "{{auth.domain}}", "user": "{{auth.username}}", "password": "{{auth.password}}"}},
+        "token": {"properties": {"accessToken": "{{auth.token}}"}},
+        "connection_string": {"url": "{{auth.connectionString}}"}
+      }
+    },
+    "python": {
+      "module": "pymssql",
+      "package": "pymssql>=2.3",
+      "connect": {
+        "server": "{{host}}",
+        "port": "{{port}}",
+        "database": "{{database}}",
+        "login_timeout": "{{connectTimeoutSeconds}}",
+        "appname": "agentfrontier"
+      },
+      "auth": {
+        "username_password": {"connect": {"user": "{{auth.username}}", "password": "{{auth.password}}"}},
+        "windows_integrated": {"connect": {"user": "{{auth.domain}}\\{{auth.username}}", "password": "{{auth.password}}"}}
+      }
+    }
+  },
+  "session": {
+    "quote": "\"",
+    "maxBatch": 1000
+  },
+  "version": {
+    "sql": "select cast(serverproperty('ProductVersion') as nvarchar(128)) as version, @@version as banner"
+  },
+  "variants": [
+    {"match": "SQL Azure", "variant": "azure_sql"}
+  ],
+  "hierarchy": [
+    {"level": "database", "label": "Database", "list": "databases", "value": "{{database}}", "select": "databases", "connect": "database",
+     "exclude": ["master", "model", "msdb", "tempdb"]},
+    {"level": "schema", "label": "Schema", "list": "schemas",
+     "exclude": ["sys", "INFORMATION_SCHEMA", "guest", "db_*"]}
+  ],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "sql": "select suser_sname() as login, db_name() as current_database, cast(serverproperty('ProductVersion') as nvarchar(128)) as version"
+    },
+    "source": {
+      "entity": "source",
+      "sql": "select 'Microsoft SQL Server' as product, cast(serverproperty('ProductVersion') as nvarchar(128)) as version, @@version as banner, suser_sname() as login"
+    },
+    "databases": {
+      "entity": "container",
+      "sql": "select d.name as name, suser_sname(d.owner_sid) as owner, d.create_date as created_at from sys.databases d where d.state = 0 and has_dbaccess(d.name) = 1 order by d.name"
+    },
+    "schemas": {
+      "entity": "container",
+      "scope": "database",
+      "sql": "select s.name as name, user_name(s.principal_id) as owner from sys.schemas s order by s.name"
+    },
+    "datasets": {
+      "entity": "dataset",
+      "scope": "schema",
+      "paging": {"mode": "keyset", "key": "name"},
+      "sql": [
+        "select top ({{limit|int}}) o.name as name, case o.type when 'U' then 'table' when 'V' then 'view' end as type,",
+        "       cast(ep.value as nvarchar(4000)) as comment,",
+        "       (select sum(p.rows) from sys.partitions p where p.object_id = o.object_id and p.index_id in (0, 1)) as row_count,",
+        "       m.definition as definition, o.create_date as created_at, o.modify_date as updated_at",
+        "from sys.objects o",
+        "join sys.schemas s on s.schema_id = o.schema_id",
+        "left join sys.extended_properties ep on ep.major_id = o.object_id and ep.minor_id = 0 and ep.class = 1",
+        "     and ep.name = 'MS_Description'",
+        "left join sys.sql_modules m on m.object_id = o.object_id",
+        "where s.name = {{schema}} and o.type in ('U', 'V') and o.is_ms_shipped = 0 [[and o.name > {{after}}]]",
+        "order by o.name"
+      ]
+    },
+    "fields": {
+      "entity": "field",
+      "scope": "datasets",
+      "sql": [
+        "select t.name as dataset, c.column_id as ordinal, c.name as name,",
+        "       type_name(c.user_type_id) + case",
+        "         when type_name(c.user_type_id) in ('varchar', 'char', 'varbinary', 'binary')",
+        "           then '(' + case when c.max_length = -1 then 'max' else cast(c.max_length as varchar(10)) end + ')'",
+        "         when type_name(c.user_type_id) in ('nvarchar', 'nchar')",
+        "           then '(' + case when c.max_length = -1 then 'max' else cast(c.max_length / 2 as varchar(10)) end + ')'",
+        "         when type_name(c.user_type_id) in ('decimal', 'numeric')",
+        "           then '(' + cast(c.precision as varchar(10)) + ',' + cast(c.scale as varchar(10)) + ')'",
+        "         else '' end as data_type,",
+        "       c.is_nullable as nullable, object_definition(c.default_object_id) as default_value,",
+        "       cast(ep.value as nvarchar(4000)) as comment,",
+        "       case when c.is_identity = 1 or c.is_computed = 1 then 1 else 0 end as is_generated",
+        "from sys.columns c",
+        "join sys.objects t on t.object_id = c.object_id",
+        "join sys.schemas s on s.schema_id = t.schema_id",
+        "left join sys.extended_properties ep on ep.major_id = c.object_id and ep.minor_id = c.column_id and ep.class = 1",
+        "     and ep.name = 'MS_Description'",
+        "where s.name = {{schema}} and t.name in ({{datasets}})",
+        "order by t.name, c.column_id"
+      ]
+    },
+    "keys": {
+      "entity": "constraint",
+      "scope": "datasets",
+      "sql": [
+        "select t.name as dataset, k.name as name, case k.type when 'PK' then 'primary_key' else 'unique' end as type,",
+        "       c.name as columns, ic.key_ordinal as seq",
+        "from sys.key_constraints k",
+        "join sys.objects t on t.object_id = k.parent_object_id",
+        "join sys.schemas s on s.schema_id = t.schema_id",
+        "join sys.index_columns ic on ic.object_id = k.parent_object_id and ic.index_id = k.unique_index_id",
+        "join sys.columns c on c.object_id = ic.object_id and c.column_id = ic.column_id",
+        "where s.name = {{schema}} and t.name in ({{datasets}})",
+        "order by t.name, k.name, ic.key_ordinal"
+      ],
+      "collect": {"by": ["dataset", "name"], "lists": ["columns"], "orderBy": "seq"}
+    },
+    "foreign_keys": {
+      "entity": "constraint",
+      "scope": "datasets",
+      "sql": [
+        "select t.name as dataset, fk.name as name, 'foreign_key' as type, pc.name as columns,",
+        "       db_name() as ref_database, schema_name(rt.schema_id) as ref_schema, rt.name as ref_dataset,",
+        "       rc.name as ref_columns, fkc.constraint_column_id as seq",
+        "from sys.foreign_keys fk",
+        "join sys.objects t on t.object_id = fk.parent_object_id",
+        "join sys.schemas s on s.schema_id = t.schema_id",
+        "join sys.foreign_key_columns fkc on fkc.constraint_object_id = fk.object_id",
+        "join sys.columns pc on pc.object_id = fkc.parent_object_id and pc.column_id = fkc.parent_column_id",
+        "join sys.objects rt on rt.object_id = fk.referenced_object_id",
+        "join sys.columns rc on rc.object_id = fkc.referenced_object_id and rc.column_id = fkc.referenced_column_id",
+        "where s.name = {{schema}} and t.name in ({{datasets}})",
+        "order by t.name, fk.name, fkc.constraint_column_id"
+      ],
+      "collect": {"by": ["dataset", "name"], "lists": ["columns", "refColumns"], "orderBy": "seq"}
+    },
+    "checks": {
+      "entity": "constraint",
+      "scope": "datasets",
+      "sql": [
+        "select t.name as dataset, cc.name as name, 'check' as type, cc.definition as definition",
+        "from sys.check_constraints cc",
+        "join sys.objects t on t.object_id = cc.parent_object_id",
+        "join sys.schemas s on s.schema_id = t.schema_id",
+        "where s.name = {{schema}} and t.name in ({{datasets}})",
+        "order by t.name, cc.name"
+      ]
+    },
+    "indexes": {
+      "entity": "index",
+      "scope": "datasets",
+      "sql": [
+        "select t.name as dataset, i.name as name, i.is_unique as is_unique, i.is_primary_key as is_primary,",
+        "       lower(i.type_desc) as method, c.name as columns, ic.key_ordinal as seq",
+        "from sys.indexes i",
+        "join sys.objects t on t.object_id = i.object_id",
+        "join sys.schemas s on s.schema_id = t.schema_id",
+        "join sys.index_columns ic on ic.object_id = i.object_id and ic.index_id = i.index_id and ic.key_ordinal > 0",
+        "join sys.columns c on c.object_id = ic.object_id and c.column_id = ic.column_id",
+        "where s.name = {{schema}} and t.name in ({{datasets}}) and i.name is not null",
+        "order by t.name, i.name, ic.key_ordinal"
+      ],
+      "collect": {"by": ["dataset", "name"], "lists": ["columns"], "orderBy": "seq"}
+    },
+    "lineage": {
+      "entity": "lineage",
+      "scope": "schema",
+      "sql": [
+        "select distinct o.name as dataset, coalesce(d.referenced_database_name, db_name()) as upstream_database,",
+        "       coalesce(d.referenced_schema_name, schema_name(ro.schema_id), s.name) as upstream_schema,",
+        "       d.referenced_entity_name as upstream_dataset, 'view_dependency' as kind",
+        "from sys.sql_expression_dependencies d",
+        "join sys.objects o on o.object_id = d.referencing_id",
+        "join sys.schemas s on s.schema_id = o.schema_id",
+        "left join sys.objects ro on ro.object_id = d.referenced_id",
+        "where s.name = {{schema}} and o.type = 'V' and d.referenced_class = 1"
+      ]
+    },
+    "principals": {
+      "entity": "principal",
+      "scope": "database",
+      "sql": [
+        "select p.name as name, case p.type when 'R' then 'role' when 'G' then 'group' when 'X' then 'group'",
+        "       else 'user' end as type, case when p.type in ('S', 'U', 'E') then 1 else 0 end as can_login",
+        "from sys.database_principals p",
+        "where p.is_fixed_role = 0 and p.name not in ('sys', 'INFORMATION_SCHEMA', 'guest', 'public')",
+        "order by p.name"
+      ]
+    },
+    "grants": {
+      "entity": "grant",
+      "scope": "schema",
+      "sql": [
+        "select o.name as dataset, pr.name as principal, lower(pe.permission_name) as privilege, 'table' as object_type,",
+        "       case when pe.state = 'W' then 1 else 0 end as grantable",
+        "from sys.database_permissions pe",
+        "join sys.objects o on o.object_id = pe.major_id and pe.class = 1",
+        "join sys.schemas s on s.schema_id = o.schema_id",
+        "join sys.database_principals pr on pr.principal_id = pe.grantee_principal_id",
+        "where s.name = {{schema}} and pe.state in ('G', 'W')",
+        "order by 1, 2, 3"
+      ]
+    },
+    "policies": {
+      "entity": "policy",
+      "scope": "schema",
+      "sql": [
+        "select sp.name as name, 'row_access' as type, o.name as dataset, pr.predicate_definition as definition,",
+        "       sp.is_enabled as enabled",
+        "from sys.security_policies sp",
+        "join sys.security_predicates pr on pr.object_id = sp.object_id",
+        "join sys.objects o on o.object_id = pr.target_object_id",
+        "join sys.schemas s on s.schema_id = o.schema_id",
+        "where s.name = {{schema}}",
+        "union all",
+        "select 'masking:' + c.name, 'masking', o.name, c.masking_function, 1",
+        "from sys.masked_columns c",
+        "join sys.objects o on o.object_id = c.object_id",
+        "join sys.schemas s on s.schema_id = o.schema_id",
+        "where s.name = {{schema}}"
+      ]
+    },
+    "sample": {
+      "entity": "row",
+      "aspect": "data",
+      "scope": "dataset",
+      "sql": "select top ({{limit|int}}) * from {{schema|ident}}.{{dataset|ident}}"
+    }
+  }
+}

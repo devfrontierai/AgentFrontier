@@ -1,0 +1,9 @@
+{
+  "description": "SQL engine on a database with no hierarchy: tables and a view at the root, composite and implicit keys gathered with collect, a generated column, unique and plain indexes, and the generic sample operation.",
+  "setup": {"sqlite": "setup.sql"},
+  "connection": {"id": "conf-sqlite", "name": "Conformance SQLite", "type": "sqlite", "properties": {"path": "{{workDir}}/basic.db"}},
+  "pipeline": {"aspects": ["metadata"]},
+  "sample": {"dataset": "products", "limit": 5},
+  "ignore": {"source": ["version", "banner"]},
+  "expected": "expected.jsonl"
+}

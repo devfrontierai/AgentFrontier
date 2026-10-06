@@ -1,0 +1,82 @@
+{
+  "specVersion": "1",
+  "id": "redshift",
+  "name": "Amazon Redshift",
+  "extends": "postgresql",
+  "category": "warehouse",
+  "status": "experimental",
+  "description": "Amazon Redshift (provisioned and serverless). Inherits the PostgreSQL connection settings and replaces the catalog queries Redshift does not support (array constructors, pg_depend lineage) with SVV views. A connection configured as postgresql switches to this definition automatically when the server says it is Redshift. Not yet run against a real cluster.",
+  "aliases": [],
+  "dialect": "redshift",
+  "properties": [
+    {"key": "host", "label": "Host", "type": "string", "required": true},
+    {"key": "port", "label": "Port", "type": "integer", "default": "5439"},
+    {"key": "database", "label": "Database", "type": "string", "default": "dev"},
+    {"key": "databases", "label": "Databases to read", "type": "list"},
+    {"key": "sslmode", "label": "SSL mode", "type": "select", "options": ["require", "verify-ca", "verify-full"]},
+    {"key": "connectTimeoutSeconds", "label": "Connect timeout (s)", "type": "integer", "default": "10"}
+  ],
+  "options": [],
+  "auth": ["username_password", "token", "connection_string"],
+  "session": {
+    "init": []
+  },
+  "version": {
+    "sql": "select version() as banner, null as version",
+    "pattern": "Redshift (\\d+\\.\\d+\\.\\d+)"
+  },
+  "variants": [],
+  "overlays": [],
+  "operations": {
+    "databases": {
+      "sql": "select database_name as name, database_owner as owner from svv_redshift_databases order by 1",
+      "alternatives": [{"sql": "select datname as name from pg_database where not datistemplate order by 1"}]
+    },
+    "schemas": {
+      "sql": "select schema_name as name, schema_owner as owner from svv_all_schemas where database_name = current_database() order by 1"
+    },
+    "datasets": {
+      "sql": [
+        "select t.table_name as name, case t.table_type when 'VIEW' then 'view' when 'EXTERNAL TABLE' then 'external_table' else 'table' end as type,",
+        "       i.tbl_rows as row_count, i.size * 1048576 as size_bytes, t.remarks as comment",
+        "from svv_all_tables t",
+        "left join svv_table_info i on i.schema = t.schema_name and i.\"table\" = t.table_name",
+        "where t.database_name = current_database() and t.schema_name = {{schema}} [[and t.table_name > {{after}}]]",
+        "order by t.table_name",
+        "limit {{limit|int}}"
+      ]
+    },
+    "fields": {
+      "sql": [
+        "select table_name as dataset, ordinal_position as ordinal, column_name as name, data_type as data_type,",
+        "       is_nullable as nullable, column_default as default_value, remarks as comment,",
+        "       character_maximum_length as max_length, numeric_precision as numeric_precision, numeric_scale as numeric_scale",
+        "from svv_all_columns",
+        "where database_name = current_database() and schema_name = {{schema}} and table_name in ({{datasets}})",
+        "order by table_name, ordinal_position"
+      ]
+    },
+    "constraints": {
+      "sql": [
+        "select tc.table_name as dataset, tc.constraint_name as name, lower(replace(tc.constraint_type, ' ', '_')) as type,",
+        "       k.column_name as columns, k.ordinal_position as seq",
+        "from information_schema.table_constraints tc",
+        "join information_schema.key_column_usage k",
+        "  on k.constraint_schema = tc.constraint_schema and k.constraint_name = tc.constraint_name",
+        "where tc.table_schema = {{schema}} and tc.table_name in ({{datasets}})",
+        "  and tc.constraint_type in ('PRIMARY KEY', 'UNIQUE', 'FOREIGN KEY')",
+        "order by 1, 2, 5"
+      ],
+      "collect": {"by": ["dataset", "name"], "lists": ["columns"], "orderBy": "seq"}
+    },
+    "indexes": null,
+    "routines": null,
+    "lineage": null,
+    "principals": {
+      "sql": "select usename as name, 'user' as type, usesuper as superuser from pg_user order by 1"
+    },
+    "grants": null,
+    "policies": null,
+    "statistics": null
+  }
+}

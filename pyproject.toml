@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentfrontier"
+version = "0.1.0"
+description = "Configuration-driven data source SDK: one engine per protocol, one JSON definition per source (Python edition)."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+authors = [{ name = "Pankaj Sharma" }]
+keywords = ["metadata", "catalog", "lineage", "database", "sdk", "connectors"]
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Database",
+]
+dependencies = []
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.1"]
+mysql = ["pymysql>=1.1"]
+oracle = ["oracledb>=2.0"]
+snowflake = ["snowflake-connector-python>=3.0"]
+sqlserver = ["pymssql>=2.3"]
+neo4j = ["neo4j>=5.0"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+agentfrontier = "agentfrontier.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+agentfrontier = ["spec/*.json", "spec/definitions/*/*.json", "spec/sinks/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "database: integration tests against the docker databases (skipped when not reachable)",
+    "neo4j: integration test against a Neo4j server (skipped when not reachable)",
+]

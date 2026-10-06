@@ -1,0 +1,33 @@
+{
+  "description": "Files engine: folders that hold matching files are containers, files are datasets, and fields are inferred from CSV, TSV, JSON and JSON Lines with the rules in docs/files.md. Excludes and non-matching extensions are left out.",
+  "connection": {
+    "id": "conf-files",
+    "name": "Conformance files",
+    "type": "local_files",
+    "properties": {
+      "root": "{{caseDir}}/data",
+      "exclude": [
+        "**/tmp/**"
+      ]
+    }
+  },
+  "pipeline": {
+    "aspects": [
+      "metadata"
+    ]
+  },
+  "sample": {
+    "scope": {
+      "folder": "."
+    },
+    "dataset": "customers.csv",
+    "limit": 2
+  },
+  "ignore": {
+    "dataset": [
+      "updatedAt",
+      "sizeBytes"
+    ]
+  },
+  "expected": "expected.jsonl"
+}

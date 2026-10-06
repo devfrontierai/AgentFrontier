@@ -1,0 +1,230 @@
+{
+  "specVersion": "1",
+  "id": "snowflake",
+  "name": "Snowflake",
+  "protocol": "sql",
+  "category": "warehouse",
+  "status": "experimental",
+  "description": "Snowflake. Reads each database's INFORMATION_SCHEMA fully qualified, so one connection serves every database. Key columns come from SHOW PRIMARY / UNIQUE / IMPORTED KEYS IN SCHEMA, once per schema. Lineage, tags and policies come from SNOWFLAKE.ACCOUNT_USAGE when the role has IMPORTED PRIVILEGES; otherwise they are skipped with a warning. Not yet run against a real account.",
+  "dialect": "snowflake",
+  "properties": [
+    {"key": "account", "label": "Account", "type": "string", "required": true, "help": "orgname-accountname, or the legacy locator with region."},
+    {"key": "warehouse", "label": "Warehouse", "type": "string", "help": "Needed for queries; most metadata reads run without one."},
+    {"key": "role", "label": "Role", "type": "string"},
+    {"key": "database", "label": "Database", "type": "string", "required": true},
+    {"key": "databases", "label": "Databases to read", "type": "list", "help": "Empty: only the database above. *: every database the role sees. Or a list; wildcards allowed."},
+    {"key": "host", "label": "Host override", "type": "string", "help": "Only for PrivateLink or custom endpoints."},
+    {"key": "loginTimeoutSeconds", "label": "Login timeout (s)", "type": "integer", "default": "30"}
+  ],
+  "options": [
+    {"key": "lineageFromAccountUsage", "label": "Lineage from ACCOUNT_USAGE", "type": "boolean", "default": "true"},
+    {"key": "governanceFromAccountUsage", "label": "Tags and policies from ACCOUNT_USAGE", "type": "boolean", "default": "true"}
+  ],
+  "auth": ["username_password", "key_pair", "token", "oauth2_access_token"],
+  "connection": {
+    "jdbc": {
+      "driver": "net.snowflake.client.jdbc.SnowflakeDriver",
+      "artifact": "net.snowflake:snowflake-jdbc:4.3.4",
+      "url": "jdbc:snowflake://{{host|default:{{account}}.snowflakecomputing.com}}/",
+      "properties": {
+        "db": "{{database}}",
+        "warehouse": "{{warehouse}}",
+        "role": "{{role}}",
+        "application": "agentfrontier",
+        "loginTimeout": "{{loginTimeoutSeconds}}",
+        "JDBC_QUERY_RESULT_FORMAT": "JSON",
+        "CLIENT_SESSION_KEEP_ALIVE": "false"
+      },
+      "auth": {
+        "username_password": {"properties": {"user": "{{auth.username}}", "password": "{{auth.password}}"}},
+        "key_pair": {"properties": {
+          "user": "{{auth.username}}",
+          "authenticator": "SNOWFLAKE_JWT",
+          "private_key_file": "{{auth.privateKey|file}}",
+          "private_key_file_pwd": "{{auth.privateKeyPassphrase}}"
+        }},
+        "token": {"properties": {"user": "{{auth.username}}", "authenticator": "PROGRAMMATIC_ACCESS_TOKEN", "token": "{{auth.token}}"}},
+        "oauth2_access_token": {"properties": {"user": "{{auth.username}}", "authenticator": "oauth", "token": "{{auth.accessToken}}"}}
+      }
+    },
+    "python": {
+      "module": "snowflake.connector",
+      "package": "snowflake-connector-python>=3.0",
+      "connect": {
+        "account": "{{account}}",
+        "host": "{{host}}",
+        "warehouse": "{{warehouse}}",
+        "role": "{{role}}",
+        "database": "{{database}}",
+        "application": "agentfrontier",
+        "login_timeout": "{{loginTimeoutSeconds}}"
+      },
+      "auth": {
+        "username_password": {"connect": {"user": "{{auth.username}}", "password": "{{auth.password}}"}},
+        "key_pair": {"connect": {
+          "user": "{{auth.username}}",
+          "authenticator": "SNOWFLAKE_JWT",
+          "private_key_file": "{{auth.privateKey|file}}",
+          "private_key_file_pwd": "{{auth.privateKeyPassphrase}}"
+        }},
+        "token": {"connect": {"user": "{{auth.username}}", "authenticator": "PROGRAMMATIC_ACCESS_TOKEN", "token": "{{auth.token}}"}},
+        "oauth2_access_token": {"connect": {"user": "{{auth.username}}", "authenticator": "oauth", "token": "{{auth.accessToken}}"}}
+      }
+    }
+  },
+  "session": {
+    "quote": "\"",
+    "maxBatch": 1000,
+    "readOnlyTransaction": false
+  },
+  "version": {
+    "sql": "select current_version() as version, 'Snowflake ' || current_version() as banner"
+  },
+  "hierarchy": [
+    {"level": "database", "label": "Database", "list": "databases", "value": "{{database}}", "select": "databases", "exclude": ["SNOWFLAKE"]},
+    {"level": "schema", "label": "Schema", "list": "schemas", "exclude": ["INFORMATION_SCHEMA"]}
+  ],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "sql": "select current_version() as version, current_user() as login, current_role() as role, current_warehouse() as warehouse, current_account() as account"
+    },
+    "source": {
+      "entity": "source",
+      "sql": "select 'Snowflake' as product, current_version() as version, current_user() as login, current_account() as account, current_region() as region"
+    },
+    "databases": {
+      "entity": "container",
+      "sql": "show databases",
+      "fields": {"name": "name", "comment": "comment", "owner": "owner", "createdAt": "created_on"},
+      "extras": "drop"
+    },
+    "schemas": {
+      "entity": "container",
+      "scope": "database",
+      "sql": "select schema_name as name, comment as comment, schema_owner as owner from {{database|ident}}.information_schema.schemata order by schema_name"
+    },
+    "datasets": {
+      "entity": "dataset",
+      "scope": "schema",
+      "paging": {"mode": "keyset", "key": "name"},
+      "sql": [
+        "select t.table_name as name, t.table_type as type, t.comment as comment, t.table_owner as owner,",
+        "       t.row_count as row_count, t.bytes as size_bytes, v.view_definition as definition,",
+        "       t.is_transient as transient, t.clustering_key as clustering_key,",
+        "       t.created as created_at, t.last_altered as updated_at",
+        "from {{database|ident}}.information_schema.tables t",
+        "left join {{database|ident}}.information_schema.views v",
+        "  on v.table_schema = t.table_schema and v.table_name = t.table_name",
+        "where t.table_schema = {{schema}} [[and t.table_name > {{after}}]]",
+        "order by t.table_name",
+        "limit {{limit|int}}"
+      ]
+    },
+    "fields": {
+      "entity": "field",
+      "scope": "datasets",
+      "sql": [
+        "select table_name as dataset, ordinal_position as ordinal, column_name as name,",
+        "       case when data_type in ('TEXT', 'VARCHAR') and character_maximum_length is not null",
+        "              then 'VARCHAR(' || character_maximum_length || ')'",
+        "            when data_type = 'NUMBER' and numeric_precision is not null",
+        "              then 'NUMBER(' || numeric_precision || ',' || coalesce(numeric_scale, 0) || ')'",
+        "            else data_type end as data_type,",
+        "       is_nullable as nullable, column_default as default_value, comment as comment,",
+        "       is_identity as is_generated, character_maximum_length as max_length,",
+        "       numeric_precision as numeric_precision, numeric_scale as numeric_scale",
+        "from {{database|ident}}.information_schema.columns",
+        "where table_schema = {{schema}} and table_name in ({{datasets}})",
+        "order by table_name, ordinal_position"
+      ]
+    },
+    "primary_keys": {
+      "entity": "constraint",
+      "scope": "schema",
+      "sql": "show primary keys in schema {{database|ident}}.{{schema|ident}}",
+      "fields": {"dataset": "table_name", "name": "constraint_name", "columns": "column_name", "seq": "key_sequence"},
+      "set": {"type": "primary_key"},
+      "extras": "drop",
+      "collect": {"by": ["dataset", "name"], "lists": ["columns"], "orderBy": "seq"}
+    },
+    "unique_keys": {
+      "entity": "constraint",
+      "scope": "schema",
+      "sql": "show unique keys in schema {{database|ident}}.{{schema|ident}}",
+      "fields": {"dataset": "table_name", "name": "constraint_name", "columns": "column_name", "seq": "key_sequence"},
+      "set": {"type": "unique"},
+      "extras": "drop",
+      "collect": {"by": ["dataset", "name"], "lists": ["columns"], "orderBy": "seq"}
+    },
+    "foreign_keys": {
+      "entity": "constraint",
+      "scope": "schema",
+      "sql": "show imported keys in schema {{database|ident}}.{{schema|ident}}",
+      "fields": {
+        "dataset": "fk_table_name", "name": "fk_name", "columns": "fk_column_name", "seq": "key_sequence",
+        "refDatabase": "pk_database_name", "refSchema": "pk_schema_name", "refDataset": "pk_table_name",
+        "refColumns": "pk_column_name"
+      },
+      "set": {"type": "foreign_key"},
+      "extras": "drop",
+      "collect": {"by": ["dataset", "name"], "lists": ["columns", "refColumns"], "orderBy": "seq"}
+    },
+    "lineage": {
+      "entity": "lineage",
+      "scope": "schema",
+      "enabledBy": "lineageFromAccountUsage",
+      "onError": "warn",
+      "sql": [
+        "select referencing_object_name as dataset, referenced_database as upstream_database,",
+        "       referenced_schema as upstream_schema, referenced_object_name as upstream_dataset,",
+        "       'object_dependency' as kind",
+        "from snowflake.account_usage.object_dependencies",
+        "where referencing_database = {{database}} and referencing_schema = {{schema}}",
+        "  and referenced_object_domain in ('TABLE', 'VIEW', 'MATERIALIZED VIEW', 'EXTERNAL TABLE')"
+      ]
+    },
+    "grants": {
+      "entity": "grant",
+      "scope": "schema",
+      "onError": "warn",
+      "sql": [
+        "select table_name as dataset, grantee as principal, privilege_type as privilege, 'table' as object_type,",
+        "       grantor as grantor, is_grantable as grantable",
+        "from {{database|ident}}.information_schema.table_privileges",
+        "where table_schema = {{schema}}",
+        "order by 1, 2, 3"
+      ]
+    },
+    "tags": {
+      "entity": "tag",
+      "scope": "schema",
+      "enabledBy": "governanceFromAccountUsage",
+      "onError": "warn",
+      "sql": [
+        "select tag_name as name, tag_value as value, lower(domain) as object_type, object_name as dataset,",
+        "       column_name as field",
+        "from snowflake.account_usage.tag_references",
+        "where object_database = {{database}} and object_schema = {{schema}} and object_deleted is null"
+      ]
+    },
+    "policies": {
+      "entity": "policy",
+      "scope": "schema",
+      "enabledBy": "governanceFromAccountUsage",
+      "onError": "warn",
+      "sql": [
+        "select policy_name as name, lower(replace(policy_kind, ' ', '_')) as type, ref_entity_name as dataset,",
+        "       ref_column_name as field, policy_status as status",
+        "from snowflake.account_usage.policy_references",
+        "where ref_database_name = {{database}} and ref_schema_name = {{schema}}"
+      ]
+    },
+    "sample": {
+      "entity": "row",
+      "aspect": "data",
+      "scope": "dataset",
+      "sql": "select * from {{database|ident}}.{{schema|ident}}.{{dataset|ident}} limit {{limit|int}}"
+    }
+  }
+}

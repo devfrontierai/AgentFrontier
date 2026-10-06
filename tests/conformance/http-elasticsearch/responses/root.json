@@ -1,0 +1,11 @@
+{
+  "name": "node-1",
+  "cluster_name": "fixture-cluster",
+  "cluster_uuid": "abc",
+  "version": {
+    "number": "8.11.0",
+    "build_flavor": "default",
+    "lucene_version": "9.8.0"
+  },
+  "tagline": "You Know, for Search"
+}

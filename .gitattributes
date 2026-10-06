@@ -1,0 +1,4 @@
+# The spec and the conformance fixtures are shared byte-for-byte with the other implementations: never convert
+# their line endings.
+src/agentfrontier/spec/** -text
+tests/conformance/** -text

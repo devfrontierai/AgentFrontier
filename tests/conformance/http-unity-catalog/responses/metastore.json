@@ -1,0 +1,7 @@
+{
+  "metastore_id": "m-1",
+  "name": "fixture-metastore",
+  "owner": "admin",
+  "region": "us-west-2",
+  "cloud": "aws"
+}
