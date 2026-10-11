@@ -4,8 +4,10 @@
 
 ```bash
 python -m venv .venv
-.venv/bin/pip install "agentfrontier[postgres]"      # Windows: .venv\Scripts\pip
+.venv/bin/pip install "agentfrontier[postgres] @ git+https://github.com/devfrontierai/AgentFrontier.git"   # Windows: .venv\Scripts\pip
 ```
+
+(Not on PyPI yet; once it is, `pip install "agentfrontier[postgres]"` is enough.)
 
 The core package has no dependencies. Each database driver is an extra: `postgres` (psycopg 3), `mysql` (PyMySQL),
 `oracle` (python-oracledb, thin mode), `snowflake`, `sqlserver` (pymssql), plus `neo4j` for the graph sink. SQLite,
