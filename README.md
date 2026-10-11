@@ -15,19 +15,50 @@ unchanged, and on the test databases the Python and Java CLIs write byte-identic
 * Python 3.10 or newer, **no required runtime dependencies** (standard library only).
 * Database drivers are optional extras (DB-API 2.0 drivers: psycopg, PyMySQL, python-oracledb, ...).
 
-## Install
+## Try it in five minutes
+
+No database needed: the examples bring a sample one.
 
 ```bash
-pip install agentfrontier                    # core: SQLite, HTTP sources, local files
-pip install "agentfrontier[postgres]"        # + psycopg 3 (PostgreSQL, Redshift)
-pip install "agentfrontier[mysql]"           # + PyMySQL
-pip install "agentfrontier[oracle]"          # + python-oracledb (thin mode, no Oracle client needed)
-pip install "agentfrontier[snowflake]"       # + snowflake-connector-python
-pip install "agentfrontier[sqlserver]"       # + pymssql
-pip install "agentfrontier[neo4j]"           # + the neo4j sink
+git clone https://github.com/devfrontierai/AgentFrontier.git && cd AgentFrontier
+python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install -e .
+python examples/data_dictionary.py                     # -> out/data-dictionary.md with an ER diagram
+python examples/agent_tools.py                         # the read-only tools an AI agent would get
 ```
 
-From a checkout: `pip install -e ".[dev,postgres,mysql,oracle,neo4j]"`.
+## What you can build
+
+| Use case | What it does | Example |
+|---|---|---|
+| **Data dictionary** | Markdown docs with an ER diagram for any database, regenerated on every run | [`data_dictionary.py`](examples/data_dictionary.py) |
+| **Schema drift check** | Fails CI when a column is dropped or retyped, before downstream jobs break | [`schema_drift.py`](examples/schema_drift.py) |
+| **AI agent data access** | Read-only list / describe / sample / query tools, served over MCP or used with Claude | [`mcp_server.py`](examples/mcp_server.py), [`claude_agent.py`](examples/claude_agent.py) |
+
+Each one runs unchanged against PostgreSQL, MySQL, Oracle, Snowflake, SQL Server, Unity Catalog, Elasticsearch or a
+folder of files. Pass it a connection file. See [examples/README.md](examples/README.md).
+
+## Install
+
+AgentFrontier is not published on PyPI yet. Install it from GitHub, with the extras for the drivers you need:
+
+```bash
+pip install "agentfrontier @ git+https://github.com/devfrontierai/AgentFrontier.git"            # core: SQLite, HTTP sources, local files
+pip install "agentfrontier[postgres] @ git+https://github.com/devfrontierai/AgentFrontier.git"  # + psycopg 3 (PostgreSQL, Redshift)
+```
+
+| Extra | Driver |
+|---|---|
+| `postgres` | psycopg 3 (PostgreSQL, Redshift) |
+| `mysql` | PyMySQL |
+| `oracle` | python-oracledb (thin mode, no Oracle client needed) |
+| `snowflake` | snowflake-connector-python |
+| `sqlserver` | pymssql |
+| `neo4j` | the neo4j sink |
+
+From a checkout: `pip install -e ".[dev,postgres,mysql,oracle,neo4j]"`. Once the package is on PyPI this becomes
+`pip install "agentfrontier[postgres]"`. [docs/integration.md](docs/integration.md) covers pinning, connection
+files, integration patterns and a production checklist.
 
 ## Quick start: library
 
@@ -108,6 +139,8 @@ to it is made in both repositories (later it moves to a repository of its own). 
 
 ## Documentation
 
+* [examples/README.md](examples/README.md): three runnable use cases
+* [docs/integration.md](docs/integration.md): add AgentFrontier to your project, integration patterns, production checklist
 * [docs/getting-started.md](docs/getting-started.md): install, first connection, first extract
 * [docs/python-api.md](docs/python-api.md): the library API
 * [docs/cli.md](docs/cli.md): commands and options
