@@ -84,6 +84,53 @@
     {
       "path": "/v1.0/oauth2PermissionGrants",
       "body": "responses/permission-grants.json"
+    },
+    {
+      "path": "/v1.0/groups/02bd9fd6-8f93-4758-87c3-1fb73740a315/members",
+      "query": {
+        "$select": "id",
+        "$top": "999",
+        "$skiptoken": "page2"
+      },
+      "body": "responses/members-finance-2.json"
+    },
+    {
+      "path": "/v1.0/groups/02bd9fd6-8f93-4758-87c3-1fb73740a315/members",
+      "query": {
+        "$select": "id",
+        "$top": "999",
+        "$skiptoken": null
+      },
+      "body": "responses/members-finance-1.json"
+    },
+    {
+      "path": "/v1.0/groups/0a6c4d2e-91b8-4f1d-a3c7-5e2f8b9d6a14/members",
+      "query": {
+        "$select": "id",
+        "$top": "999"
+      },
+      "body": "responses/members-admins.json"
+    },
+    {
+      "path": "/v1.0/servicePrincipals/6f1b2c4e-8a3d-4e5f-9b7c-1d2e3f4a5b6c/appRoleAssignedTo",
+      "query": {
+        "$select": "id,principalId,principalType,appRoleId,resourceId"
+      },
+      "body": "responses/app-roles-graph.json"
+    },
+    {
+      "path": "/v1.0/servicePrincipals/b1f3c8d2-5e6a-4b7c-8d9e-0f1a2b3c4d5e/appRoleAssignedTo",
+      "query": {
+        "$select": "id,principalId,principalType,appRoleId,resourceId"
+      },
+      "body": "responses/app-roles-expenses.json"
+    },
+    {
+      "path": "/v1.0/servicePrincipals/e4d5c6b7-a8f9-4e0d-b1c2-d3e4f5a6b7c8/appRoleAssignedTo",
+      "query": {
+        "$select": "id,principalId,principalType,appRoleId,resourceId"
+      },
+      "body": "responses/app-roles-payroll.json"
     }
   ]
 }

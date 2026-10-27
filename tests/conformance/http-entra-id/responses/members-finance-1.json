@@ -1,0 +1,14 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#directoryObjects(id)",
+  "@odata.nextLink": "{{baseUrl}}/v1.0/groups/02bd9fd6-8f93-4758-87c3-1fb73740a315/members?$select=id&$top=999&$skiptoken=page2",
+  "value": [
+    {
+      "@odata.type": "#microsoft.graph.user",
+      "id": "87d349ed-44d7-43e1-9a83-5f2406dee5bd"
+    },
+    {
+      "@odata.type": "#microsoft.graph.user",
+      "id": "268f5dde-3ed6-4fa8-a25c-2f167e1696ca"
+    }
+  ]
+}

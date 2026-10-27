@@ -1,0 +1,18 @@
+[
+  {
+    "id": "00u3cdefGHIJklmno697",
+    "status": "ACTIVE",
+    "profile": {
+      "login": "chen.wu@altostrat.com",
+      "email": "chen.wu@altostrat.com"
+    }
+  },
+  {
+    "id": "00u4defgHIJKlmnop697",
+    "status": "ACTIVE",
+    "profile": {
+      "login": "dana.fox@altostrat.com",
+      "email": "dana.fox@altostrat.com"
+    }
+  }
+]

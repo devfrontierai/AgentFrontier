@@ -421,7 +421,7 @@ class EngineSession:
                 else:
                     bv = self.base_vars(key)
                     bv.update(params)
-                    all_ = self.run_all(name, op, key, bv)
+                    all_ = self._run_scoped(name, op, key, bv)
                     if not params:
                         self._scope_cache[name] = (key, all_)
                 if datasets is not None and entity != "dataset":
@@ -524,6 +524,33 @@ class EngineSession:
                 break
             cursor = nxt
         return all_
+
+    def _run_scoped(self, name: str, op: dict, scope: Scope, vars: dict) -> list[dict]:
+        """Every page of a source- or level-scoped operation; with ``forEach``, once per record of another operation
+        (bound to the ``as`` variable), copying the ``copy`` fields from that record."""
+        fe = op.get("forEach")
+        if fe is None:
+            return self.run_all(name, op, scope, vars)
+        parent_name = J.text(fe, "operation")
+        parent = self._def.operation(parent_name) if parent_name else None
+        if not isinstance(fe, dict) or parent is None:
+            raise AgentFrontierError.invalid_definition("operation '" + name + "': forEach needs the name of an "
+                                                        "active operation")
+        if parent.get("forEach") is not None or J.text(parent, "scope", "source") in ("dataset", "datasets"):
+            raise AgentFrontierError.invalid_definition("operation '" + name + "': forEach cannot iterate over '"
+                                                        + J.jstr(parent_name) + "', which is itself iterated or "
+                                                        "dataset-scoped")
+        as_ = J.text(fe, "as", "item") or "item"
+        copy = fe.get("copy") if isinstance(fe.get("copy"), dict) else {}
+        out: list[dict] = []
+        for p in self.run_operation(J.jstr(parent_name), parent, scope, None, None, {}):
+            v = dict(vars)
+            v[as_] = p.values
+            for r in self.run_all(name, op, scope, v):
+                for field, src in copy.items():
+                    r[field] = T.lookup(p.values, J.jstr(src))
+                out.append(r)
+        return out
 
     def _page_vars(self, op: dict, mode: str, cursor: Any, size: int) -> dict:
         v: dict = {"limit": size}

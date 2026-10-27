@@ -1,0 +1,12 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#servicePrincipals('e4d5c6b7-a8f9-4e0d-b1c2-d3e4f5a6b7c8')/appRoleAssignedTo",
+  "value": [
+    {
+      "id": "Qk3m9Z1t8E2yQ7cW5rT0uA",
+      "principalId": "268f5dde-3ed6-4fa8-a25c-2f167e1696ca",
+      "principalType": "User",
+      "appRoleId": "7f1e2d3c-4b5a-4968-8776-655443322110",
+      "resourceId": "e4d5c6b7-a8f9-4e0d-b1c2-d3e4f5a6b7c8"
+    }
+  ]
+}

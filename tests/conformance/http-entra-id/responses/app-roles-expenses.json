@@ -1,0 +1,19 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#servicePrincipals('b1f3c8d2-5e6a-4b7c-8d9e-0f1a2b3c4d5e')/appRoleAssignedTo",
+  "value": [
+    {
+      "id": "8eS2xb0gA0OKvcUx5RzkzA",
+      "principalId": "87d349ed-44d7-43e1-9a83-5f2406dee5bd",
+      "principalType": "User",
+      "appRoleId": "3c5ae5c4-2c4b-4e1e-9b23-6b3d8c1f2a10",
+      "resourceId": "b1f3c8d2-5e6a-4b7c-8d9e-0f1a2b3c4d5e"
+    },
+    {
+      "id": "1v9sQ6nZv0WhQvC3yJ0bVg",
+      "principalId": "02bd9fd6-8f93-4758-87c3-1fb73740a315",
+      "principalType": "Group",
+      "appRoleId": "00000000-0000-0000-0000-000000000000",
+      "resourceId": "b1f3c8d2-5e6a-4b7c-8d9e-0f1a2b3c4d5e"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "id": "00u1abcdEFGHijklm697",
+    "status": "ACTIVE",
+    "profile": {
+      "login": "ana.lopez@altostrat.com",
+      "email": "ana.lopez@altostrat.com"
+    }
+  },
+  {
+    "id": "00u2bcdeFGHIjklmn697",
+    "status": "ACTIVE",
+    "profile": {
+      "login": "ben.okafor@altostrat.com",
+      "email": "ben.okafor@altostrat.com"
+    }
+  }
+]

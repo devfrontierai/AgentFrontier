@@ -1,0 +1,13 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#directoryObjects(id)",
+  "value": [
+    {
+      "@odata.type": "#microsoft.graph.user",
+      "id": "5bde3e51-d13b-4db1-9948-fe4b109d11a7"
+    },
+    {
+      "@odata.type": "#microsoft.graph.group",
+      "id": "02bd9fd6-8f93-4758-87c3-1fb73740a315"
+    }
+  ]
+}

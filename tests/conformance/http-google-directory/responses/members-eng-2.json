@@ -1,0 +1,14 @@
+{
+  "kind": "admin#directory#members",
+  "etag": "\"m-eng-2\"",
+  "members": [
+    {
+      "kind": "admin#directory#member",
+      "id": "03rdcrjn2fy7wkp",
+      "email": "helpdesk-admins@altostrat.com",
+      "role": "MEMBER",
+      "type": "GROUP",
+      "status": "ACTIVE"
+    }
+  ]
+}

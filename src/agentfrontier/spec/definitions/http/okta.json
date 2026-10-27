@@ -147,6 +147,39 @@
       },
       "extras": "drop"
     },
+    "groupMembers": {
+      "entity": "relationship",
+      "aspect": "governance",
+      "enabledBy": "groupMembers",
+      "forEach": {
+        "operation": "groups",
+        "as": "group",
+        "copy": {
+          "object": "name"
+        }
+      },
+      "paging": {
+        "mode": "linkHeader",
+        "size": 200
+      },
+      "request": {
+        "path": "/api/v1/groups/{{group.name|url}}/users",
+        "query": {
+          "limit": "{{limit}}"
+        }
+      },
+      "records": "$[*]",
+      "fields": {
+        "subject": "id",
+        "login": "$.profile.login"
+      },
+      "set": {
+        "subjectType": "principal",
+        "predicate": "member_of",
+        "objectType": "principal"
+      },
+      "extras": "drop"
+    },
     "apps": {
       "entity": "principal",
       "paging": {
@@ -172,6 +205,87 @@
         "type": "service"
       },
       "extras": "drop"
+    },
+    "appUsers": {
+      "entity": "grant",
+      "enabledBy": "appAssignments",
+      "forEach": {
+        "operation": "apps",
+        "as": "app",
+        "copy": {
+          "dataset": "name"
+        }
+      },
+      "paging": {
+        "mode": "linkHeader",
+        "size": 200
+      },
+      "records": "$[*]",
+      "set": {
+        "privilege": "ASSIGNED",
+        "objectType": "application",
+        "grantable": false
+      },
+      "extras": "drop",
+      "request": {
+        "path": "/api/v1/apps/{{app.name|url}}/users",
+        "query": {
+          "limit": "{{limit}}"
+        }
+      },
+      "fields": {
+        "principal": "id",
+        "assignmentScope": "scope",
+        "status": "status"
+      }
+    },
+    "appGroups": {
+      "entity": "grant",
+      "enabledBy": "appAssignments",
+      "forEach": {
+        "operation": "apps",
+        "as": "app",
+        "copy": {
+          "dataset": "name"
+        }
+      },
+      "paging": {
+        "mode": "linkHeader",
+        "size": 200
+      },
+      "records": "$[*]",
+      "set": {
+        "privilege": "ASSIGNED",
+        "objectType": "application",
+        "grantable": false
+      },
+      "extras": "drop",
+      "request": {
+        "path": "/api/v1/apps/{{app.name|url}}/groups",
+        "query": {
+          "limit": "{{limit}}"
+        }
+      },
+      "fields": {
+        "principal": "id",
+        "priority": "priority"
+      }
     }
-  }
+  },
+  "options": [
+    {
+      "key": "groupMembers",
+      "label": "Read group memberships",
+      "type": "boolean",
+      "default": "true",
+      "help": "One request per group: its direct members (users and groups), as member_of relationships."
+    },
+    {
+      "key": "appAssignments",
+      "label": "Read app assignments",
+      "type": "boolean",
+      "default": "true",
+      "help": "Two requests per app (/apps/{id}/users and /apps/{id}/groups): who is assigned to it, as grants."
+    }
+  ]
 }

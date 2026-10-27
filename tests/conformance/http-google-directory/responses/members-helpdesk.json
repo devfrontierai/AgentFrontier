@@ -1,0 +1,14 @@
+{
+  "kind": "admin#directory#members",
+  "etag": "\"m-help\"",
+  "members": [
+    {
+      "kind": "admin#directory#member",
+      "id": "117805936211954082233",
+      "email": "sam@altostrat.com",
+      "role": "MANAGER",
+      "type": "USER",
+      "status": "SUSPENDED"
+    }
+  ]
+}

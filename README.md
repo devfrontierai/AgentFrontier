@@ -174,8 +174,6 @@ This repository vendors a copy pinned to a tag (`scripts/spec.lock`):
 
 ## Not implemented (yet)
 
-* Group memberships for Entra ID, Google Workspace and Okta: those APIs list members per group, and the engine
-  cannot yet run one request per record of another operation.
 * Cedar, Presidio, Tika, Purview, Macie and Google Sensitive Data Protection adapters; consent and retention
   readers.
 * Object storage for the files engine (S3, ADLS, GCS): only `storage: local`, as in the Java edition.

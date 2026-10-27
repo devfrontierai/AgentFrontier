@@ -273,3 +273,31 @@ def test_parallel_pipeline(tmp_path):
     assert r.counts == {"source": 1, "container": 4, "dataset": 4, "field": 8, "row": 4}
     assert r.load.connections == 0 and r.load.statements > 0
     assert time.time() - started < 30
+
+
+def _for_each_sdk(tmp_path):
+    d = tmp_path / "defs"
+    d.mkdir()
+    (d / "overlay.json").write_text(json.dumps({"overlay": "sqlite", "operations": {
+        "columnCounts": {"entity": "record", "forEach": {"operation": "datasets", "as": "t", "copy": {"dataset": "name"}},
+                         "sql": "select count(*) as n from pragma_table_info({{t.name}})"},
+        "unknownParent": {"entity": "record", "forEach": {"operation": "nope"}, "sql": "select 1 as n"},
+        "nested": {"entity": "record", "forEach": {"operation": "columnCounts"}, "sql": "select 1 as n"},
+        "perDataset": {"entity": "record", "forEach": {"operation": "fields"}, "sql": "select 1 as n"}}}))
+    db = tmp_path / "x.db"
+    import sqlite3
+    con = sqlite3.connect(db)
+    con.executescript("create table alpha (id int); create table beta (id int, label text);")
+    con.close()
+    return AgentFrontier(definitions=[d]), ConnectionConfig("sqlite", {"path": str(db)})
+
+
+def test_for_each_runs_once_per_parent_record(tmp_path):
+    af, conn = _for_each_sdk(tmp_path)
+    with af.open(conn) as s:
+        got = [(r.get("dataset"), r.get("n")) for r in s.run("columnCounts", Scope.root())]
+        assert got == [("alpha", 1), ("beta", 2)]
+        for op in ("unknownParent", "nested", "perDataset"):
+            with pytest.raises(AgentFrontierError) as e:
+                s.run(op, Scope.root())
+            assert e.value.code == "INVALID_DEFINITION", op

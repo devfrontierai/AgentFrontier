@@ -1,0 +1,9 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#directoryObjects(id)",
+  "value": [
+    {
+      "@odata.type": "#microsoft.graph.servicePrincipal",
+      "id": "e4d5c6b7-a8f9-4e0d-b1c2-d3e4f5a6b7c8"
+    }
+  ]
+}

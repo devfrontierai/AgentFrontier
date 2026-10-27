@@ -66,6 +66,73 @@
         "Link": "<{{baseUrl}}/api/v1/apps?limit=200>; rel=\"self\", <{{baseUrl}}/api/v1/apps?after=0oa1salesforceAB697&limit=200>; rel=\"next\""
       },
       "body": "responses/apps-1.json"
+    },
+    {
+      "path": "/api/v1/groups/00g1everyoneABCDE697/users",
+      "query": {
+        "limit": "200",
+        "after": "00u1abcdEFGHijklm697x"
+      },
+      "body": "responses/members-everyone-2.json",
+      "headers": {
+        "Link": "<{{baseUrl}}/api/v1/groups/00g1everyoneABCDE697/users?after=00u1abcdEFGHijklm697x&limit=200>; rel=\"self\""
+      }
+    },
+    {
+      "path": "/api/v1/groups/00g1everyoneABCDE697/users",
+      "query": {
+        "limit": "200",
+        "after": null
+      },
+      "body": "responses/members-everyone-1.json",
+      "headers": {
+        "Link": [
+          "<{{baseUrl}}/api/v1/groups/00g1everyoneABCDE697/users?limit=200>; rel=\"self\"",
+          "<{{baseUrl}}/api/v1/groups/00g1everyoneABCDE697/users?after=00u1abcdEFGHijklm697x&limit=200>; rel=\"next\""
+        ]
+      }
+    },
+    {
+      "path": "/api/v1/groups/00g2financeBCDEFG697/users",
+      "query": {
+        "limit": "200"
+      },
+      "body": "responses/members-finance.json"
+    },
+    {
+      "path": "/api/v1/groups/00g3sfdcAdminsCDE697/users",
+      "query": {
+        "limit": "200"
+      },
+      "body": "responses/members-sfdc.json"
+    },
+    {
+      "path": "/api/v1/apps/0oa1salesforceAB697/users",
+      "query": {
+        "limit": "200"
+      },
+      "body": "responses/app-users-salesforce.json"
+    },
+    {
+      "path": "/api/v1/apps/0oa2reportingSvc697/users",
+      "query": {
+        "limit": "200"
+      },
+      "body": "responses/app-users-reporting.json"
+    },
+    {
+      "path": "/api/v1/apps/0oa1salesforceAB697/groups",
+      "query": {
+        "limit": "200"
+      },
+      "body": "responses/app-groups-salesforce.json"
+    },
+    {
+      "path": "/api/v1/apps/0oa2reportingSvc697/groups",
+      "query": {
+        "limit": "200"
+      },
+      "body": "responses/app-groups-reporting.json"
     }
   ]
 }

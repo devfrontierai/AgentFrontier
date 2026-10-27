@@ -1,5 +1,5 @@
 {
-  "description": "HTTP engine on the Okta Management API with no hierarchy: SSWS API token, Link-header paging with the next URL in a separate Link header (users) and in one combined Link header after the self link (apps), a single page with only a self link (groups), users with their status mapped to canLogin, groups and app integrations as principals, and an organisation record from the public well-known endpoint.",
+  "description": "HTTP engine on the Okta Management API with no hierarchy: SSWS API token, Link-header paging with the next URL in a separate Link header (users) and in one combined Link header after the self link (apps), a single page with only a self link (groups), users with their status mapped to canLogin, groups and app integrations as principals, and an organisation record from the public well-known endpoint, group memberships through forEach (one request per group, Link-header paged for Everyone) as member_of relationships, and app user and group assignments per app as grants.",
   "server": {
     "routes": "routes.json"
   },

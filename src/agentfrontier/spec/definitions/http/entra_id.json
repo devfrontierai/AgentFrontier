@@ -45,6 +45,20 @@
       "type": "boolean",
       "default": "true",
       "help": "oauth2PermissionGrants: which apps may act on behalf of users, with which scopes."
+    },
+    {
+      "key": "groupMembers",
+      "label": "Read group memberships",
+      "type": "boolean",
+      "default": "true",
+      "help": "One request per group (/groups/{id}/members): direct members, users, groups and service principals, as member_of relationships."
+    },
+    {
+      "key": "appRoleAssignments",
+      "label": "Read app role assignments",
+      "type": "boolean",
+      "default": "true",
+      "help": "One request per service principal (/servicePrincipals/{id}/appRoleAssignedTo): who holds which app role, as grants on the application."
     }
   ],
   "auth": [
@@ -186,6 +200,41 @@
       },
       "extras": "drop"
     },
+    "groupMembers": {
+      "entity": "relationship",
+      "aspect": "governance",
+      "enabledBy": "groupMembers",
+      "forEach": {
+        "operation": "groups",
+        "as": "group",
+        "copy": {
+          "object": "name"
+        }
+      },
+      "paging": {
+        "mode": "nextUrl",
+        "next": "$['@odata.nextLink']",
+        "size": 999
+      },
+      "request": {
+        "path": "/groups/{{group.name|url}}/members",
+        "query": {
+          "$select": "id",
+          "$top": "{{limit}}"
+        }
+      },
+      "records": "$.value[*]",
+      "fields": {
+        "subject": "id",
+        "memberType": "@odata.type"
+      },
+      "set": {
+        "subjectType": "principal",
+        "predicate": "member_of",
+        "objectType": "principal"
+      },
+      "extras": "drop"
+    },
     "servicePrincipals": {
       "entity": "principal",
       "paging": {
@@ -277,6 +326,37 @@
         "directoryScopeId": "directoryScopeId",
         "appScopeId": "appScopeId",
         "assignmentId": "id"
+      },
+      "extras": "drop"
+    },
+    "appRoleAssignments": {
+      "entity": "grant",
+      "enabledBy": "appRoleAssignments",
+      "forEach": {
+        "operation": "servicePrincipals",
+        "as": "app"
+      },
+      "paging": {
+        "mode": "nextUrl",
+        "next": "$['@odata.nextLink']"
+      },
+      "request": {
+        "path": "/servicePrincipals/{{app.name|url}}/appRoleAssignedTo",
+        "query": {
+          "$select": "id,principalId,principalType,appRoleId,resourceId"
+        }
+      },
+      "records": "$.value[*]",
+      "fields": {
+        "principal": "principalId",
+        "privilege": "appRoleId",
+        "dataset": "resourceId",
+        "principalType": "principalType",
+        "assignmentId": "id"
+      },
+      "set": {
+        "objectType": "application",
+        "grantable": false
       },
       "extras": "drop"
     },

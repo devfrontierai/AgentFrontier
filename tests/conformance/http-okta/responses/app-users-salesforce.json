@@ -1,0 +1,18 @@
+[
+  {
+    "id": "00u1abcdEFGHijklm697",
+    "scope": "USER",
+    "status": "PROVISIONED",
+    "credentials": {
+      "userName": "ana.lopez@altostrat.com"
+    }
+  },
+  {
+    "id": "00u2bcdeFGHIjklmn697",
+    "scope": "GROUP",
+    "status": "PROVISIONED",
+    "credentials": {
+      "userName": "ben.okafor@altostrat.com"
+    }
+  }
+]

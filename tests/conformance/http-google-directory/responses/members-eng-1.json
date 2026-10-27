@@ -1,0 +1,23 @@
+{
+  "kind": "admin#directory#members",
+  "etag": "\"m-eng-1\"",
+  "nextPageToken": "Q2VuZ01lbWJlcnNQYWdlMg",
+  "members": [
+    {
+      "kind": "admin#directory#member",
+      "id": "104598712035586720147",
+      "email": "liz@altostrat.com",
+      "role": "OWNER",
+      "type": "USER",
+      "status": "ACTIVE"
+    },
+    {
+      "kind": "admin#directory#member",
+      "id": "113264087509283741658",
+      "email": "kai@altostrat.com",
+      "role": "MEMBER",
+      "type": "USER",
+      "status": "ACTIVE"
+    }
+  ]
+}

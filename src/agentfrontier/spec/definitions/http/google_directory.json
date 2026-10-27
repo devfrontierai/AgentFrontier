@@ -173,6 +173,44 @@
       },
       "extras": "drop"
     },
+    "groupMembers": {
+      "entity": "relationship",
+      "aspect": "governance",
+      "enabledBy": "groupMembers",
+      "forEach": {
+        "operation": "groups",
+        "as": "group",
+        "copy": {
+          "object": "name"
+        }
+      },
+      "paging": {
+        "mode": "cursor",
+        "next": "$.nextPageToken",
+        "size": 200
+      },
+      "request": {
+        "path": "/groups/{{group.name|url}}/members",
+        "query": {
+          "maxResults": "{{limit}}",
+          "pageToken": "{{cursor}}"
+        }
+      },
+      "records": "$.members[*]",
+      "fields": {
+        "subject": "id",
+        "role": "role",
+        "memberType": "type",
+        "email": "email",
+        "status": "status"
+      },
+      "set": {
+        "subjectType": "principal",
+        "predicate": "member_of",
+        "objectType": "principal"
+      },
+      "extras": "drop"
+    },
     "orgUnits": {
       "entity": "principal",
       "request": {
@@ -264,5 +302,14 @@
       },
       "extras": "drop"
     }
-  }
+  },
+  "options": [
+    {
+      "key": "groupMembers",
+      "label": "Read group memberships",
+      "type": "boolean",
+      "default": "true",
+      "help": "One request per group: its direct members (users and groups), as member_of relationships."
+    }
+  ]
 }

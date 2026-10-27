@@ -213,6 +213,22 @@ def test_effective_authority_with_paths() -> None:
     assert any(r.get("predicate") == "may_access" and r.get("subject") == "alice" for r in rels)
 
 
+def test_memberships_from_relationships() -> None:
+    """Identity sources list members per group, as member_of relationships; they count like memberOf."""
+    g = AuthorityGraph.from_records([
+        {"entity": "principal", "source": "idp", "name": "u1", "type": "user"},
+        {"entity": "principal", "source": "idp", "name": "g1", "type": "group"},
+        {"entity": "principal", "source": "idp", "name": "g2", "type": "group"},
+        {"entity": "relationship", "source": "idp", "subject": "u1", "predicate": "member_of", "object": "g1"},
+        {"entity": "relationship", "source": "idp", "subject": "g1", "predicate": "member_of", "object": "g2"},
+        {"entity": "relationship", "source": "idp", "subject": "u1", "predicate": "owns", "object": "g9"},
+        {"entity": "grant", "source": "idp", "principal": "g2", "privilege": "ASSIGNED", "objectType": "application",
+         "dataset": "salesforce"}])
+    assert g.groups("u1") == {"g1": ("u1", "g1"), "g2": ("u1", "g1", "g2")}
+    e = g.effective("u1")
+    assert [(x.privilege, x.dataset, x.path) for x in e] == [("ASSIGNED", "salesforce", ("u1", "g1", "g2"))]
+
+
 def test_rule_pdp_with_native_grants() -> None:
     pdp = RulePDP(None, AuthorityGraph.from_records(_access_records()))
     def ask(who: str, dataset: str, schema: str = "sales", action: str = "sample") -> str:

@@ -111,11 +111,11 @@ class AuthorityGraph:
 
     @staticmethod
     def from_directory(directory: str | Path) -> "AuthorityGraph":
-        """Reads ``principal``, ``grant``, ``delegation`` and ``agent_permission`` JSON Lines files (plain records
-        or raw-stream events) from a jsonl sink's directory."""
+        """Reads ``principal``, ``relationship`` (``member_of``), ``grant``, ``delegation`` and ``agent_permission``
+        JSON Lines files (plain records or raw-stream events) from a jsonl sink's directory."""
         d = Path(directory)
         out: list[dict] = []
-        for entity in ("principal", "grant", "delegation", "agent_permission"):
+        for entity in ("principal", "relationship", "grant", "delegation", "agent_permission"):
             p = d / (entity + ".jsonl")
             if not p.is_file():
                 continue
@@ -140,6 +140,11 @@ class AuthorityGraph:
                     scope = J.text(v, "scope") or "*"
                     self._delegations.append(_Delegation(p, dlg, scope.split(), J.text(v, "validFrom"),
                                                          J.text(v, "validTo"), J.text(v, "source")))
+            elif entity == "relationship":
+                # memberships listed per group (identity sources) arrive as member_of relationships
+                s, o = J.text(v, "subject"), J.text(v, "object")
+                if J.text(v, "predicate") == "member_of" and s and o:
+                    self._members.setdefault(s, set()).add(o)
             elif entity == "agent_permission":
                 g = self._permission(v)
                 if g is not None:

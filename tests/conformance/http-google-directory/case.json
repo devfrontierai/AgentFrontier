@@ -1,5 +1,5 @@
 {
-  "description": "HTTP engine on the Google Admin SDK Directory API with no hierarchy: OAuth refresh-token grant against a token URL the connection overrides (form fields checked, no scope sent), nextPageToken cursor paging (users, roles), users, groups, organizational units (memberOf: the parent unit, and a user's unit) and admin roles as principals, admin role assignments to users and groups, customer-wide and per organizational unit, as grants.",
+  "description": "HTTP engine on the Google Admin SDK Directory API with no hierarchy: OAuth refresh-token grant against a token URL the connection overrides (form fields checked, no scope sent), nextPageToken cursor paging (users, roles), users, groups, organizational units (memberOf: the parent unit, and a user's unit) and admin roles as principals, admin role assignments to users and groups, customer-wide and per organizational unit, as grants, and group memberships through forEach (one request per group, cursor-paged, with a nested group) as member_of relationships.",
   "server": {
     "routes": "routes.json"
   },

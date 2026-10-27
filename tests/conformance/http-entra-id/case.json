@@ -1,5 +1,5 @@
 {
-  "description": "HTTP engine on Microsoft Graph with no hierarchy: OAuth client credentials against a tenant token endpoint (form fields checked, scope derived from the Graph URL), absolute @odata.nextLink paging (users, role assignments), principals of four kinds (users, groups, service principals, directory roles), directory role assignments as grants and delegated permission grants as delegations, including an all-principals consent.",
+  "description": "HTTP engine on Microsoft Graph with no hierarchy: OAuth client credentials against a tenant token endpoint (form fields checked, scope derived from the Graph URL), absolute @odata.nextLink paging (users, role assignments), principals of four kinds (users, groups, service principals, directory roles), directory role assignments as grants and delegated permission grants as delegations, including an all-principals consent, and two forEach operations: group memberships (one request per group, paged, with a nested group) as member_of relationships, and app role assignments per service principal as grants.",
   "server": {
     "routes": "routes.json"
   },

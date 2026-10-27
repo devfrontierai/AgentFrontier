@@ -5,7 +5,7 @@ Versions follow semantic versioning. Each release names the spec tag it implemen
 
 ## Unreleased (plan phase 2: governance)
 
-Implements **spec-v1.2.0**.
+Implements **spec-v1.3.0**.
 
 * **Policy enforcement.** `agentfrontier.governance`: the decision contract (`Decision`), the built-in `RulePDP`
   (ordered rules, deny overrides allow, fail closed for `write` / `delete` / `execute`, optional native-grant
@@ -22,7 +22,9 @@ Implements **spec-v1.2.0**.
   the path that explains each; `who_can`, `relationships()` and `export()` for Evia.
 * **Audit trail.** `AuditLog`: hash-chained `audit_event` records per run, the manifest in `run.json`
   (`report.audit`), an optional HMAC signature, and `verify` / `verify_directory`.
-* **Identity sources** (experimental): `entra_id`, `google_directory`, `okta`.
+* **Identity sources** (experimental): `entra_id`, `google_directory`, `okta`, with group memberships
+  (`member_of` relationships, read by the authority graph) and app assignments.
+* **`forEach` operations** in the engine: one execution per record of another operation (spec-v1.3.0).
 * **CLI:** `extract --policy --subject --purpose --classify --audit`, `policy-decide`, `audit-verify`,
   `authority`; `query` and `sample` take `--policy`, `--subject`, `--purpose` and `--classify`.
 * Pipeline JSON `governance` block; `RunReport.policy` and `RunReport.audit`; error code `POLICY_DENIED`.

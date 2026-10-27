@@ -81,6 +81,30 @@
         "pageToken": null
       },
       "body": "responses/role-assignments.json"
+    },
+    {
+      "path": "/admin/directory/v1/groups/01x0gk371fz3j2m/members",
+      "query": {
+        "maxResults": "200",
+        "pageToken": "Q2VuZ01lbWJlcnNQYWdlMg"
+      },
+      "body": "responses/members-eng-2.json"
+    },
+    {
+      "path": "/admin/directory/v1/groups/01x0gk371fz3j2m/members",
+      "query": {
+        "maxResults": "200",
+        "pageToken": null
+      },
+      "body": "responses/members-eng-1.json"
+    },
+    {
+      "path": "/admin/directory/v1/groups/03rdcrjn2fy7wkp/members",
+      "query": {
+        "maxResults": "200",
+        "pageToken": null
+      },
+      "body": "responses/members-helpdesk.json"
     }
   ]
 }
