@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/devfrontierai/agentfrontier-spec/schemas/capabilities.schema.json",
+  "title": "Definition capabilities block",
+  "description": "Optional `capabilities` object of a source definition. Most of a connector's capabilities are derived from its operations (entity, aspect, category); this block declares what cannot be derived: the source API version, limits and per-operation incremental modes. See docs/capabilities.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {"type": "string"},
+    "limits": {"$ref": "#/$defs/limits"},
+    "operations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "incremental": {
+            "type": "array",
+            "items": {"enum": ["watermark", "cursor", "etag", "delta_token", "lsn", "change_feed", "full_diff"]},
+            "uniqueItems": true
+          },
+          "limits": {"$ref": "#/$defs/limits"},
+          "comment": {"type": "string"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "limits": {
+      "type": "object",
+      "properties": {
+        "requestsPerSecond": {"type": "number", "exclusiveMinimum": 0},
+        "maxPageSize": {"type": "integer", "minimum": 1},
+        "maxConcurrency": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": {"type": ["string", "number", "boolean"]}
+    }
+  }
+}

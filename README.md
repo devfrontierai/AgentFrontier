@@ -101,17 +101,39 @@ agentfrontier query shop.json "select count(*) from shop.orders" --scope databas
 
 `python -m agentfrontier ...` works the same way. See [docs/cli.md](docs/cli.md).
 
+## Raw-stream events
+
+With the envelope on, every record becomes a raw-stream event that says which tenant, source system, connector and
+run it came from, its family and category (Discovery & Structure / metadata, Traceability & Evidence / lineage, ...),
+a stable `nativeObjectId` and a deterministic `eventId`. Re-reading an unchanged object gives the same `eventId`, so
+consumers can deduplicate and replay safely.
+
+```python
+report = af.run(PipelineConfig(pg, aspects=["metadata", "lineage"], sinks=[{"type": "jsonl", "path": "out/shop"}],
+                               envelope=True, tenant_id="acme"))
+```
+
+```bash
+agentfrontier extract shop.json --aspects metadata,lineage --sink jsonl:out/shop --envelope --tenant acme
+agentfrontier capabilities postgresql      # what a connector can read: entity, aspect, raw-stream category, limits
+```
+
+The envelope is off by default in 0.2 and becomes the default in 0.3. The rules are in the spec's
+[docs/envelope.md](https://github.com/devfrontierai/agentfrontier-spec/blob/main/docs/envelope.md).
+
 ## The spec
 
-The definitions, the canonical entity model (`entities.json`), the auth catalog, the sink mappings and the
-conformance cases form the **AgentFrontier spec**. It is shared by every implementation and owned jointly: a change
-to it is made in both repositories (later it moves to a repository of its own). In this repository:
+The definitions, the canonical entity model (`entities.json`), the raw-stream catalog (`streams.json`), the JSON
+Schemas, the auth catalog, the sink mappings and the conformance cases form the **AgentFrontier spec**. It lives in
+[agentfrontier-spec](https://github.com/devfrontierai/agentfrontier-spec) and is shared by every implementation.
+This repository vendors a copy pinned to a tag (`scripts/spec.lock`):
 
-* `src/agentfrontier/spec/` holds the definitions, `entities.json`, `auth-methods.json`, `index.json` and
-  `sinks/` as package data;
-* `tests/conformance/` holds the conformance cases (`expected.jsonl` files are the contract and are never
-  regenerated here);
-* `scripts/sync_spec.py <path-to-spec>` re-copies both from the shared spec (`--check` only reports differences).
+* `src/agentfrontier/spec/` holds the definitions, `entities.json`, `streams.json`, `schemas/`,
+  `auth-methods.json`, `index.json` and `sinks/` as package data;
+* `tests/conformance/` holds the conformance cases (`expected.jsonl` and `expected-envelope.jsonl` files are the
+  contract and are never regenerated here);
+* `python scripts/sync_spec.py ../agentfrontier-spec --ref spec-vX.Y.Z` refreshes both from a spec tag (`--check`
+  only reports differences). Never edit the copies by hand.
 
 ## Status per definition
 

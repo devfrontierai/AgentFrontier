@@ -1,6 +1,6 @@
 {
-  "specVersion": "1",
-  "description": "The canonical records every AgentFrontier implementation emits. Operations in a source definition map their results onto these fields; anything that does not map lands in the record's `properties` map. Hierarchy level values (for example `database`, `schema`, `folder`) are added to every record by the engine and are not listed here.",
+  "specVersion": "2",
+  "description": "The canonical records every AgentFrontier implementation emits. Operations in a source definition map their results onto these fields; anything that does not map lands in the record's `properties` map. Hierarchy level values (for example `database`, `schema`, `folder`) are added to every record by the engine and are not listed here. Each entity belongs to one aspect (what a pipeline selects) and one raw-stream category (see streams.json); with the envelope enabled, the record becomes the `body` of a raw-stream event (see schemas/envelope.schema.json). Rows of data (entity `row`: `dataset` plus a `values` map) are not mapped onto fields and are not listed here; their aspect is `data` and their category `data_read`.",
   "types": {
     "string": "text; numbers and booleans are converted with their plain text form",
     "long": "64-bit integer; numeric text is parsed, anything else becomes null",
@@ -12,15 +12,21 @@
   },
   "aspects": {
     "metadata": "Structure: the source, its containers, datasets, fields, keys, indexes and routines.",
-    "lineage": "Which datasets (and fields) are derived from which.",
-    "governance": "Who can do what: principals, grants, access policies and tags.",
+    "lineage": "Which datasets (and fields) are derived from which, and the provenance of extracted artifacts.",
+    "governance": "Who can do what: principals, grants, delegations, access policies, labels and obligations.",
     "statistics": "Profiles of the data: null fractions, distinct counts, widths.",
     "usage": "How the data is used: query history and access logs.",
-    "data": "Rows of the data itself (samples and read-only queries)."
+    "data": "Rows of the data itself (samples and read-only queries).",
+    "context": "Business meaning and content: glossary terms, metrics, documents and their chunks.",
+    "activity": "What people, agents and applications did: executions and audit events.",
+    "quality": "Quality, freshness and reliability results.",
+    "agents": "AI agents, the tools they can call and the permissions they hold.",
+    "cost": "Usage and cost reported by cloud and LLM providers."
   },
   "entities": {
     "source": {
       "aspect": "metadata",
+      "category": "metadata",
       "description": "The system as a whole. One per session.",
       "fields": {
         "product": "string",
@@ -34,6 +40,7 @@
     },
     "container": {
       "aspect": "metadata",
+      "category": "metadata",
       "description": "A level of the source's hierarchy: database, schema, catalog, bucket, folder, project, namespace. `level` names which.",
       "fields": {
         "level": "string",
@@ -46,6 +53,7 @@
     },
     "dataset": {
       "aspect": "metadata",
+      "category": "metadata",
       "description": "Something that holds records: table, view, file, index, collection, API endpoint, topic.",
       "fields": {
         "name": "string",
@@ -79,6 +87,7 @@
     },
     "field": {
       "aspect": "metadata",
+      "category": "metadata",
       "description": "A column of a table or a property of a document. Nested properties use a dotted `name` and set `parent`.",
       "fields": {
         "dataset": "string",
@@ -97,6 +106,7 @@
     },
     "constraint": {
       "aspect": "metadata",
+      "category": "metadata",
       "description": "Primary key, unique key, foreign key or check. A foreign key's target is `refDataset` plus `ref<Level>` for each hierarchy level (refDatabase, refSchema, ...).",
       "fields": {
         "dataset": "string",
@@ -116,6 +126,7 @@
     },
     "index": {
       "aspect": "metadata",
+      "category": "metadata",
       "fields": {
         "dataset": "string",
         "name": "string",
@@ -128,6 +139,7 @@
     },
     "routine": {
       "aspect": "metadata",
+      "category": "metadata",
       "description": "Function or procedure.",
       "fields": {
         "name": "string",
@@ -142,6 +154,7 @@
     },
     "lineage": {
       "aspect": "lineage",
+      "category": "lineage",
       "description": "`dataset` (downstream, in the scope's location) is derived from `upstreamDataset` (located by `upstream<Level>`, for example upstreamSchema). Field-level edges also set `field` and `upstreamField`.",
       "fields": {
         "dataset": "string",
@@ -154,6 +167,7 @@
     },
     "principal": {
       "aspect": "governance",
+      "category": "identity_authority",
       "description": "User, role, group or service account.",
       "fields": {
         "name": "string",
@@ -166,6 +180,7 @@
     },
     "grant": {
       "aspect": "governance",
+      "category": "identity_authority",
       "description": "A privilege a principal holds on an object.",
       "fields": {
         "principal": "string",
@@ -179,6 +194,7 @@
     },
     "policy": {
       "aspect": "governance",
+      "category": "policy",
       "description": "Row access, masking, retention or other access rule.",
       "fields": {
         "name": "string",
@@ -193,7 +209,8 @@
     },
     "tag": {
       "aspect": "governance",
-      "description": "A tag or classification attached to an object.",
+      "category": "classification_labels",
+      "description": "A tag or classification attached to an object, as the source declares it. Prefer `label` for new definitions: it also carries the labelling engine and review status.",
       "fields": {
         "name": "string",
         "value": "string",
@@ -204,6 +221,7 @@
     },
     "statistic": {
       "aspect": "statistics",
+      "category": "quality_observability",
       "description": "Profile of a dataset or field. `distinctCount` below zero means a fraction of the row count (PostgreSQL convention).",
       "fields": {
         "dataset": "string",
@@ -218,6 +236,7 @@
     },
     "usage": {
       "aspect": "usage",
+      "category": "audit",
       "description": "One query or access event.",
       "fields": {
         "queryId": "string",
@@ -228,6 +247,360 @@
         "rowsProduced": "long",
         "datasets": "list",
         "status": "string"
+      }
+    },
+    "relationship": {
+      "aspect": "metadata",
+      "category": "relationship",
+      "description": "A typed edge between two objects that is not a key, grant or lineage edge: `subject` `predicate` `object` (for example a report `consumes` a dataset, a team `owns` a schema). Subjects and objects are AgentFrontier object ids (the envelope's nativeObjectId form) or source-native ids. Confidence and evidence are on the envelope.",
+      "fields": {
+        "subject": "string",
+        "subjectType": "string",
+        "predicate": "string",
+        "object": "string",
+        "objectType": "string",
+        "validFrom": "string",
+        "validTo": "string",
+        "comment": "string"
+      }
+    },
+    "capability": {
+      "aspect": "metadata",
+      "category": "configuration_capability",
+      "description": "Something a connector can do for this source: an operation, the entity (`producesEntity`) and category it produces, its incremental modes and limits. Derived from the definition's `capabilities` block and operations.",
+      "fields": {
+        "name": "string",
+        "operation": "string",
+        "producesEntity": "string",
+        "aspect": "string",
+        "category": "string",
+        "access": "string",
+        "incremental": "list",
+        "apiVersion": "string",
+        "authMethods": "list",
+        "limits": "any",
+        "comment": "string"
+      },
+      "enums": {
+        "access": {
+          "values": ["read", "write"],
+          "synonyms": {}
+        }
+      }
+    },
+    "label": {
+      "aspect": "governance",
+      "category": "classification_labels",
+      "description": "A label, classification, sensitivity level or glossary term on an object or a piece of content, with where it came from. Source-declared labels are never overwritten by inferred ones: each engine's labels are separate records.",
+      "fields": {
+        "name": "string",
+        "value": "string",
+        "labelType": "string",
+        "objectType": "string",
+        "dataset": "string",
+        "field": "string",
+        "content": "string",
+        "engine": "string",
+        "ruleVersion": "string",
+        "reviewStatus": "string",
+        "expiresAt": "string"
+      },
+      "enums": {
+        "labelType": {
+          "values": ["sensitivity", "classification", "glossary_term", "tag", "retention", "other"],
+          "synonyms": {"sensitivity_label": "sensitivity", "term": "glossary_term"}
+        },
+        "reviewStatus": {
+          "values": ["unreviewed", "accepted", "rejected"],
+          "synonyms": {"pending": "unreviewed", "approved": "accepted"}
+        }
+      }
+    },
+    "obligation": {
+      "aspect": "governance",
+      "category": "consent_retention_obligations",
+      "description": "Consent, retention, legal hold, deletion, residency or contractual obligation on an object or a data subject.",
+      "fields": {
+        "name": "string",
+        "type": "string",
+        "objectType": "string",
+        "dataset": "string",
+        "field": "string",
+        "subject": "string",
+        "purpose": "string",
+        "consentRef": "string",
+        "retentionUntil": "string",
+        "legalHold": "boolean",
+        "jurisdiction": "string",
+        "issuer": "string",
+        "effectiveFrom": "string",
+        "effectiveTo": "string"
+      },
+      "enums": {
+        "type": {
+          "values": ["consent", "retention", "legal_hold", "deletion", "residency", "contractual", "other"],
+          "synonyms": {"hold": "legal_hold"}
+        }
+      }
+    },
+    "delegation": {
+      "aspect": "governance",
+      "category": "identity_authority",
+      "description": "Authority one principal hands to another principal or to an agent (on-behalf-of access, impersonation, app role assignment).",
+      "fields": {
+        "principal": "string",
+        "delegate": "string",
+        "delegateType": "string",
+        "scope": "list",
+        "issuer": "string",
+        "validFrom": "string",
+        "validTo": "string"
+      }
+    },
+    "audit_event": {
+      "aspect": "activity",
+      "category": "audit",
+      "description": "An action an actor took on a resource and the decision about it, as an audit log records it.",
+      "fields": {
+        "actor": "string",
+        "actorType": "string",
+        "action": "string",
+        "resource": "string",
+        "resourceType": "string",
+        "purpose": "string",
+        "decision": "string",
+        "policyVersion": "string",
+        "outcome": "string",
+        "correlationId": "string",
+        "occurredAt": "string"
+      },
+      "enums": {
+        "decision": {
+          "values": ["allow", "deny", "allow_with_obligations", "not_applicable"],
+          "synonyms": {"permit": "allow", "granted": "allow", "denied": "deny"}
+        }
+      }
+    },
+    "change": {
+      "aspect": "metadata",
+      "category": "change",
+      "description": "A change to a source object reported by the source (CDC, delta query, change log). `before` and `after` are only filled when policy allows.",
+      "fields": {
+        "objectType": "string",
+        "objectId": "string",
+        "operation": "string",
+        "cursor": "string",
+        "occurredAt": "string",
+        "before": "any",
+        "after": "any"
+      },
+      "enums": {
+        "operation": {
+          "values": ["insert", "update", "delete"],
+          "synonyms": {"create": "insert", "c": "insert", "u": "update", "d": "delete", "remove": "delete"}
+        }
+      }
+    },
+    "provenance": {
+      "aspect": "lineage",
+      "category": "provenance_evidence",
+      "description": "Where an extracted artifact or fact came from: source version, extraction method, location inside the source and the parser that produced it.",
+      "fields": {
+        "artifact": "string",
+        "sourceUri": "string",
+        "sourceVersion": "string",
+        "method": "string",
+        "location": "string",
+        "parser": "string",
+        "parserVersion": "string",
+        "hash": "string"
+      }
+    },
+    "business_term": {
+      "aspect": "context",
+      "category": "business_context_semantics",
+      "description": "A glossary term or business concept.",
+      "fields": {
+        "name": "string",
+        "definition": "string",
+        "synonyms": "list",
+        "domain": "string",
+        "owner": "string",
+        "status": "string",
+        "comment": "string"
+      }
+    },
+    "metric": {
+      "aspect": "context",
+      "category": "business_context_semantics",
+      "description": "A governed metric: its definition, calculation, unit, grain and dimensions.",
+      "fields": {
+        "name": "string",
+        "definition": "string",
+        "expression": "string",
+        "unit": "string",
+        "grain": "string",
+        "dimensions": "list",
+        "domain": "string",
+        "owner": "string"
+      }
+    },
+    "content": {
+      "aspect": "context",
+      "category": "content_knowledge",
+      "description": "A document, page, message or other piece of content whose text was read.",
+      "fields": {
+        "name": "string",
+        "title": "string",
+        "mimeType": "string",
+        "location": "string",
+        "language": "string",
+        "sizeBytes": "long",
+        "owner": "string",
+        "version": "string",
+        "createdAt": "string",
+        "updatedAt": "string"
+      }
+    },
+    "chunk": {
+      "aspect": "context",
+      "category": "content_knowledge",
+      "description": "A span of a content item's text with its location (page, section, cell range) for citations.",
+      "fields": {
+        "content": "string",
+        "ordinal": "integer",
+        "text": "string",
+        "location": "string",
+        "tokenCount": "integer",
+        "embeddingRef": "string"
+      }
+    },
+    "activity": {
+      "aspect": "activity",
+      "category": "activity_execution",
+      "description": "One execution by a user, agent or application: a tool call, query, job run or API request.",
+      "fields": {
+        "name": "string",
+        "actor": "string",
+        "actorType": "string",
+        "tool": "string",
+        "operation": "string",
+        "status": "string",
+        "startedAt": "string",
+        "finishedAt": "string",
+        "durationMs": "long",
+        "correlationId": "string",
+        "approval": "string"
+      },
+      "enums": {
+        "actorType": {
+          "values": ["user", "agent", "application", "service"],
+          "synonyms": {"app": "application", "service_account": "service"}
+        }
+      }
+    },
+    "quality_result": {
+      "aspect": "quality",
+      "category": "quality_observability",
+      "description": "The result of a quality check, freshness measurement or connector health check.",
+      "fields": {
+        "check": "string",
+        "objectType": "string",
+        "dataset": "string",
+        "field": "string",
+        "status": "string",
+        "value": "double",
+        "threshold": "string",
+        "severity": "string",
+        "measuredAt": "string",
+        "message": "string"
+      },
+      "enums": {
+        "status": {
+          "values": ["pass", "warn", "fail", "error"],
+          "synonyms": {"passed": "pass", "ok": "pass", "warning": "warn", "failed": "fail"}
+        },
+        "severity": {
+          "values": ["info", "low", "medium", "high", "critical"],
+          "synonyms": {}
+        }
+      }
+    },
+    "agent": {
+      "aspect": "agents",
+      "category": "agents_registry",
+      "description": "An AI agent registered in a platform (agent builder, MCP host, gateway).",
+      "fields": {
+        "name": "string",
+        "provider": "string",
+        "platform": "string",
+        "description": "string",
+        "owner": "string",
+        "model": "string",
+        "status": "string",
+        "createdAt": "string",
+        "updatedAt": "string"
+      }
+    },
+    "agent_tool": {
+      "aspect": "agents",
+      "category": "agents_permissions_tools_identity",
+      "description": "A tool an agent can call, and the server that provides it.",
+      "fields": {
+        "agent": "string",
+        "name": "string",
+        "server": "string",
+        "description": "string",
+        "readOnly": "boolean",
+        "destructive": "boolean"
+      }
+    },
+    "agent_permission": {
+      "aspect": "agents",
+      "category": "agents_permissions_tools_identity",
+      "description": "A permission an agent holds, directly or through the identity it runs as.",
+      "fields": {
+        "agent": "string",
+        "identity": "string",
+        "privilege": "string",
+        "resource": "string",
+        "resourceType": "string",
+        "scope": "list",
+        "grantor": "string"
+      }
+    },
+    "usage_cost": {
+      "aspect": "cost",
+      "category": "usage_cost",
+      "description": "Usage and cost for one charge period, aligned with the FOCUS specification (column names in camelCase) and extended with LLM token counts.",
+      "fields": {
+        "provider": "string",
+        "billingAccountId": "string",
+        "subAccountId": "string",
+        "serviceName": "string",
+        "resourceId": "string",
+        "regionId": "string",
+        "model": "string",
+        "chargePeriodStart": "string",
+        "chargePeriodEnd": "string",
+        "chargeCategory": "string",
+        "consumedQuantity": "double",
+        "consumedUnit": "string",
+        "inputTokens": "long",
+        "outputTokens": "long",
+        "cachedInputTokens": "long",
+        "cacheWriteTokens": "long",
+        "requests": "long",
+        "billedCost": "double",
+        "effectiveCost": "double",
+        "billingCurrency": "string",
+        "invoiceStatus": "string"
+      },
+      "enums": {
+        "chargeCategory": {
+          "values": ["usage", "purchase", "tax", "credit", "adjustment"],
+          "synonyms": {"refund": "credit"}
+        }
       }
     }
   }

@@ -29,5 +29,6 @@
       "sizeBytes"
     ]
   },
+  "envelope": {"tenantId": "conformance", "expected": "expected-envelope.jsonl"},
   "expected": "expected.jsonl"
 }

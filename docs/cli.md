@@ -13,6 +13,7 @@ success, 1 on failure, 2 on bad usage.
 |---|---|
 | `definitions` | lists source definitions (id, name, protocol, category, status, auth methods, origin) |
 | `describe <type>` | properties, options, auth methods (fields, `?` = optional), hierarchy, operations (`entity @ scope`) and overlays of a definition |
+| `capabilities <type>` | the definition's `capability` records: per operation the produced entity, aspect, raw-stream category, incremental modes and limits (Python edition only for now) |
 | `validate [file...]` | without files: checks every definition. With files: each may be a definition, an overlay, a pipeline or a connection. Prints `{"ok": ..., "problems": [...]}` |
 | `test <connection.json>` | connects, detects the version, runs the test operation; prints the test result |
 | `extract <connection.json>` | runs a pipeline to sinks, prints the run report |
@@ -29,6 +30,7 @@ Options:
 | `--aspects a,b` | extract | aspects to extract (default `metadata`) |
 | `--sink <spec>` | extract | `jsonl:<dir>`, `json:<file>`, `console`, `memory`, or a sink JSON file (repeatable; default `console`) |
 | `--parallelism N` `--page-size N` `--batch-size N` `--sample-rows N` | extract | pipeline settings |
+| `--envelope` `--tenant <id>` | extract | write raw-stream events (tenant `default` unless given) instead of plain records. Put `--envelope` after the connection file, or write `--envelope true`, since an option takes the next argument as its value |
 | `--max-rows N` | query | row cap (default 1000) |
 | `--scope level=value,...` | query, sample | where to run, for example `--scope database=shopdb,schema=shop` |
 | `--limit N` | sample | rows (default 10) |

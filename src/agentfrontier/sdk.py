@@ -27,10 +27,11 @@ from typing import Any, Callable, Iterable
 
 from . import json_util as J
 from .auth import TokenService
+from .capabilities import capabilities as capabilities_of
 from .definitions import DefinitionRegistry, SourceDefinition
 from .engine import Detected, EngineSession
 from .errors import AgentFrontierError, root_message
-from .model import ConnectionConfig, SessionStats, TestResult
+from .model import ConnectionConfig, Record, SessionStats, TestResult
 from .pipeline import Pipeline, PipelineConfig, RunListener, RunReport
 from .protocols import Protocol, ProtocolContext
 from .protocols.files import FilesProtocol
@@ -77,6 +78,7 @@ class AgentFrontier:
         self.definitions = DefinitionRegistry(self.spec, list(definitions))
         self.entity_model = self.spec.entities()
         self.auth_catalog = self.spec.auth_methods()
+        self.streams = self.spec.streams()
         p: dict[str, Protocol] = {}
         for x in [SqlProtocol(), HttpProtocol(), FilesProtocol()]:
             p[x.id] = x
@@ -257,6 +259,12 @@ class AgentFrontier:
 
     def run(self, config: PipelineConfig, listener: RunListener | None = None) -> RunReport:
         return Pipeline(self, config, listener).run()
+
+    def capabilities(self, type_: str) -> list[Record]:
+        """``capability`` records of a definition (by id or alias): what the connector can read and how (spec
+        docs/capabilities.md)."""
+        d = self.definitions.get(type_)
+        return capabilities_of(d, self.entity_model)
 
     def sink(self, config: dict) -> Sink:
         """A sink from its JSON configuration (``{"type": "jsonl", "path": "out"}``)."""

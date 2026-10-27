@@ -14,6 +14,11 @@ A case is a folder with a `case.json`:
 | `sample` | Optional: also call `sample(scope, dataset, limit)`; the rows are compared with `expected-sample.json`. |
 | `ignore` | Per entity, fields removed before comparing (values that legitimately differ between machines or drivers). |
 | `expected` | The expected records, one JSON object per line. |
+| `envelope` | Optional: run the same pipeline again with the raw-stream envelope on and tenant `envelope.tenantId`, and compare the events with `envelope.expected`. The harness removes the run-dependent `runId`, `observedAt` and `eventId` and applies `ignore` to each event's `body` before comparing. It also checks that every `eventId` equals the id recomputed from the event's own properties ([docs/envelope.md](../docs/envelope.md)). |
+
+`event-ids.json` holds test vectors for the `eventId` rule: every implementation computes the id of each `input`
+and must get exactly `eventId`. Together with the per-case check above, this proves that two implementations give
+the same object the same id even when its body holds machine-dependent values.
 
 Regenerate expected files only from an implementation you have checked by hand (Java:
 `-Dagentfrontier.updateConformance=true`) and review the diff.

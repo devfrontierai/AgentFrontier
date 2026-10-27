@@ -158,6 +158,7 @@ class Entity:
     aspect: str
     fields: dict[str, str]
     enums: dict[str, Enumeration]
+    category: str | None = None
 
     def canonical(self, column: str) -> str | None:
         norm = normalize(column)
@@ -178,8 +179,13 @@ class EntityModel:
             for en_name, en in ((e or {}).get("enums") or {}).items():
                 enums[en_name] = Enumeration(J.strings(J.get(en, "values")),
                                              {k: J.as_text(v) for k, v in (J.get(en, "synonyms") or {}).items()})
-            self._entities[name] = Entity(name, J.text(e, "aspect", "metadata"), fields, enums)
+            self._entities[name] = Entity(name, J.text(e, "aspect", "metadata"), fields, enums, J.text(e, "category"))
         self._aspects = {k: J.as_text(v) for k, v in ((doc or {}).get("aspects") or {}).items()}
+        self._spec_version = J.text(doc, "specVersion", "1")
+
+    @property
+    def spec_version(self) -> str:
+        return self._spec_version
 
     def entity(self, name: str) -> Entity | None:
         return self._entities.get(name)
@@ -199,11 +205,45 @@ class EntityModel:
         e = self._entities.get(entity)
         return "metadata" if e is None else e.aspect
 
+    def category_of(self, entity: str) -> str | None:
+        """Raw-stream category of an entity (see streams.json); ``data_read`` for rows, None for entities the model
+        does not know."""
+        if entity == "row":
+            return "data_read"
+        e = self._entities.get(entity)
+        return None if e is None else e.category
+
     @staticmethod
     def known_types() -> list[str]:
         return ["string", "long", "integer", "double", "boolean", "list", "any"]
 
     normalize = staticmethod(normalize)
+
+
+# ----------------------------------------------------------------------------------------------------- StreamCatalog
+
+
+class StreamCatalog:
+    """Raw-stream families and their categories from ``spec/streams.json``."""
+
+    def __init__(self, doc: Any):
+        self._families: dict[str, dict] = dict((doc or {}).get("families") or {})
+        self._family_of: dict[str, str] = {}
+        for fam, f in self._families.items():
+            for c in J.strings(J.get(f, "categories")):
+                self._family_of[c] = fam
+        self._categories: dict[str, dict] = dict((doc or {}).get("categories") or {})
+
+    @property
+    def families(self) -> list[str]:
+        return list(self._families)
+
+    @property
+    def categories(self) -> list[str]:
+        return list(self._categories)
+
+    def family_of(self, category: str | None) -> str | None:
+        return None if category is None else self._family_of.get(category)
 
 
 # ----------------------------------------------------------------------------------------------------- SpecResources
@@ -247,3 +287,6 @@ class SpecResources:
 
     def auth_methods(self) -> AuthCatalog:
         return AuthCatalog(self.read("auth-methods.json"))
+
+    def streams(self) -> StreamCatalog:
+        return StreamCatalog(self.read("streams.json"))

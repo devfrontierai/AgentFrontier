@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.10", "3.11", "3.12", "3.13"]
+        include:
+          - os: windows-latest
+            python: "3.12"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      # unit, spec, envelope and conformance suites; the database and Neo4j suites skip themselves without servers
+      - run: pip install -e ".[dev]"
+      - run: python -m pytest -q
+
+  spec-pin:
+    # the vendored spec must be exactly the tag recorded in scripts/spec.lock
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: compare with the pinned spec tag
+        run: |
+          ref=$(sed -n 's/^ref=//p' scripts/spec.lock)
+          python scripts/sync_spec.py https://github.com/devfrontierai/agentfrontier-spec.git --ref "$ref" --check
+
+  no-runtime-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install .
+      - name: the core imports with the standard library only
+        run: |
+          test "$(pip list --format=freeze | grep -v -i -E '^(agentfrontier|pip|setuptools|wheel)==' | wc -l)" = 0
+          python -c "import agentfrontier, json; print(agentfrontier.__version__, len(agentfrontier.AgentFrontier().list_definitions()))"

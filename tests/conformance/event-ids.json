@@ -1,0 +1,151 @@
+{
+  "description": "Test vectors for the eventId rule in docs/envelope.md. Every implementation computes eventId(input) and must get exactly `eventId`.",
+  "vectors": [
+    {
+      "description": "plain dataset record",
+      "input": {
+        "tenantId": "default",
+        "sourceSystemId": "shop",
+        "entity": "dataset",
+        "nativeObjectId": "shop/main/orders",
+        "op": "upsert",
+        "body": {
+          "entity": "dataset",
+          "source": "shop",
+          "schema": "main",
+          "name": "orders",
+          "type": "table"
+        }
+      },
+      "eventId": "sha256:d76eae228f22fff7ce34b05dffdb3ec7d4f3f77e8bc52912baf383c65be969fd"
+    },
+    {
+      "description": "key order in the body does not matter",
+      "input": {
+        "tenantId": "default",
+        "sourceSystemId": "shop",
+        "entity": "dataset",
+        "nativeObjectId": "shop/main/orders",
+        "op": "upsert",
+        "body": {
+          "type": "table",
+          "name": "orders",
+          "schema": "main",
+          "source": "shop",
+          "entity": "dataset"
+        }
+      },
+      "eventId": "sha256:d76eae228f22fff7ce34b05dffdb3ec7d4f3f77e8bc52912baf383c65be969fd"
+    },
+    {
+      "description": "another tenant gives another id",
+      "input": {
+        "tenantId": "acme",
+        "sourceSystemId": "shop",
+        "entity": "dataset",
+        "nativeObjectId": "shop/main/orders",
+        "op": "upsert",
+        "body": {
+          "entity": "dataset",
+          "source": "shop",
+          "schema": "main",
+          "name": "orders",
+          "type": "table"
+        }
+      },
+      "eventId": "sha256:e7d52efe5972aff2649e947e91792760762f1494d959549005de31e1ea5d897d"
+    },
+    {
+      "description": "op is part of the id",
+      "input": {
+        "tenantId": "default",
+        "sourceSystemId": "shop",
+        "entity": "dataset",
+        "nativeObjectId": "shop/main/orders",
+        "op": "tombstone",
+        "body": {
+          "entity": "dataset",
+          "source": "shop",
+          "schema": "main",
+          "name": "orders",
+          "type": "table"
+        }
+      },
+      "eventId": "sha256:665eb68ac593d22d06c5c1a320e8686a579cd449172720945e1dbe811948a78a"
+    },
+    {
+      "description": "nulls, booleans, integers, lists and nested properties",
+      "input": {
+        "tenantId": "default",
+        "sourceSystemId": "pg",
+        "entity": "field",
+        "nativeObjectId": "pg/db/public/t/id",
+        "op": "upsert",
+        "body": {
+          "entity": "field",
+          "source": "pg",
+          "database": "db",
+          "schema": "public",
+          "dataset": "t",
+          "name": "id",
+          "ordinal": 1,
+          "nullable": false,
+          "comment": null,
+          "maxLength": 9007199254740993,
+          "properties": {
+            "identity": "always",
+            "z": [
+              1,
+              "two",
+              null,
+              true
+            ],
+            "a": {
+              "y": 2,
+              "x": 1
+            }
+          }
+        }
+      },
+      "eventId": "sha256:375d0ecc941c64309af9bf3ed9eaf43b46d1c61f2706f96fc43c1bfd02c37e25"
+    },
+    {
+      "description": "doubles are written with a fractional digit",
+      "input": {
+        "tenantId": "default",
+        "sourceSystemId": "pg",
+        "entity": "statistic",
+        "nativeObjectId": "pg/db/public/t/amount#statistic",
+        "op": "upsert",
+        "body": {
+          "entity": "statistic",
+          "source": "pg",
+          "dataset": "t",
+          "field": "amount",
+          "nullFraction": 0.25,
+          "distinctCount": -1.0,
+          "avgWidth": 8.0
+        }
+      },
+      "eventId": "sha256:200560f272c67ec3045b1e351b9e1078a8bb7dfe54da32ee7da0160be712b069"
+    },
+    {
+      "description": "non-ASCII text and characters that need escaping",
+      "input": {
+        "tenantId": "default",
+        "sourceSystemId": "files",
+        "entity": "dataset",
+        "nativeObjectId": "files/données/résumé.csv",
+        "op": "upsert",
+        "body": {
+          "entity": "dataset",
+          "source": "files",
+          "folder": "données",
+          "name": "résumé.csv",
+          "comment": "quote \" backslash \\ tab \t newline \n 日本語"
+        }
+      },
+      "eventId": "sha256:0005588d5487ddf333a243da54fe03e444c068cac344984bf68df70fadf38f45"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/devfrontierai/agentfrontier-spec/schemas/envelope.schema.json",
+  "title": "AgentFrontier raw-stream event",
+  "description": "One raw-stream event: a canonical record (`body`) plus where it came from, what it is and how far it can be trusted. Implementations write the properties in the order listed here and omit optional properties whose value is unknown. Rules for eventId and nativeObjectId are in docs/envelope.md.",
+  "type": "object",
+  "required": ["envelopeVersion", "eventId", "tenantId", "sourceSystemId", "connectorId", "runId", "family", "category", "entity", "op", "nativeObjectId", "observedAt", "schemaVersion", "assertion", "confidence", "body"],
+  "additionalProperties": false,
+  "properties": {
+    "envelopeVersion": {"const": "1"},
+    "eventId": {
+      "description": "sha256: followed by 64 lower-case hex digits; deterministic, see docs/envelope.md",
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "tenantId": {"type": "string", "minLength": 1},
+    "sourceSystemId": {"description": "The connection id: one configured source system", "type": "string", "minLength": 1},
+    "connectorId": {"description": "The definition that read it (postgresql, unity_catalog, ...)", "type": "string", "minLength": 1},
+    "runId": {"type": "string", "minLength": 1},
+    "family": {
+      "enum": ["discovery_structure", "governance_authority", "traceability_evidence", "context_knowledge", "runtime_observability", "agents_security", "economics", "data_streams"]
+    },
+    "category": {
+      "enum": ["metadata", "configuration_capability", "relationship", "policy", "identity_authority", "classification_labels", "consent_retention_obligations", "lineage", "provenance_evidence", "audit", "change", "business_context_semantics", "content_knowledge", "activity_execution", "quality_observability", "agents_registry", "agents_permissions_tools_identity", "usage_cost", "data_read", "data_write"]
+    },
+    "entity": {"description": "The body's entity (entities.json)", "type": "string", "minLength": 1},
+    "op": {
+      "description": "upsert: the object exists with this body. delete: the source reported a deletion. tombstone: the object was not seen in a full run that should have seen it.",
+      "enum": ["upsert", "delete", "tombstone"]
+    },
+    "nativeObjectId": {"description": "Stable id of the object inside its source system, see docs/envelope.md", "type": "string", "minLength": 1},
+    "nativeVersion": {"description": "Source version of the object (ETag, generation, LSN, row version) when the source exposes one", "type": "string"},
+    "observedAt": {"description": "When AgentFrontier read it: UTC ISO-8601", "type": "string", "format": "date-time"},
+    "eventTime": {"description": "When it happened at the source, when the source says", "type": "string"},
+    "schemaVersion": {"description": "specVersion of entities.json the body follows", "type": "string"},
+    "mappingVersion": {"description": "Version of the definition or mapping profile that produced the body", "type": "string"},
+    "assertion": {
+      "description": "observed: read from the source as it is. declared: the source states it (a declared lineage edge, a label set by a person). parsed: derived by parsing source artifacts (SQL, documents). inferred: proposed by a rule or model.",
+      "enum": ["observed", "declared", "parsed", "inferred"]
+    },
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "evidenceRef": {"description": "Pointer to the evidence (query, API call, document span) behind the body", "type": "string"},
+    "payloadRef": {"description": "Pointer to the preserved raw payload, when raw payloads are kept", "type": "string"},
+    "classificationRefs": {"type": "array", "items": {"type": "string"}},
+    "policyVersion": {"description": "Version of the policy decision applied before release", "type": "string"},
+    "body": {"description": "The canonical record (record.schema.json): `entity`, `source`, level values, canonical fields and `properties`", "type": "object"}
+  }
+}

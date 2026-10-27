@@ -25,5 +25,6 @@
     "dataset": "customers",
     "limit": 2
   },
+  "envelope": {"tenantId": "conformance", "expected": "expected-envelope.jsonl"},
   "expected": "expected.jsonl"
 }

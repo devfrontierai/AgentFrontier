@@ -22,12 +22,14 @@ Usage: agentfrontier <command> [arguments] [options]
 Commands
   definitions                         list source definitions
   describe <type>                     properties, auth methods, hierarchy and operations of a definition
+  capabilities <type>                 what a definition can read: entity, aspect, raw-stream category, limits
   validate [file...]                  check definitions (all, or the given files), connections or pipelines
   test <connection.json>              connect, detect the version, run the test operation
   extract <connection.json>           extract to sinks
       --aspects metadata,lineage,...  what to extract (default metadata)
       --sink jsonl:<dir> | json:<file> | console | <sink.json>   (repeatable; default console)
       --parallelism N  --page-size N  --batch-size N
+      --envelope [--tenant <id>]      write raw-stream events instead of plain records
   run <pipeline.json>                 run a pipeline file
   query <connection.json> "<sql>"     read-only query  [--max-rows N] [--scope level=value,...]
   sample <connection.json> <dataset>  first rows of a dataset [--scope level=value,...] [--limit N]
@@ -106,6 +108,9 @@ def main(argv: list[str] | None = None) -> int:
             return _definitions(af)
         if cmd == "describe":
             return _describe(af, _need(positional, 0, "type"))
+        if cmd == "capabilities":
+            _print([r.to_json() for r in af.capabilities(_need(positional, 0, "type"))])
+            return 0
         if cmd == "validate":
             return _validate(af, positional)
         if cmd == "test":
@@ -217,7 +222,9 @@ def _extract(af: AgentFrontier, file: str, opts: dict[str, list[str]]) -> int:
     sinks = [_sink_spec(s) for s in opts.get("sink", ["console"])]
     aspects = opts["aspects"][0].split(",") if "aspects" in opts else ["metadata"]
     p = PipelineConfig(_connection(file), aspects, None, None, sinks, _int_opt(opts, "page-size"),
-                       _int_opt(opts, "batch-size"), _int_opt(opts, "parallelism"), _int_opt(opts, "sample-rows"))
+                       _int_opt(opts, "batch-size"), _int_opt(opts, "parallelism"), _int_opt(opts, "sample-rows"),
+                       envelope=J.as_text(opts.get("envelope", ["false"])[0]).lower() == "true",
+                       tenant_id=(opts.get("tenant") or [None])[0])
     to_console = any(J.text(s, "type") == "console" for s in sinks)
 
     def listener(event: str, data: dict) -> None:

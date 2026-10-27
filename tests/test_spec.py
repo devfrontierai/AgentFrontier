@@ -115,8 +115,8 @@ def test_from_environment_reads_definition_directories(tmp_path):
 
 
 def test_spec_copies_match_the_shared_spec():
-    """Set AGENTFRONTIER_SPEC_SOURCE to the shared spec folder (for example ../agentfrontier-java/spec) to check
-    that the copies in this repository are identical; skipped otherwise."""
+    """Set AGENTFRONTIER_SPEC_SOURCE to a checkout of the agentfrontier-spec repository (for example
+    ../agentfrontier-spec) to check that the copies in this repository are identical; skipped otherwise."""
     import subprocess
     import sys
 

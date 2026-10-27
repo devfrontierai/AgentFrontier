@@ -1,0 +1,69 @@
+{
+  "specVersion": "1",
+  "description": "Raw-stream families and categories. Every entity in entities.json belongs to one category, and every category to one family. Families and categories are logical: they say what an event is and who consumes it, not how it is transported. See docs/envelope.md.",
+  "families": {
+    "discovery_structure": {
+      "name": "Discovery & Structure",
+      "access": "read",
+      "categories": ["metadata", "configuration_capability", "relationship"]
+    },
+    "governance_authority": {
+      "name": "Governance & Authority",
+      "access": "read",
+      "categories": ["policy", "identity_authority", "classification_labels", "consent_retention_obligations"]
+    },
+    "traceability_evidence": {
+      "name": "Traceability & Evidence",
+      "access": "read",
+      "tamperEvident": true,
+      "categories": ["lineage", "provenance_evidence", "audit", "change"]
+    },
+    "context_knowledge": {
+      "name": "Context & Knowledge",
+      "access": "read",
+      "categories": ["business_context_semantics", "content_knowledge"]
+    },
+    "runtime_observability": {
+      "name": "Runtime & Observability",
+      "access": "read",
+      "categories": ["activity_execution", "quality_observability"]
+    },
+    "agents_security": {
+      "name": "Agents Security",
+      "access": "read",
+      "categories": ["agents_registry", "agents_permissions_tools_identity"]
+    },
+    "economics": {
+      "name": "Economics",
+      "access": "read",
+      "categories": ["usage_cost"]
+    },
+    "data_streams": {
+      "name": "Data Streams",
+      "access": "read_write",
+      "categories": ["data_read", "data_write"]
+    }
+  },
+  "categories": {
+    "metadata": {"name": "Metadata", "consumers": ["catalog and search", "schema registry", "Enterprise Asset Graph", "context assembly"]},
+    "configuration_capability": {"name": "Configuration & Capability", "consumers": ["gateway discovery", "capability registry", "planning and compatibility checks"]},
+    "relationship": {"name": "Relationship", "consumers": ["Enterprise Asset Graph", "Business Context Graph", "search and impact analysis"]},
+    "policy": {"name": "Policy", "consumers": ["policy evaluation", "Authority Graph", "query guard", "cache invalidation"]},
+    "identity_authority": {"name": "Identity & Authority", "consumers": ["Authority Graph", "tool authorization", "scoped context retrieval"]},
+    "classification_labels": {"name": "Classification & Labels", "consumers": ["policy engine", "masking", "routing", "cache partitioning", "graph annotations"]},
+    "consent_retention_obligations": {"name": "Consent, Retention & Obligations", "consumers": ["context guard", "lifecycle jobs", "deletion propagation", "audit"]},
+    "lineage": {"name": "Lineage", "consumers": ["Lineage Graph", "impact analysis", "provenance", "sink transformations"]},
+    "provenance_evidence": {"name": "Provenance & Evidence", "consumers": ["Provenance Graph", "explainability", "citations", "validation and audit"]},
+    "audit": {"name": "Audit", "consumers": ["Audit Graph", "compliance", "investigation and incident response"]},
+    "change": {"name": "Change (Incremental)", "consumers": ["incremental ingestion", "replay", "graph updates", "cache invalidation", "reconciliation"]},
+    "business_context_semantics": {"name": "Business Context & Semantics", "consumers": ["Business Context Graph", "NL-to-SQL", "NL-to-report", "context assembly"]},
+    "content_knowledge": {"name": "Content & Knowledge", "consumers": ["search and RAG", "semantic cache", "graph enrichment", "agent context"]},
+    "activity_execution": {"name": "Activity & Execution", "consumers": ["Audit & Activity Graph", "operations", "security analytics", "cost attribution"]},
+    "quality_observability": {"name": "Quality & Observability", "consumers": ["reliability dashboards", "trust signals", "alerting", "pipeline control"]},
+    "agents_registry": {"name": "Agents Registry", "consumers": ["Agent Authority Graph"]},
+    "agents_permissions_tools_identity": {"name": "Agents Permissions, Tools & Identity", "consumers": ["Agent Authority Graph"]},
+    "usage_cost": {"name": "Usage & Cost", "consumers": ["Cloud & LLM Cost Graph", "cost attribution", "unit economics", "FinOps reporting"]},
+    "data_read": {"name": "Data read", "consumers": ["agents (NL to SQL, APIs, scripts, artifacts)"]},
+    "data_write": {"name": "Data write", "consumers": ["agents executing approved updates"]}
+  }
+}

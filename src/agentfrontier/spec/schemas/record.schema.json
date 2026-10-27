@@ -1,0 +1,2305 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/devfrontierai/agentfrontier-spec/schemas/record.schema.json",
+  "title": "AgentFrontier canonical record",
+  "description": "Generated from entities.json by tools/validate.py --write; do not edit. Records also carry `source` and their hierarchy level values (database, schema, ...), which vary by source.",
+  "oneOf": [
+    {
+      "title": "source",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "source"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "product": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "banner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "variant": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "definition": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "login": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "comment": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "container",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "container"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "comment": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sizeBytes": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "dataset",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "dataset"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "comment": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rowCount": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "sizeBytes": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "definition": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "isPartition": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "partitionOf": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "format": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "location": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "updatedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "field",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "field"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "dataset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ordinal": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "dataType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "nullable": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "defaultValue": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "comment": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "isGenerated": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "maxLength": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "numericPrecision": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "numericScale": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "parent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "constraint",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "constraint"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "dataset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "columns": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "refDataset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "refColumns": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "definition": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "index",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "index"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "dataset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "isUnique": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "isPrimary": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "method": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "columns": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "definition": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "routine",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "routine"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "language": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "arguments": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "returns": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "comment": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "definition": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "lineage",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "lineage"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "dataset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "upstreamDataset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "upstreamField": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "transformation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "principal",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "principal"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "canLogin": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "superuser": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "memberOf": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "comment": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "grant",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "grant"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "principal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "privilege": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "objectType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dataset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "grantor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "grantable": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "policy",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "policy"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dataset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "definition": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "appliesTo": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "comment": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "tag",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "tag"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "objectType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dataset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "statistic",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "statistic"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "dataset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rowCount": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "nullFraction": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "distinctCount": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "avgWidth": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "min": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "max": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "usage",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "usage"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "queryId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "queryText": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "user": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "startedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "durationMs": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "rowsProduced": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "datasets": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "relationship",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "relationship"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "subject": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subjectType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "predicate": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "object": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "objectType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "validFrom": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "validTo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "comment": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "capability",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "capability"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "operation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "producesEntity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "aspect": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "category": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "access": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "incremental": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "apiVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "authMethods": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "limits": {},
+        "comment": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "label",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "label"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "labelType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "objectType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dataset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "content": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "engine": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ruleVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewStatus": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expiresAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "obligation",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "obligation"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "objectType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dataset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subject": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "purpose": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "consentRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "retentionUntil": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "legalHold": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "jurisdiction": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "issuer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "effectiveFrom": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "effectiveTo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "delegation",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "delegation"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "principal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "delegate": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "delegateType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scope": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "issuer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "validFrom": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "validTo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "audit_event",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "audit_event"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "actor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "actorType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resource": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resourceType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "purpose": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "decision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "policyVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "outcome": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "correlationId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "occurredAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "change",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "change"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "objectType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "objectId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "operation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "occurredAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "before": {},
+        "after": {}
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "provenance",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "provenance"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "artifact": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sourceUri": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sourceVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "method": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "location": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "parser": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "parserVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "business_term",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "business_term"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "definition": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "synonyms": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "domain": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "comment": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "metric",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "metric"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "definition": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expression": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "grain": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dimensions": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "domain": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "content",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "content"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mimeType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "location": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "language": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sizeBytes": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "updatedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "chunk",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "chunk"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "content": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ordinal": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "location": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tokenCount": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "embeddingRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "activity",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "activity"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "actor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "actorType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tool": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "operation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "startedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "finishedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "durationMs": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "correlationId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "approval": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "quality_result",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "quality_result"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "check": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "objectType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dataset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "threshold": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "severity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "measuredAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "agent",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "agent"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "platform": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "createdAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "updatedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "agent_tool",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "agent_tool"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "agent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "server": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "readOnly": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "destructive": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "agent_permission",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "agent_permission"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "agent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "identity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "privilege": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resource": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resourceType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scope": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "grantor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "usage_cost",
+      "type": "object",
+      "required": [
+        "entity"
+      ],
+      "properties": {
+        "entity": {
+          "const": "usage_cost"
+        },
+        "source": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "billingAccountId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subAccountId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "serviceName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resourceId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "regionId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "chargePeriodStart": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "chargePeriodEnd": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "chargeCategory": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "consumedQuantity": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "consumedUnit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "inputTokens": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "outputTokens": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "cachedInputTokens": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "cacheWriteTokens": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "requests": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "billedCost": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "effectiveCost": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "billingCurrency": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "invoiceStatus": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "title": "row",
+      "type": "object",
+      "required": [
+        "entity",
+        "dataset",
+        "values"
+      ],
+      "properties": {
+        "entity": {
+          "const": "row"
+        },
+        "source": {
+          "type": "string"
+        },
+        "dataset": {
+          "type": "string"
+        },
+        "values": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    }
+  ]
+}

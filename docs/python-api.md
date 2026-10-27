@@ -24,6 +24,8 @@ Thread-safe; create one and share it.
 | `test(connection)` | `TestResult`; never raises for configuration or connection problems |
 | `open(connection)` | a session (validates, resolves secrets, connects, detects version and variant) |
 | `run(pipeline_config, listener=None)` | runs a pipeline, returns a `RunReport` |
+| `capabilities(type)` | `capability` records of a definition: each operation's produced entity, aspect, raw-stream category, incremental modes and limits (spec `docs/capabilities.md`) |
+| `streams` | the raw-stream `StreamCatalog` (`families`, `categories`, `family_of(category)`) |
 | `sink(config)` | a sink from its JSON configuration |
 | `clear_detection_cache()` | forget cached version detection |
 | `secrets` | the `Secrets` resolver (`resolve`, `resolve_all`, `resolve_deep`) |
@@ -116,7 +118,8 @@ progress handler) and fetches at most `max_rows + 1` rows.
 
 ```python
 PipelineConfig(connection, aspects=None, operations=None, scope=None, sinks=None,
-               page_size=0, batch_size=0, parallelism=0, sample_rows=0, name=None)
+               page_size=0, batch_size=0, parallelism=0, sample_rows=0, name=None,
+               envelope=False, tenant_id=None)
 PipelineConfig.of(connection, aspects, sinks)
 PipelineConfig.from_file(path)  /  PipelineConfig.from_json(obj_or_text, base_dir=None)
 report = af.run(config, listener=lambda event, data: ...)
@@ -129,6 +132,16 @@ Defaults: aspects `["metadata"]`, page size 500, batch size 200, parallelism 1, 
 `RunReport`: `run_id`, `pipeline`, `source`, `definition`, `version`, `variant`, `status` (SUCCEEDED, PARTIAL,
 FAILED), `counts`, `warnings`, `errors`, `elapsed_ms`, `load`, `started_at`, `finished_at`, `count(entity)`,
 `to_map()` (the JSON shape of `run.json`).
+
+## Raw-stream events
+
+With `envelope=True` (pipeline JSON: `"envelope": true, "tenantId": "..."`), sinks receive `Event` objects instead of
+plain records. An `Event` is a `Record` subclass: `entity` and `values` are the wrapped record's, so filters and graph
+sinks work unchanged. Its `envelope` dict holds `envelopeVersion`, `eventId`, `tenantId`, `sourceSystemId`,
+`connectorId`, `runId`, `family`, `category`, `entity`, `op`, `nativeObjectId`, `observedAt`, `schemaVersion`,
+`assertion` and `confidence`. `record` is the wrapped record, and `to_json()` returns the envelope with the record as
+`body`, so the JSON sinks write events. The rules for `eventId` and `nativeObjectId` are in the spec's
+`docs/envelope.md`; `agentfrontier.envelope.event_id(...)` and `native_object_id(record, levels)` compute them.
 
 ## Sinks
 

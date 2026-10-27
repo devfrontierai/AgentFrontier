@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable
 
 from . import json_util as J
 from .engine import EngineSession
+from .envelope import EnvelopeBuilder
 from .errors import AgentFrontierError, root_message
 from .model import ConnectionConfig, Record, Scope, Snapshot
 from .sinks import RunContext, Sink
@@ -65,7 +66,8 @@ class PipelineConfig:
     operation names, overriding ``aspects`` when not empty; ``scope``: options added to the connection's (filters);
     ``sinks``: sink configurations; ``page_size``: datasets per page; ``batch_size``: datasets per batch;
     ``parallelism``: leaf scopes processed at once, one session each; ``sample_rows``: rows per dataset for aspect
-    ``data``."""
+    ``data``; ``envelope``: wrap every record in a raw-stream event (spec docs/envelope.md); ``tenant_id``: the
+    events' tenant (``default`` when not set)."""
 
     connection: ConnectionConfig
     aspects: list[str] = field(default_factory=list)
@@ -77,6 +79,8 @@ class PipelineConfig:
     parallelism: int = 0
     sample_rows: int = 0
     name: str | None = None
+    envelope: bool = False
+    tenant_id: str | None = None
 
     def __post_init__(self) -> None:
         self.aspects = list(self.aspects) if self.aspects else ["metadata"]
@@ -97,7 +101,8 @@ class PipelineConfig:
 
     def with_sinks(self, new_sinks: Iterable[dict]) -> "PipelineConfig":
         return PipelineConfig(self.connection, self.aspects, self.operations, self.scope, list(new_sinks),
-                              self.page_size, self.batch_size, self.parallelism, self.sample_rows, self.name)
+                              self.page_size, self.batch_size, self.parallelism, self.sample_rows, self.name,
+                              self.envelope, self.tenant_id)
 
     @staticmethod
     def from_file(path: str | Path) -> "PipelineConfig":
@@ -131,7 +136,8 @@ class PipelineConfig:
         return PipelineConfig(connection, J.strings(n.get("aspects")), J.strings(n.get("operations")),
                               J.to_map(n.get("scope")), sinks, J.integer(settings, "pageSize", 0),
                               J.integer(settings, "batchSize", 0), J.integer(settings, "parallelism", 0),
-                              J.integer(settings, "sampleRows", 0), J.text(n, "name"))
+                              J.integer(settings, "sampleRows", 0), J.text(n, "name"), J.boolean(n, "envelope", False),
+                              J.text(n, "tenantId"))
 
 
 @dataclass(frozen=True)
@@ -184,6 +190,7 @@ class Pipeline:
         self._sinks: list[Sink] = []
         self._leaves_ok = 0
         self._load = Snapshot()
+        self._envelope: EnvelopeBuilder | None = None
 
     def _add_warning(self, w: str) -> None:
         with self._lock:
@@ -216,6 +223,10 @@ class Pipeline:
                 variant = main.info.variant
                 ctx = RunContext(run_id, self.config.name, connection.id, definition, main.info,
                                  [lv.level for lv in main.hierarchy], list(self.config.aspects), instant_str(started))
+                if self.config.envelope:
+                    self._envelope = EnvelopeBuilder(self.sdk.entity_model, self.sdk.streams, self.config.tenant_id,
+                                                     connection.id if connection.id is not None else definition,
+                                                     definition, run_id, ctx.levels)
                 for sink in self._sinks:
                     sink.begin(ctx)
                 self._event("started", {"runId": run_id, "definition": definition, "version": J.jstr(version)})
@@ -223,7 +234,7 @@ class Pipeline:
                 if metadata:
                     self._emit([main.source()])
                 for name, op in self._selected(main, "source"):
-                    self._emit(main.run_operation(name, op, Scope.root(), None, {"source"}, {}))
+                    self._emit(main.run_operation(name, op, Scope.root(), None, {"source"}, {}), op)
                 leaves: list[Scope] = []
                 self._walk(main, Scope.root(), 0, leaves, metadata)
                 if len(leaves) == 1 or self.config.parallelism == 1:
@@ -277,7 +288,7 @@ class Pipeline:
             self._event("container", {"level": level.level, "name": c.string("name")})
             if not leaf_level:
                 for name, op in self._selected(s, level.level):
-                    self._emit(s.run_operation(name, op, child, None, {level.level}, {}))
+                    self._emit(s.run_operation(name, op, child, None, {level.level}, {}), op)
             self._walk(s, child, depth + 1, leaves, metadata)
 
     def _parallel(self, connection: ConnectionConfig, leaves: list[Scope]) -> None:
@@ -332,7 +343,7 @@ class Pipeline:
                 for i in range(0, len(names), self.config.batch_size):
                     batch = names[i:i + self.config.batch_size]
                     for name, op in batch_ops:
-                        self._emit(s.run_operation(name, op, scope, batch, {"batch"}, {}))
+                        self._emit(s.run_operation(name, op, scope, batch, {"batch"}, {}), op)
                 if data and s.definition.operation("sample") is not None:
                     for n in names:
                         try:
@@ -352,7 +363,7 @@ class Pipeline:
                     break
             if leaf_level is not None:
                 for name, op in self._selected(s, leaf_level):
-                    self._emit(s.run_operation(name, op, scope, None, {leaf_level}, {}))
+                    self._emit(s.run_operation(name, op, scope, None, {leaf_level}, {}), op)
             with self._lock:
                 self._leaves_ok += 1
             self._event("scope.finished", {"scope": str(scope), "elapsedMs": (time.perf_counter_ns() - t0) // 1_000_000})
@@ -385,12 +396,17 @@ class Pipeline:
     def _wants(self, aspect: str) -> bool:
         return (aspect in self.config.aspects) if not self.config.operations else aspect == "metadata"
 
-    def _emit(self, records: list[Record]) -> None:
+    def _emit(self, records: list[Record], operation: dict | None = None) -> None:
+        """Hands records to the sinks, wrapped in raw-stream events when the envelope is on. ``operation`` is the
+        definition operation that produced them (for its ``assertion`` and ``confidence``)."""
         if not records:
             return
         with self._lock:
             for r in records:
                 self._counts[r.entity] = self._counts.get(r.entity, 0) + 1
+        if self._envelope is not None:
+            observed_at = instant_str(_dt.datetime.now(_dt.timezone.utc))
+            records = [self._envelope.wrap(r, observed_at, operation) for r in records]
         for sink in self._sinks:
             sink.write(records)
 

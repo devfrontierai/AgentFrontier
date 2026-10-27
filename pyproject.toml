@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentfrontier"
-version = "0.1.0"
+version = "0.2.0"
 description = "Configuration-driven data source SDK: one engine per protocol, one JSON definition per source (Python edition)."
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -26,7 +26,7 @@ oracle = ["oracledb>=2.0"]
 snowflake = ["snowflake-connector-python>=3.0"]
 sqlserver = ["pymssql>=2.3"]
 neo4j = ["neo4j>=5.0"]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "jsonschema>=4.18"]
 
 [project.scripts]
 agentfrontier = "agentfrontier.cli:main"
@@ -39,7 +39,7 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-agentfrontier = ["spec/*.json", "spec/definitions/*/*.json", "spec/sinks/*.json"]
+agentfrontier = ["spec/*.json", "spec/definitions/*/*.json", "spec/sinks/*.json", "spec/schemas/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
