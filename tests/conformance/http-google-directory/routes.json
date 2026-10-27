@@ -1,0 +1,86 @@
+{
+  "require": {
+    "headers": {
+      "Authorization": "Bearer conf-google-token"
+    }
+  },
+  "routes": [
+    {
+      "method": "POST",
+      "path": "/token",
+      "require": {},
+      "form": {
+        "grant_type": "refresh_token",
+        "refresh_token": "conf-refresh-token",
+        "client_id": "conf-client.apps.googleusercontent.com",
+        "client_secret": "conf-secret",
+        "scope": null
+      },
+      "body": "responses/token.json"
+    },
+    {
+      "path": "/admin/directory/v1/customers/my_customer",
+      "body": "responses/customer.json"
+    },
+    {
+      "path": "/admin/directory/v1/users",
+      "query": {
+        "customer": "my_customer",
+        "projection": "basic",
+        "maxResults": "500",
+        "pageToken": "Q0FFU0VnZ0JFZ1FJQUJBQUdQX19fX19fX19fX19fX3dFZ0FB"
+      },
+      "body": "responses/users-2.json"
+    },
+    {
+      "path": "/admin/directory/v1/users",
+      "query": {
+        "customer": "my_customer",
+        "projection": "basic",
+        "maxResults": "500",
+        "pageToken": null
+      },
+      "body": "responses/users-1.json"
+    },
+    {
+      "path": "/admin/directory/v1/groups",
+      "query": {
+        "customer": "my_customer",
+        "maxResults": "200",
+        "pageToken": null
+      },
+      "body": "responses/groups.json"
+    },
+    {
+      "path": "/admin/directory/v1/customer/my_customer/orgunits",
+      "query": {
+        "type": "all"
+      },
+      "body": "responses/orgunits.json"
+    },
+    {
+      "path": "/admin/directory/v1/customer/my_customer/roles",
+      "query": {
+        "maxResults": "100",
+        "pageToken": "AFHUbwgOAEzZ0xzVXlxZHRjc2RGUU9ZcGQ"
+      },
+      "body": "responses/roles-2.json"
+    },
+    {
+      "path": "/admin/directory/v1/customer/my_customer/roles",
+      "query": {
+        "maxResults": "100",
+        "pageToken": null
+      },
+      "body": "responses/roles-1.json"
+    },
+    {
+      "path": "/admin/directory/v1/customer/my_customer/roleassignments",
+      "query": {
+        "maxResults": "200",
+        "pageToken": null
+      },
+      "body": "responses/role-assignments.json"
+    }
+  ]
+}

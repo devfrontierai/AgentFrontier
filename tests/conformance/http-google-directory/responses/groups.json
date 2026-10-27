@@ -1,0 +1,29 @@
+{
+  "kind": "admin#directory#groups",
+  "etag": "\"g0\"",
+  "groups": [
+    {
+      "kind": "admin#directory#group",
+      "id": "01x0gk371fz3j2m",
+      "etag": "\"g1\"",
+      "email": "eng@altostrat.com",
+      "name": "Engineering",
+      "directMembersCount": "14",
+      "description": "All engineers",
+      "adminCreated": true,
+      "nonEditableAliases": [
+        "eng@altostrat.com.test-google-a.com"
+      ]
+    },
+    {
+      "kind": "admin#directory#group",
+      "id": "03rdcrjn2fy7wkp",
+      "etag": "\"g2\"",
+      "email": "helpdesk-admins@altostrat.com",
+      "name": "Helpdesk admins",
+      "directMembersCount": "3",
+      "description": "",
+      "adminCreated": true
+    }
+  ]
+}

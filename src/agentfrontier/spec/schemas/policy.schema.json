@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/devfrontierai/agentfrontier-spec/schemas/policy.schema.json",
+  "title": "AgentFrontier policy decision contract",
+  "description": "Policy requests, decisions, obligations and the built-in rules file; see docs/policy.md. Validate a document against one of the $defs.",
+  "$defs": {
+    "party": {
+      "oneOf": [
+        {"type": "string", "minLength": 1},
+        {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": {"type": "string", "minLength": 1},
+            "type": {"type": "string"},
+            "groups": {"type": "array", "items": {"type": "string"}},
+            "attributes": {"type": "object"}
+          }
+        }
+      ]
+    },
+    "request": {
+      "type": "object",
+      "required": ["subject", "action", "resource"],
+      "properties": {
+        "subject": {"$ref": "#/$defs/party"},
+        "delegateAgent": {"oneOf": [{"$ref": "#/$defs/party"}, {"type": "null"}]},
+        "action": {"type": "string", "minLength": 1},
+        "resource": {
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {"enum": ["source", "container", "dataset", "field", "operation", "record", "query"]},
+            "source": {"type": ["string", "null"]},
+            "sourceType": {"type": ["string", "null"]},
+            "path": {"type": "object", "additionalProperties": {"type": "string"}},
+            "dataset": {"type": ["string", "null"]},
+            "field": {"type": ["string", "null"]},
+            "entity": {"type": ["string", "null"]},
+            "aspect": {"type": ["string", "null"]},
+            "operation": {"type": ["string", "null"]},
+            "labels": {"type": "array", "items": {"type": "string"}},
+            "statement": {"type": ["string", "null"]}
+          }
+        },
+        "purpose": {"type": ["string", "null"]},
+        "context": {"type": "object"}
+      }
+    },
+    "obligation": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {"type": "string", "minLength": 1},
+        "advice": {"type": "boolean"},
+        "fields": {"type": "array", "items": {"type": "string"}},
+        "labels": {"type": "array", "items": {"type": "string"}},
+        "method": {"enum": ["redact", "null", "hash", "partial"]},
+        "keep": {"type": "integer", "minimum": 0},
+        "salt": {"type": "string"},
+        "where": {"type": "object"},
+        "max": {"type": "integer", "minimum": 0},
+        "reason": {"type": "string"}
+      },
+      "allOf": [
+        {"if": {"properties": {"type": {"const": "mask"}}}, "then": {"anyOf": [{"required": ["fields"]}, {"required": ["labels"]}]}},
+        {"if": {"properties": {"type": {"const": "drop_fields"}}}, "then": {"anyOf": [{"required": ["fields"]}, {"required": ["labels"]}]}},
+        {"if": {"properties": {"type": {"const": "filter_rows"}}}, "then": {"required": ["where"]}},
+        {"if": {"properties": {"type": {"const": "limit_rows"}}}, "then": {"required": ["max"]}}
+      ]
+    },
+    "decision": {
+      "type": "object",
+      "required": ["decision"],
+      "properties": {
+        "decision": {"enum": ["allow", "deny"]},
+        "obligations": {"type": "array", "items": {"$ref": "#/$defs/obligation"}},
+        "policyVersion": {"type": ["string", "null"]},
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {"source": {"type": "string"}, "rule": {"type": ["string", "null"]}, "reason": {"type": ["string", "null"]}}
+          }
+        },
+        "reason": {"type": ["string", "null"]}
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": ["id", "effect"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "effect": {"enum": ["allow", "deny"]},
+        "description": {"type": "string"},
+        "match": {"type": "object"},
+        "obligations": {"type": "array", "items": {"$ref": "#/$defs/obligation"}},
+        "reason": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "rules": {
+      "type": "object",
+      "required": ["rules"],
+      "properties": {
+        "version": {"type": "string"},
+        "description": {"type": "string"},
+        "defaultDecision": {"enum": ["allow", "deny"]},
+        "highRiskActions": {"type": "array", "items": {"type": "string"}},
+        "rules": {"type": "array", "items": {"$ref": "#/$defs/rule"}}
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "kind": "admin#directory#users",
+  "etag": "\"pXlTCWQyR4MzBhT1t4dmc7S2ttmKjM\"",
+  "users": [
+    {
+      "kind": "admin#directory#user",
+      "id": "104598712035586720147",
+      "etag": "\"a1\"",
+      "primaryEmail": "liz@altostrat.com",
+      "name": {
+        "givenName": "Liz",
+        "familyName": "Ortega",
+        "fullName": "Liz Ortega"
+      },
+      "isAdmin": true,
+      "isDelegatedAdmin": false,
+      "lastLoginTime": "2026-10-20T08:14:03.000Z",
+      "creationTime": "2019-04-02T17:18:32.000Z",
+      "agreedToTerms": true,
+      "suspended": false,
+      "archived": false,
+      "changePasswordAtNextLogin": false,
+      "ipWhitelisted": false,
+      "emails": [
+        {
+          "address": "liz@altostrat.com",
+          "primary": true
+        }
+      ],
+      "customerId": "C03az79cb",
+      "orgUnitPath": "/",
+      "isMailboxSetup": true,
+      "isEnrolledIn2Sv": true,
+      "isEnforcedIn2Sv": true,
+      "includeInGlobalAddressList": true
+    },
+    {
+      "kind": "admin#directory#user",
+      "id": "113264087509283741658",
+      "etag": "\"a2\"",
+      "primaryEmail": "kai@altostrat.com",
+      "name": {
+        "givenName": "Kai",
+        "familyName": "Nakamura",
+        "fullName": "Kai Nakamura"
+      },
+      "isAdmin": false,
+      "isDelegatedAdmin": true,
+      "lastLoginTime": "2026-10-24T12:40:51.000Z",
+      "creationTime": "2021-09-13T09:02:11.000Z",
+      "agreedToTerms": true,
+      "suspended": false,
+      "archived": false,
+      "changePasswordAtNextLogin": false,
+      "ipWhitelisted": false,
+      "emails": [
+        {
+          "address": "kai@altostrat.com",
+          "primary": true
+        }
+      ],
+      "customerId": "C03az79cb",
+      "orgUnitPath": "/Engineering",
+      "isMailboxSetup": true,
+      "isEnrolledIn2Sv": true,
+      "isEnforcedIn2Sv": false,
+      "includeInGlobalAddressList": true
+    }
+  ],
+  "nextPageToken": "Q0FFU0VnZ0JFZ1FJQUJBQUdQX19fX19fX19fX19fX3dFZ0FB"
+}

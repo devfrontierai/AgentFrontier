@@ -1,0 +1,268 @@
+{
+  "specVersion": "1",
+  "id": "google_directory",
+  "name": "Google Workspace directory",
+  "aliases": [
+    "google_workspace",
+    "cloud_identity_directory"
+  ],
+  "protocol": "http",
+  "category": "identity",
+  "status": "experimental",
+  "description": "Google Workspace and Cloud Identity accounts through the Admin SDK Directory API, read only and metadata level: users, groups, organizational units and admin roles as principals, admin role assignments as grants. Principals are named by their immutable id (organizational units by their path); e-mail addresses and display names are properties. A user's memberOf holds its organizational unit, and an organizational unit's memberOf its parent. Group memberships are not read yet: the API lists them per group. Needs an OAuth token of an administrator with the admin.directory.*.readonly scopes (refresh token or access token); service-account keys with domain-wide delegation are not supported. Exercised against recorded responses; not yet run against a live account.",
+  "properties": [
+    {
+      "key": "customer",
+      "label": "Customer ID",
+      "type": "string",
+      "default": "my_customer",
+      "help": "my_customer: the account of the signed-in administrator. Or a customer ID such as C01234abc."
+    },
+    {
+      "key": "baseUrl",
+      "label": "API URL",
+      "type": "string",
+      "default": "https://admin.googleapis.com",
+      "help": "Change only for a proxy or a private endpoint."
+    },
+    {
+      "key": "timeoutSeconds",
+      "label": "Request timeout (s)",
+      "type": "integer",
+      "default": "30"
+    }
+  ],
+  "auth": [
+    "oauth2_refresh_token",
+    "oauth2_access_token"
+  ],
+  "connection": {
+    "http": {
+      "baseUrl": "{{baseUrl}}/admin/directory/v1",
+      "timeoutSeconds": "{{timeoutSeconds}}",
+      "headers": {
+        "Accept": "application/json"
+      },
+      "retry": {
+        "attempts": 3,
+        "on": [
+          429,
+          503
+        ],
+        "backoffMs": 1000
+      },
+      "auth": {
+        "oauth2_refresh_token": {
+          "oauth2": {
+            "tokenUrl": "https://oauth2.googleapis.com/token"
+          },
+          "headers": {
+            "Authorization": "Bearer {{token.accessToken}}"
+          }
+        },
+        "oauth2_access_token": {
+          "headers": {
+            "Authorization": "Bearer {{auth.accessToken}}"
+          }
+        }
+      }
+    }
+  },
+  "hierarchy": [],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "request": {
+        "path": "/customers/{{customer|url}}"
+      },
+      "fields": {
+        "customerId": "id",
+        "primaryDomain": "customerDomain"
+      },
+      "extras": "drop"
+    },
+    "source": {
+      "entity": "source",
+      "request": {
+        "path": "/customers/{{customer|url}}"
+      },
+      "fields": {
+        "product": {
+          "value": "Google Workspace"
+        },
+        "comment": "customerDomain",
+        "customerId": "id",
+        "primaryDomain": "customerDomain"
+      },
+      "extras": "drop"
+    },
+    "users": {
+      "entity": "principal",
+      "paging": {
+        "mode": "cursor",
+        "next": "$.nextPageToken",
+        "size": 500
+      },
+      "request": {
+        "path": "/users",
+        "query": {
+          "customer": "{{customer}}",
+          "projection": "basic",
+          "maxResults": "{{limit}}",
+          "pageToken": "{{cursor}}"
+        }
+      },
+      "records": "$.users[*]",
+      "fields": {
+        "name": "id",
+        "canLogin": {
+          "from": "suspended",
+          "values": {
+            "true": false,
+            "false": true
+          },
+          "default": true
+        },
+        "superuser": "isAdmin",
+        "memberOf": "orgUnitPath",
+        "primaryEmail": "primaryEmail",
+        "displayName": "$.name.fullName",
+        "isDelegatedAdmin": "isDelegatedAdmin",
+        "archived": "archived",
+        "isEnrolledIn2Sv": "isEnrolledIn2Sv",
+        "createdAt": "creationTime",
+        "lastLoginTime": {
+          "from": "lastLoginTime",
+          "values": {
+            "1970-01-01T00:00:00.000Z": null
+          }
+        }
+      },
+      "set": {
+        "type": "user"
+      },
+      "extras": "drop"
+    },
+    "groups": {
+      "entity": "principal",
+      "paging": {
+        "mode": "cursor",
+        "next": "$.nextPageToken",
+        "size": 200
+      },
+      "request": {
+        "path": "/groups",
+        "query": {
+          "customer": "{{customer}}",
+          "maxResults": "{{limit}}",
+          "pageToken": "{{cursor}}"
+        }
+      },
+      "records": "$.groups[*]",
+      "fields": {
+        "name": "id",
+        "comment": "description",
+        "email": "email",
+        "displayName": "name",
+        "directMembersCount": "directMembersCount",
+        "adminCreated": "adminCreated"
+      },
+      "set": {
+        "type": "group",
+        "canLogin": false
+      },
+      "extras": "drop"
+    },
+    "orgUnits": {
+      "entity": "principal",
+      "request": {
+        "path": "/customer/{{customer|url}}/orgunits",
+        "query": {
+          "type": "all"
+        }
+      },
+      "records": "$.organizationUnits[*]",
+      "fields": {
+        "name": "orgUnitPath",
+        "memberOf": "parentOrgUnitPath",
+        "comment": "description",
+        "displayName": "name",
+        "orgUnitId": {
+          "template": "{{orgUnitId|removePrefix:id:}}"
+        },
+        "blockInheritance": "blockInheritance"
+      },
+      "set": {
+        "type": "org_unit",
+        "canLogin": false
+      },
+      "extras": "drop"
+    },
+    "roles": {
+      "entity": "principal",
+      "paging": {
+        "mode": "cursor",
+        "next": "$.nextPageToken",
+        "size": 100
+      },
+      "request": {
+        "path": "/customer/{{customer|url}}/roles",
+        "query": {
+          "maxResults": "{{limit}}",
+          "pageToken": "{{cursor}}"
+        }
+      },
+      "records": "$.items[*]",
+      "fields": {
+        "name": "roleId",
+        "comment": "roleDescription",
+        "superuser": {
+          "from": "isSuperAdminRole",
+          "default": false
+        },
+        "displayName": "roleName",
+        "isSystemRole": {
+          "from": "isSystemRole",
+          "default": false
+        }
+      },
+      "set": {
+        "type": "role",
+        "canLogin": false
+      },
+      "extras": "drop"
+    },
+    "roleAssignments": {
+      "entity": "grant",
+      "paging": {
+        "mode": "cursor",
+        "next": "$.nextPageToken",
+        "size": 200
+      },
+      "request": {
+        "path": "/customer/{{customer|url}}/roleassignments",
+        "query": {
+          "maxResults": "{{limit}}",
+          "pageToken": "{{cursor}}"
+        }
+      },
+      "records": "$.items[*]",
+      "fields": {
+        "principal": "assignedTo",
+        "privilege": "roleId",
+        "objectType": {
+          "from": "scopeType",
+          "values": {
+            "CUSTOMER": "directory",
+            "ORG_UNIT": "org_unit"
+          },
+          "else": "other"
+        },
+        "dataset": "orgUnitId",
+        "assigneeType": "assigneeType",
+        "assignmentId": "roleAssignmentId"
+      },
+      "extras": "drop"
+    }
+  }
+}

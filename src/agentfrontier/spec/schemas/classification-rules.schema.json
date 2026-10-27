@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/devfrontierai/agentfrontier-spec/schemas/classification-rules.schema.json",
+  "title": "AgentFrontier classification rules",
+  "description": "A rules file for the rule-based classifier; see docs/classification.md.",
+  "type": "object",
+  "required": ["version", "rules"],
+  "properties": {
+    "version": {"type": "string", "minLength": 1},
+    "engine": {"type": "string", "minLength": 1},
+    "description": {"type": "string"},
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "labelType"],
+        "anyOf": [{"required": ["name"]}, {"required": ["comment"]}, {"required": ["values"]}],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "label": {"type": "string", "minLength": 1},
+          "labelType": {"enum": ["sensitivity", "classification", "glossary_term", "tag", "retention", "other"]},
+          "value": {"type": ["string", "null"]},
+          "name": {"$ref": "#/$defs/detector"},
+          "comment": {"$ref": "#/$defs/detector"},
+          "values": {
+            "allOf": [{"$ref": "#/$defs/detector"}],
+            "properties": {
+              "minFraction": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+              "minValues": {"type": "integer", "minimum": 1},
+              "validator": {"enum": ["luhn", "iban", null]}
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "detector": {
+      "type": "object",
+      "required": ["patterns"],
+      "properties": {
+        "patterns": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#servicePrincipals(id,appId,displayName,description,servicePrincipalType,accountEnabled,appOwnerOrganizationId)",
+  "value": [
+    {
+      "id": "6f1b2c4e-8a3d-4e5f-9b7c-1d2e3f4a5b6c",
+      "appId": "00000003-0000-0000-c000-000000000000",
+      "displayName": "Microsoft Graph",
+      "description": null,
+      "servicePrincipalType": "Application",
+      "accountEnabled": true,
+      "appOwnerOrganizationId": "f8cdef31-a31e-4b4a-93e4-5f571e91255a"
+    },
+    {
+      "id": "b1f3c8d2-5e6a-4b7c-8d9e-0f1a2b3c4d5e",
+      "appId": "3a1f7b2c-6d5e-4f8a-9b0c-2d3e4f5a6b7c",
+      "displayName": "Contoso Expenses",
+      "description": "Expense reporting web app",
+      "servicePrincipalType": "Application",
+      "accountEnabled": true,
+      "appOwnerOrganizationId": "0c7e1a5b-3f2d-4e9a-b8c6-d1e2f3a4b5c6"
+    },
+    {
+      "id": "e4d5c6b7-a8f9-4e0d-b1c2-d3e4f5a6b7c8",
+      "appId": "9e8d7c6b-5a4f-4e3d-2c1b-0a9f8e7d6c5b",
+      "displayName": "func-payroll",
+      "description": null,
+      "servicePrincipalType": "ManagedIdentity",
+      "accountEnabled": false,
+      "appOwnerOrganizationId": null
+    }
+  ]
+}

@@ -27,6 +27,8 @@ from . import json_util as J
 from .engine import EngineSession
 from .envelope import EnvelopeBuilder
 from .errors import AgentFrontierError, root_message
+from .governance.classify import FieldClassifier
+from .governance.enforce import Governance
 from .model import ConnectionConfig, Record, Scope, Snapshot
 from .sinks import RunContext, Sink
 
@@ -60,6 +62,26 @@ def _normpath(p: Path) -> str:
     return os.path.normpath(str(p))
 
 
+def _governance_paths(g: Any, base: Path | None) -> dict:
+    """The governance block with its file references made absolute: ``policy`` (a rules file) or ``policy.rules``,
+    ``classify.rules`` and ``authority``."""
+    if not isinstance(g, dict):
+        return {}
+    g = J.deep_copy(g)
+    pol = g.get("policy")
+    if isinstance(pol, str):
+        g["policy"] = {"rules": str(_resolve(base, pol))}
+    elif isinstance(pol, dict) and isinstance(pol.get("rules"), str):
+        pol["rules"] = str(_resolve(base, pol["rules"]))
+    cls = g.get("classify")
+    if isinstance(cls, dict) and cls.get("rules") is not None:
+        cls["rules"] = [str(_resolve(base, r)) if isinstance(r, str) else r
+                        for r in (cls["rules"] if isinstance(cls["rules"], list) else [cls["rules"]])]
+    if isinstance(g.get("authority"), str):
+        g["authority"] = str(_resolve(base, g["authority"]))
+    return g
+
+
 @dataclass
 class PipelineConfig:
     """``connection``: the source; ``aspects``: what to extract (default metadata); ``operations``: explicit
@@ -67,7 +89,8 @@ class PipelineConfig:
     ``sinks``: sink configurations; ``page_size``: datasets per page; ``batch_size``: datasets per batch;
     ``parallelism``: leaf scopes processed at once, one session each; ``sample_rows``: rows per dataset for aspect
     ``data``; ``envelope``: wrap every record in a raw-stream event (spec docs/envelope.md); ``tenant_id``: the
-    events' tenant (``default`` when not set)."""
+    events' tenant (``default`` when not set); ``governance``: who the run acts for, the policy, classification and
+    auditing (see :func:`governance_from_config`)."""
 
     connection: ConnectionConfig
     aspects: list[str] = field(default_factory=list)
@@ -81,12 +104,14 @@ class PipelineConfig:
     name: str | None = None
     envelope: bool = False
     tenant_id: str | None = None
+    governance: dict = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         self.aspects = list(self.aspects) if self.aspects else ["metadata"]
         self.operations = list(self.operations or [])
         self.scope = dict(self.scope or {})
         self.sinks = list(self.sinks or [])
+        self.governance = dict(self.governance or {})
         self.page_size = 500 if not self.page_size or self.page_size <= 0 else self.page_size
         self.batch_size = 200 if not self.batch_size or self.batch_size <= 0 else self.batch_size
         self.parallelism = 1 if not self.parallelism or self.parallelism <= 0 else self.parallelism
@@ -102,7 +127,7 @@ class PipelineConfig:
     def with_sinks(self, new_sinks: Iterable[dict]) -> "PipelineConfig":
         return PipelineConfig(self.connection, self.aspects, self.operations, self.scope, list(new_sinks),
                               self.page_size, self.batch_size, self.parallelism, self.sample_rows, self.name,
-                              self.envelope, self.tenant_id)
+                              self.envelope, self.tenant_id, self.governance)
 
     @staticmethod
     def from_file(path: str | Path) -> "PipelineConfig":
@@ -137,7 +162,7 @@ class PipelineConfig:
                               J.to_map(n.get("scope")), sinks, J.integer(settings, "pageSize", 0),
                               J.integer(settings, "batchSize", 0), J.integer(settings, "parallelism", 0),
                               J.integer(settings, "sampleRows", 0), J.text(n, "name"), J.boolean(n, "envelope", False),
-                              J.text(n, "tenantId"))
+                              J.text(n, "tenantId"), _governance_paths(n.get("governance"), base))
 
 
 @dataclass(frozen=True)
@@ -158,18 +183,25 @@ class RunReport:
     load: Snapshot
     started_at: str
     finished_at: str
+    audit: dict | None = None
+    policy: dict | None = None
 
     def count(self, entity: str) -> int:
         return self.counts.get(entity, 0)
 
     def to_map(self) -> dict:
-        return {"runId": self.run_id, "pipeline": self.pipeline, "source": self.source,
+        out = {"runId": self.run_id, "pipeline": self.pipeline, "source": self.source,
                 "definition": self.definition, "version": self.version, "variant": self.variant,
                 "status": self.status, "counts": {k: self.counts[k] for k in sorted(self.counts)},
                 "warnings": list(self.warnings), "errors": list(self.errors), "elapsedMs": self.elapsed_ms,
                 "sourceLoad": {"statements": self.load.statements, "rows": self.load.rows,
                                "elapsedMs": self.load.elapsed_ms, "connections": self.load.connections},
                 "startedAt": self.started_at, "finishedAt": self.finished_at}
+        if self.policy is not None:
+            out["policy"] = dict(self.policy)
+        if self.audit is not None:
+            out["audit"] = dict(self.audit)
+        return out
 
     to_dict = to_map
 
@@ -191,6 +223,9 @@ class Pipeline:
         self._leaves_ok = 0
         self._load = Snapshot()
         self._envelope: EnvelopeBuilder | None = None
+        self._gov: Governance | None = None
+        self._started = False
+        self._levels: list[str] = []
 
     def _add_warning(self, w: str) -> None:
         with self._lock:
@@ -217,6 +252,9 @@ class Pipeline:
         try:
             if self._errors:
                 raise _SkipRun()
+            self._gov = Governance.from_config(self.config.governance, run_id=run_id, source=connection.id,
+                                               aspect_of=self.sdk.entity_model.aspect_of,
+                                               resolve=self.sdk.secrets.resolve_deep, audit_sink=self._write)
             with self.sdk.open(connection) as main:
                 definition = main.definition.id
                 version = main.info.version
@@ -227,14 +265,18 @@ class Pipeline:
                     self._envelope = EnvelopeBuilder(self.sdk.entity_model, self.sdk.streams, self.config.tenant_id,
                                                      connection.id if connection.id is not None else definition,
                                                      definition, run_id, ctx.levels)
+                self._levels = list(ctx.levels)
                 for sink in self._sinks:
                     sink.begin(ctx)
+                self._started = True
+                self._gov.audit_decision("run.start", self._gov.resource("source", connection.id, entity="source"),
+                                         None, "success")
                 self._event("started", {"runId": run_id, "definition": definition, "version": J.jstr(version)})
                 metadata = self._wants("metadata")
                 if metadata:
                     self._emit([main.source()])
                 for name, op in self._selected(main, "source"):
-                    self._emit(main.run_operation(name, op, Scope.root(), None, {"source"}, {}), op)
+                    self._run_op(main, name, op, Scope.root(), None, {"source"})
                 leaves: list[Scope] = []
                 self._walk(main, Scope.root(), 0, leaves, metadata)
                 if len(leaves) == 1 or self.config.parallelism == 1:
@@ -254,12 +296,21 @@ class Pipeline:
         except Exception as e:  # noqa: BLE001 - a run always ends with a report
             self._add_error(root_message(e))
             log.warning("pipeline %s failed", self.config.name, exc_info=True)
-        finished = _dt.datetime.now(_dt.timezone.utc)
         status = "SUCCEEDED" if not self._errors else ("PARTIAL" if self._leaves_ok > 0 else "FAILED")
+        audit = policy = None
+        gov = self._gov
+        if gov is not None and not gov.trivial:
+            policy = gov.summary()
+            if gov.audit is not None and (gov.audit_all or gov.audit.events):
+                if self._started:
+                    gov.audit_decision("run.finish", gov.resource("source", connection.id, entity="source"), None,
+                                       status.lower(), sum(self._counts.values()))
+                audit = gov.audit.manifest()
+        finished = _dt.datetime.now(_dt.timezone.utc)
         report = RunReport(run_id, self.config.name, connection.id, definition, version, variant, status,
                            dict(self._counts), list(self._warnings), list(self._errors),
                            int(round((time.time() - t0) * 1000)), self._load, instant_str(started),
-                           instant_str(finished))
+                           instant_str(finished), audit, policy)
         for sink in self._sinks:
             try:
                 sink.end(report)
@@ -288,7 +339,7 @@ class Pipeline:
             self._event("container", {"level": level.level, "name": c.string("name")})
             if not leaf_level:
                 for name, op in self._selected(s, level.level):
-                    self._emit(s.run_operation(name, op, child, None, {level.level}, {}), op)
+                    self._run_op(s, name, op, child, None, {level.level})
             self._walk(s, child, depth + 1, leaves, metadata)
 
     def _parallel(self, connection: ConnectionConfig, leaves: list[Scope]) -> None:
@@ -334,6 +385,8 @@ class Pipeline:
             batch_ops = self._selected(s, "batch")
             metadata = self._wants("metadata")
             data = self._wants("data")
+            gov = self._gov
+            classifier = FieldClassifier(gov.classifier) if gov is not None and gov.classifier is not None else None
             cursor = None
             while True:
                 page = s.datasets(scope, cursor, self.config.page_size)
@@ -343,27 +396,18 @@ class Pipeline:
                 for i in range(0, len(names), self.config.batch_size):
                     batch = names[i:i + self.config.batch_size]
                     for name, op in batch_ops:
-                        self._emit(s.run_operation(name, op, scope, batch, {"batch"}, {}), op)
+                        self._run_op(s, name, op, scope, batch, {"batch"}, classifier)
                 if data and s.definition.operation("sample") is not None:
                     for n in names:
-                        try:
-                            rows = s.sample(scope, n, self.config.sample_rows)
-                            tagged = []
-                            for r in rows:
-                                v: dict = {"source": s.connection.id}
-                                v.update(scope.as_map())
-                                v["dataset"] = n
-                                v["values"] = r.values
-                                tagged.append(Record("row", v))
-                            self._emit(tagged)
-                        except AgentFrontierError as e:
-                            self._add_warning("sample of " + J.jstr(n) + ": " + e.message)
+                        self._sample(s, scope, n, classifier)
+                if classifier is not None:
+                    self._emit_labels(classifier.flush())
                 cursor = page.next_cursor
                 if cursor is None:
                     break
             if leaf_level is not None:
                 for name, op in self._selected(s, leaf_level):
-                    self._emit(s.run_operation(name, op, scope, None, {leaf_level}, {}), op)
+                    self._run_op(s, name, op, scope, None, {leaf_level})
             with self._lock:
                 self._leaves_ok += 1
             self._event("scope.finished", {"scope": str(scope), "elapsedMs": (time.perf_counter_ns() - t0) // 1_000_000})
@@ -396,9 +440,93 @@ class Pipeline:
     def _wants(self, aspect: str) -> bool:
         return (aspect in self.config.aspects) if not self.config.operations else aspect == "metadata"
 
-    def _emit(self, records: list[Record], operation: dict | None = None) -> None:
-        """Hands records to the sinks, wrapped in raw-stream events when the envelope is on. ``operation`` is the
-        definition operation that produced them (for its ``assertion`` and ``confidence``)."""
+    def _run_op(self, s: EngineSession, name: str, op: dict, scope: Scope, datasets: list[str] | None,
+                kinds: set[str], classifier: FieldClassifier | None = None) -> None:
+        """Runs one operation behind the policy enforcement point and emits its records."""
+        gov = self._gov
+        if gov is None or gov.trivial:
+            self._emit(s.run_operation(name, op, scope, datasets, kinds, {}), op, classifier)
+            return
+        entity = J.text(op, "entity", "record") or "record"
+        res = gov.resource("operation", s.connection.id, scope.as_map(), operation=name, entity=entity,
+                           aspect=J.text(op, "aspect", self.sdk.entity_model.aspect_of(entity)))
+        d = gov.decide("read", res)
+        if not d.allowed:
+            self._add_warning("policy denied operation " + name + ("" if scope.is_root else " at " + str(scope))
+                              + ": " + J.jstr(d.reason))
+            gov.audit_decision("read", res, d, "denied", 0)
+            return
+        try:
+            records = s.run_operation(name, op, scope, datasets, kinds, {})
+        except Exception:
+            gov.audit_decision("read", res, d, "failure")
+            raise
+        gov.audit_decision("read", res, d, "success", len(records))
+        self._emit(records, op, classifier)
+
+    def _sample(self, s: EngineSession, scope: Scope, n: str, classifier: FieldClassifier | None) -> None:
+        """Samples one dataset behind the policy enforcement point. Its values are classified before the rows are
+        released, so masking sees the labels they produce."""
+        gov = self._gov
+        governed = gov is not None and not gov.trivial
+        res: dict = {}
+        d = None
+        if governed:
+            res = gov.resource("dataset", s.connection.id, scope.as_map(), dataset=n, entity="row", aspect="data",
+                               operation="sample")
+            if classifier is not None:
+                res["labels"] = sorted(set(res.get("labels") or []) | set(classifier.pending_labels(n)))
+            d = gov.decide("sample", res)
+            if not d.allowed:
+                self._add_warning("policy denied sample of " + J.jstr(n) + ": " + J.jstr(d.reason))
+                gov.audit_decision("sample", res, d, "denied", 0)
+                return
+        try:
+            rows = s.sample(scope, n, self.config.sample_rows)
+        except AgentFrontierError as e:
+            self._add_warning("sample of " + J.jstr(n) + ": " + e.message)
+            if governed:
+                gov.audit_decision("sample", res, d, "failure", reason=e.message)
+            return
+        base: dict = {"source": s.connection.id}
+        base.update(scope.as_map())
+        if classifier is not None:
+            classifier.observe_rows(base, n, [r.values for r in rows])
+            self._emit_labels(classifier.flush(n))
+        tagged = []
+        for r in rows:
+            v = dict(base)
+            v["dataset"] = n
+            v["values"] = r.values
+            tagged.append(Record("row", v))
+        if governed:
+            gov.audit_decision("sample", res, d, "success", len(tagged))
+        self._emit(tagged, action="sample")
+
+    def _emit_labels(self, labels: list[Record]) -> None:
+        """Classifier output: each label is an inferred assertion with its own confidence."""
+        for r in labels:
+            self._emit([r], {"assertion": "inferred", "confidence": r.get("confidence")})
+
+    def _emit(self, records: list[Record], operation: dict | None = None,
+              classifier: FieldClassifier | None = None, action: str = "read") -> None:
+        """Releases records through the policy enforcement point (obligations applied, denied ones withheld) and
+        hands them to the sinks. ``operation`` is the definition operation that produced them (for the envelope's
+        ``assertion`` and ``confidence``)."""
+        if not records:
+            return
+        gov = self._gov
+        if gov is not None and not gov.trivial:
+            if classifier is not None:
+                for r in records:
+                    if r.entity == "field":
+                        classifier.observe_field(r)
+            gov.observe(records)
+            records = gov.release(records, action, self._levels)
+        self._write(records, operation)
+
+    def _write(self, records: list[Record], operation: dict | None = None) -> None:
+        """Hands records to the sinks, wrapped in raw-stream events when the envelope is on."""
         if not records:
             return
         with self._lock:

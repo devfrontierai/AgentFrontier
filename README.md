@@ -121,6 +121,24 @@ agentfrontier capabilities postgresql      # what a connector can read: entity, 
 The envelope is off by default in 0.2 and becomes the default in 0.3. The rules are in the spec's
 [docs/envelope.md](https://github.com/devfrontierai/agentfrontier-spec/blob/main/docs/envelope.md).
 
+## Governance
+
+Every read is decided by a policy before it runs, and every record before it is released: deny rules, masking by
+field or classification label, row filters, approvals, and a fail-closed default for high-risk actions. Fields
+are labelled by built-in classifiers (PII, payment cards, IBANs, health data, credentials) without touching the
+source's own labels. The authority graph explains who can access what and through which group or delegation,
+and runs can write a hash-chained, verifiable audit trail.
+
+```bash
+agentfrontier extract shop.json --aspects metadata,data --sink jsonl:out/shop \
+    --policy rules.json --subject alice --purpose analytics --classify --audit
+agentfrontier audit-verify out/shop
+agentfrontier authority out/acl --principal alice
+```
+
+Without a policy nothing changes. See [docs/governance.md](docs/governance.md); the contracts are in the spec's
+`docs/policy.md`, `classification.md`, `authority.md` and `audit.md`.
+
 ## The spec
 
 The definitions, the canonical entity model (`entities.json`), the raw-stream catalog (`streams.json`), the JSON
@@ -129,7 +147,7 @@ Schemas, the auth catalog, the sink mappings and the conformance cases form the 
 This repository vendors a copy pinned to a tag (`scripts/spec.lock`):
 
 * `src/agentfrontier/spec/` holds the definitions, `entities.json`, `streams.json`, `schemas/`,
-  `auth-methods.json`, `index.json` and `sinks/` as package data;
+  `classification/`, `auth-methods.json`, `index.json` and `sinks/` as package data;
 * `tests/conformance/` holds the conformance cases (`expected.jsonl` and `expected-envelope.jsonl` files are the
   contract and are never regenerated here);
 * `python scripts/sync_spec.py ../agentfrontier-spec --ref spec-vX.Y.Z` refreshes both from a spec tag (`--check`
@@ -146,6 +164,9 @@ This repository vendors a copy pinned to a tag (`scripts/spec.lock`):
 | `local_files` | files | verified | Conformance case `files-basic` |
 | `elasticsearch` | http | experimental | Conformance case `http-elasticsearch` (fixture server) |
 | `unity_catalog` | http | experimental | Conformance case `http-unity-catalog` (fixture server) |
+| `entra_id` | http | experimental | Conformance case `http-entra-id` (fixture server) |
+| `google_directory` | http | experimental | Conformance case `http-google-directory` (fixture server) |
+| `okta` | http | experimental | Conformance case `http-okta` (fixture server) |
 | `opensearch` | http | verified | Same engine path as Elasticsearch; not run against a server here |
 | `redshift` | sql (psycopg) | experimental | Not run against a cluster (neither is the Java edition) |
 | `snowflake` | sql (snowflake-connector-python) | experimental | Not run; connection block present |
@@ -153,6 +174,10 @@ This repository vendors a copy pinned to a tag (`scripts/spec.lock`):
 
 ## Not implemented (yet)
 
+* Group memberships for Entra ID, Google Workspace and Okta: those APIs list members per group, and the engine
+  cannot yet run one request per record of another operation.
+* Cedar, Presidio, Tika, Purview, Macie and Google Sensitive Data Protection adapters; consent and retention
+  readers.
 * Object storage for the files engine (S3, ADLS, GCS): only `storage: local`, as in the Java edition.
 * Parquet / Avro schema inference: such files are listed as datasets but yield no fields (same as Java).
 * `--drivers` is a Java option (JDBC jars); the Python CLI accepts it and ignores it.
@@ -165,6 +190,7 @@ This repository vendors a copy pinned to a tag (`scripts/spec.lock`):
 * [docs/integration.md](docs/integration.md): add AgentFrontier to your project, integration patterns, production checklist
 * [docs/getting-started.md](docs/getting-started.md): install, first connection, first extract
 * [docs/python-api.md](docs/python-api.md): the library API
+* [docs/governance.md](docs/governance.md): policies, masking, classification, the authority graph, audit
 * [docs/cli.md](docs/cli.md): commands and options
 * [docs/testing.md](docs/testing.md): the test suites and how to run them
 

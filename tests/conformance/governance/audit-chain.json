@@ -1,0 +1,83 @@
+{
+  "description": "Audit hash chain (docs/audit.md): three events of run run-1 with their sequence, previousHash and hash, and the manifest signed with the key below. Implementations recompute every hash and the signature, and must reject the tampered variants.",
+  "key": "conformance-key",
+  "runId": "run-1",
+  "events": [
+    {
+      "entity": "audit_event",
+      "source": "retail",
+      "actor": "alice",
+      "action": "run.start",
+      "resource": "retail",
+      "resourceType": "source",
+      "outcome": "success",
+      "correlationId": "run-1",
+      "occurredAt": "2026-10-27T10:00:00.000Z",
+      "sequence": 1,
+      "hash": "sha256:08462b15611e3cc8b5743aeb66ca2b918857b63a166db2298e46caa7c1954591"
+    },
+    {
+      "entity": "audit_event",
+      "source": "retail",
+      "actor": "alice",
+      "action": "sample",
+      "resource": "retail/schema=sales/dataset=customers/operation=sample",
+      "resourceType": "dataset",
+      "purpose": "analytics",
+      "decision": "allow_with_obligations",
+      "policyVersion": "conformance-1",
+      "outcome": "success",
+      "records": 5,
+      "correlationId": "run-1",
+      "occurredAt": "2026-10-27T10:00:01.250Z",
+      "sequence": 2,
+      "previousHash": "sha256:08462b15611e3cc8b5743aeb66ca2b918857b63a166db2298e46caa7c1954591",
+      "hash": "sha256:36f65ca4543068c48a4c1407829721bc15cf261f27f588acc30e48f91e044a6e"
+    },
+    {
+      "entity": "audit_event",
+      "source": "retail",
+      "actor": "alice",
+      "action": "read",
+      "resource": "retail/schema=hr/operation=salaries",
+      "resourceType": "operation",
+      "decision": "deny",
+      "policyVersion": "conformance-1",
+      "outcome": "denied",
+      "records": 0,
+      "reason": "denied by rule hr-only",
+      "correlationId": "run-1",
+      "occurredAt": "2026-10-27T10:00:02.000Z",
+      "sequence": 3,
+      "previousHash": "sha256:36f65ca4543068c48a4c1407829721bc15cf261f27f588acc30e48f91e044a6e",
+      "hash": "sha256:0c781ac95309fdd13300f8da6787f17c6acaaa296bda70029c53155700002eed"
+    }
+  ],
+  "manifest": {
+    "chain": "af-audit/1",
+    "events": 3,
+    "firstHash": "sha256:08462b15611e3cc8b5743aeb66ca2b918857b63a166db2298e46caa7c1954591",
+    "lastHash": "sha256:0c781ac95309fdd13300f8da6787f17c6acaaa296bda70029c53155700002eed",
+    "signature": "hmac-sha256:e38580aa8f52c24198305f5ae218d7a7da16b06c2067f6a8671a504e96adfbe8"
+  },
+  "tampered": [
+    {
+      "name": "changed field",
+      "event": 2,
+      "set": {
+        "records": 50
+      }
+    },
+    {
+      "name": "removed event",
+      "remove": 2
+    },
+    {
+      "name": "reordered",
+      "swap": [
+        1,
+        2
+      ]
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "description": "Masking methods (docs/policy.md §5): value, method, optional keep/salt, and the masked value.",
+  "cases": [
+    {
+      "value": "alice@example.com",
+      "method": "redact",
+      "expected": "****"
+    },
+    {
+      "value": "alice@example.com",
+      "method": "null",
+      "expected": null
+    },
+    {
+      "value": "alice@example.com",
+      "method": "hash",
+      "expected": "sha256:ff8d9819fc0e12bf0d24892e45987e249a28dce836a85cad60e28eaaa8c6d976"
+    },
+    {
+      "value": "alice@example.com",
+      "method": "hash",
+      "salt": "s1",
+      "expected": "sha256:bad5c38fcbb367711313f6447be38abd68627396429b68039061ae19979e620b"
+    },
+    {
+      "value": 4111111111111111,
+      "method": "hash",
+      "expected": "sha256:9bbef19476623ca56c17da75fd57734dbf82530686043a6e491c6d71befe8f6e"
+    },
+    {
+      "value": "4111111111111111",
+      "method": "partial",
+      "expected": "************1111"
+    },
+    {
+      "value": "4111111111111111",
+      "method": "partial",
+      "keep": 6,
+      "expected": "**********111111"
+    },
+    {
+      "value": "abc",
+      "method": "partial",
+      "expected": "****"
+    },
+    {
+      "value": null,
+      "method": "hash",
+      "expected": null
+    },
+    {
+      "value": "ü€",
+      "method": "hash",
+      "expected": "sha256:efb65b779538006d489299318d8a96a512e6b42d1127d64a0afa38169c30c33a"
+    },
+    {
+      "value": true,
+      "method": "partial",
+      "keep": 2,
+      "expected": "**ue"
+    }
+  ]
+}

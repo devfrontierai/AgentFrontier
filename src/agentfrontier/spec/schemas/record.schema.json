@@ -1146,6 +1146,18 @@
             "string",
             "null"
           ]
+        },
+        "confidence": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "evidence": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": true
@@ -1391,6 +1403,36 @@
           ]
         },
         "occurredAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "records": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sequence": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "previousHash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hash": {
           "type": [
             "string",
             "null"

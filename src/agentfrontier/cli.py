@@ -11,6 +11,7 @@ from typing import Any
 from . import json_util as J
 from .definitions import DefinitionRegistry
 from .errors import AgentFrontierError
+from .governance import AuthorityGraph, Governance, RulePDP, verify_directory
 from .model import ConnectionConfig, QueryRequest, Scope
 from .pipeline import PipelineConfig, RunReport
 from .sdk import AgentFrontier
@@ -30,9 +31,20 @@ Commands
       --sink jsonl:<dir> | json:<file> | console | <sink.json>   (repeatable; default console)
       --parallelism N  --page-size N  --batch-size N
       --envelope [--tenant <id>]      write raw-stream events instead of plain records
+      --policy <rules.json>           decide every read with these rules (deny, mask, filter ...)
+      --subject <id>  --purpose <p>   who the run acts for, and why (for the policy and the audit trail)
+      --classify                      label fields with the built-in classifiers (names, comments, samples)
+      --audit [--audit-key-env VAR]   write hash-chained audit events; sign the manifest with $VAR
   run <pipeline.json>                 run a pipeline file
   query <connection.json> "<sql>"     read-only query  [--max-rows N] [--scope level=value,...]
   sample <connection.json> <dataset>  first rows of a dataset [--scope level=value,...] [--limit N]
+                                      query and sample also take --policy, --subject, --purpose, --classify
+  policy-decide --rules <rules.json> [request.json]   decide one policy request (stdin when no file)
+  audit-verify <dir> [--key-env VAR]  check the audit hash chain a jsonl sink wrote, against run.json
+  authority <dir>                     effective grants from an extraction's principals, grants, delegations
+      --principal <name>              one principal's (or agent's) effective grants, with their paths
+      --who-can <PRIVILEGE>:<resource>  who holds a privilege on a resource (dotted name, globs allowed)
+      (neither)                       the whole graph: {"nodes": [...], "edges": [...]}
 
 Options
   --definitions <dir>                 extra definitions or overlays (repeatable)
@@ -126,6 +138,12 @@ def main(argv: list[str] | None = None) -> int:
         if cmd == "sample":
             return _sample(af, _connection(_need(positional, 0, "connection file")), _need(positional, 1, "dataset"),
                            opts)
+        if cmd == "policy-decide":
+            return _policy_decide(opts, positional)
+        if cmd == "audit-verify":
+            return _audit_verify(_need(positional, 0, "output directory"), opts)
+        if cmd == "authority":
+            return _authority(_need(positional, 0, "output directory"), opts)
         _err("unknown command '" + cmd + "'\n")
         sys.stderr.write(USAGE)
         return 2
@@ -223,8 +241,8 @@ def _extract(af: AgentFrontier, file: str, opts: dict[str, list[str]]) -> int:
     aspects = opts["aspects"][0].split(",") if "aspects" in opts else ["metadata"]
     p = PipelineConfig(_connection(file), aspects, None, None, sinks, _int_opt(opts, "page-size"),
                        _int_opt(opts, "batch-size"), _int_opt(opts, "parallelism"), _int_opt(opts, "sample-rows"),
-                       envelope=J.as_text(opts.get("envelope", ["false"])[0]).lower() == "true",
-                       tenant_id=(opts.get("tenant") or [None])[0])
+                       envelope=_flag(opts, "envelope"), tenant_id=(opts.get("tenant") or [None])[0],
+                       governance=_governance_opts(opts))
     to_console = any(J.text(s, "type") == "console" for s in sinks)
 
     def listener(event: str, data: dict) -> None:
@@ -236,6 +254,72 @@ def _extract(af: AgentFrontier, file: str, opts: dict[str, list[str]]) -> int:
         _err(J.write(r.to_map()))
         return 1 if r.status == "FAILED" else 0
     return _report(r)
+
+
+def _flag(opts: dict[str, list[str]], key: str) -> bool:
+    return key in opts and J.as_text(opts[key][0]).lower() == "true"
+
+
+def _governance_opts(opts: dict[str, list[str]]) -> dict:
+    """The pipeline ``governance`` block from --policy, --subject, --purpose, --classify, --audit."""
+    g: dict = {}
+    if "policy" in opts:
+        g["policy"] = {"rules": str(Path(opts["policy"][0]).absolute())}
+    for k in ("subject", "purpose"):
+        if k in opts:
+            g[k] = opts[k][0]
+    if _flag(opts, "classify"):
+        g["classify"] = True
+    if _flag(opts, "audit"):
+        g["audit"] = {"key": "${env:" + opts["audit-key-env"][0] + "}"} if "audit-key-env" in opts else True
+    return g
+
+
+def _governance(opts: dict[str, list[str]]) -> "Governance | None":
+    g = _governance_opts(opts)
+    if not g:
+        return None
+    return Governance.from_config(g, run_id="cli")
+
+
+def _policy_decide(opts: dict[str, list[str]], positional: list[str]) -> int:
+    if "rules" not in opts:
+        raise _Usage("policy-decide needs --rules <file>")
+    pdp = RulePDP.from_file(opts["rules"][0])
+    text = Path(positional[0]).read_text(encoding="utf-8") if positional else sys.stdin.read()
+    try:
+        request = J.loads_first(text)
+    except ValueError as e:
+        raise AgentFrontierError.invalid_config("cannot parse the policy request: " + str(e)) from e
+    d = pdp.decide(request)
+    _print(d.to_json())
+    return 0 if d.allowed else 1
+
+
+def _audit_verify(directory: str, opts: dict[str, list[str]]) -> int:
+    key = None
+    if "key-env" in opts:
+        import os
+        key = os.environ.get(opts["key-env"][0])
+        if key is None:
+            raise AgentFrontierError.invalid_config("environment variable " + opts["key-env"][0] + " is not set")
+    v = verify_directory(directory, key)
+    _print(v.to_json())
+    return 0 if v.ok else 1
+
+
+def _authority(directory: str, opts: dict[str, list[str]]) -> int:
+    g = AuthorityGraph.from_directory(directory)
+    if "principal" in opts:
+        _print([e.to_json() for e in g.effective(opts["principal"][0])])
+    elif "who-can" in opts:
+        priv, _, resource = opts["who-can"][0].partition(":")
+        if not resource:
+            raise _Usage("--who-can needs PRIVILEGE:resource")
+        _print([e.to_json() for e in g.who_can(priv, resource)])
+    else:
+        _print(g.export())
+    return 0
 
 
 def _report(r: RunReport) -> int:
@@ -254,14 +338,14 @@ def _scope(opts: dict[str, list[str]]) -> Scope:
 
 
 def _query(af: AgentFrontier, c: ConnectionConfig, sql: str, opts: dict[str, list[str]]) -> int:
-    with af.open(c) as s:
+    with af.open(c, _governance(opts)) as s:
         r = s.query(QueryRequest(sql, _scope(opts), _int_opt(opts, "max-rows"), 0, []))
         _print(r.to_dict())
         return 0
 
 
 def _sample(af: AgentFrontier, c: ConnectionConfig, dataset: str, opts: dict[str, list[str]]) -> int:
-    with af.open(c) as s:
+    with af.open(c, _governance(opts)) as s:
         limit = _int_opt(opts, "limit")
         rows = s.sample(_scope(opts), dataset, 10 if limit <= 0 else limit)
         _print([r.values for r in rows])

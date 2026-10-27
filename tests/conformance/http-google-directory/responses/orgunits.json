@@ -1,0 +1,26 @@
+{
+  "kind": "admin#directory#orgUnits",
+  "etag": "\"o0\"",
+  "organizationUnits": [
+    {
+      "kind": "admin#directory#orgUnit",
+      "etag": "\"o1\"",
+      "name": "Engineering",
+      "description": "Product engineering",
+      "orgUnitPath": "/Engineering",
+      "orgUnitId": "id:03ph8a2z1enx4kq",
+      "parentOrgUnitPath": "/",
+      "parentOrgUnitId": "id:03ph8a2z0yy8k9z"
+    },
+    {
+      "kind": "admin#directory#orgUnit",
+      "etag": "\"o2\"",
+      "name": "Contractors",
+      "orgUnitPath": "/Engineering/Contractors",
+      "orgUnitId": "id:03ph8a2z3kw5v1d",
+      "parentOrgUnitPath": "/Engineering",
+      "parentOrgUnitId": "id:03ph8a2z1enx4kq",
+      "blockInheritance": false
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "0oa1salesforceAB697",
+    "name": "salesforce",
+    "label": "Salesforce.com",
+    "status": "ACTIVE",
+    "lastUpdated": "2024-02-01T10:00:00.000Z",
+    "created": "2022-05-20T10:00:00.000Z",
+    "signOnMode": "SAML_2_0",
+    "features": [
+      "PUSH_NEW_USERS"
+    ],
+    "visibility": {
+      "autoSubmitToolbar": false,
+      "hide": {
+        "iOS": false,
+        "web": false
+      }
+    },
+    "_links": {
+      "users": {
+        "href": "{{baseUrl}}/api/v1/apps/0oa1salesforceAB697/users"
+      }
+    }
+  }
+]

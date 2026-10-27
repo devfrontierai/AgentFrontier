@@ -26,6 +26,7 @@ oracle = ["oracledb>=2.0"]
 snowflake = ["snowflake-connector-python>=3.0"]
 sqlserver = ["pymssql>=2.3"]
 neo4j = ["neo4j>=5.0"]
+yaml = ["pyyaml>=6.0"]
 dev = ["pytest>=8", "jsonschema>=4.18"]
 
 [project.scripts]
@@ -39,7 +40,8 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-agentfrontier = ["spec/*.json", "spec/definitions/*/*.json", "spec/sinks/*.json", "spec/schemas/*.json"]
+agentfrontier = ["spec/*.json", "spec/definitions/*/*.json", "spec/sinks/*.json", "spec/schemas/*.json",
+                 "spec/classification/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

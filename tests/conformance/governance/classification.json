@@ -1,0 +1,251 @@
+{
+  "description": "Built-in classification rules (classification/rules.json, docs/classification.md): for a field name, comment and sample values, the labels in rule order with value, confidence and evidence.",
+  "ruleVersion": "1.0.0",
+  "cases": [
+    {
+      "name": "customer_email",
+      "comment": null,
+      "values": [
+        "a@example.com",
+        "b.c@example.org",
+        null
+      ],
+      "expected": [
+        {
+          "label": "pii.email",
+          "labelType": "classification",
+          "value": "confidential",
+          "confidence": 0.9,
+          "evidence": "name,values:2/2"
+        }
+      ]
+    },
+    {
+      "name": "email_verified",
+      "comment": null,
+      "values": null,
+      "expected": []
+    },
+    {
+      "name": "contact",
+      "comment": "Primary e-mail of the customer",
+      "values": null,
+      "expected": [
+        {
+          "label": "pii.email",
+          "labelType": "classification",
+          "value": "confidential",
+          "confidence": 0.6,
+          "evidence": "comment"
+        }
+      ]
+    },
+    {
+      "name": "phone_number",
+      "comment": null,
+      "values": [
+        "+1 415-555-0100",
+        "(020) 7946 0958"
+      ],
+      "expected": [
+        {
+          "label": "pii.phone",
+          "labelType": "classification",
+          "value": "confidential",
+          "confidence": 0.8,
+          "evidence": "name,values:2/2"
+        }
+      ]
+    },
+    {
+      "name": "hotel",
+      "comment": null,
+      "values": null,
+      "expected": []
+    },
+    {
+      "name": "payment_ref",
+      "comment": null,
+      "values": [
+        "4111111111111111",
+        "5500 0000 0000 0004",
+        "4111111111111112"
+      ],
+      "expected": []
+    },
+    {
+      "name": "payment_ref2",
+      "comment": null,
+      "values": [
+        "4111111111111112",
+        "1234567890123"
+      ],
+      "expected": []
+    },
+    {
+      "name": "pan_values",
+      "comment": null,
+      "values": [
+        "4111111111111111",
+        "5500 0000 0000 0004"
+      ],
+      "expected": [
+        {
+          "label": "pci.card_number",
+          "labelType": "classification",
+          "value": "restricted",
+          "confidence": 0.95,
+          "evidence": "values:2/2"
+        }
+      ]
+    },
+    {
+      "name": "iban",
+      "comment": null,
+      "values": [
+        "GB82WEST12345698765432",
+        "DE89370400440532013000"
+      ],
+      "expected": [
+        {
+          "label": "finance.iban",
+          "labelType": "classification",
+          "value": "restricted",
+          "confidence": 0.95,
+          "evidence": "name,values:2/2"
+        }
+      ]
+    },
+    {
+      "name": "ssn",
+      "comment": null,
+      "values": [
+        "123-45-6789"
+      ],
+      "expected": [
+        {
+          "label": "pii.national_id",
+          "labelType": "classification",
+          "value": "restricted",
+          "confidence": 0.85,
+          "evidence": "name,values:1/1"
+        }
+      ]
+    },
+    {
+      "name": "billing_address",
+      "comment": null,
+      "values": null,
+      "expected": [
+        {
+          "label": "pii.address",
+          "labelType": "classification",
+          "value": "confidential",
+          "confidence": 0.6,
+          "evidence": "name"
+        }
+      ]
+    },
+    {
+      "name": "email_address",
+      "comment": null,
+      "values": null,
+      "expected": [
+        {
+          "label": "pii.email",
+          "labelType": "classification",
+          "value": "confidential",
+          "confidence": 0.7,
+          "evidence": "name"
+        }
+      ]
+    },
+    {
+      "name": "first_name",
+      "comment": null,
+      "values": null,
+      "expected": [
+        {
+          "label": "pii.person_name",
+          "labelType": "classification",
+          "value": "confidential",
+          "confidence": 0.7,
+          "evidence": "name"
+        }
+      ]
+    },
+    {
+      "name": "username",
+      "comment": null,
+      "values": [
+        "alice",
+        "bob"
+      ],
+      "expected": []
+    },
+    {
+      "name": "api_token",
+      "comment": null,
+      "values": [
+        "ghp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "not-a-token"
+      ],
+      "expected": [
+        {
+          "label": "secret.credential",
+          "labelType": "classification",
+          "value": "secret",
+          "confidence": 0.95,
+          "evidence": "values:1/2"
+        }
+      ]
+    },
+    {
+      "name": "notes",
+      "comment": "Stores the user password hash",
+      "values": null,
+      "expected": [
+        {
+          "label": "secret.password",
+          "labelType": "classification",
+          "value": "secret",
+          "confidence": 0.7,
+          "evidence": "comment"
+        }
+      ]
+    },
+    {
+      "name": "client_ip",
+      "comment": null,
+      "values": [
+        "10.0.0.1",
+        "192.168.1.300"
+      ],
+      "expected": [
+        {
+          "label": "pii.ip_address",
+          "labelType": "classification",
+          "value": "internal",
+          "confidence": 0.6,
+          "evidence": "name"
+        }
+      ]
+    },
+    {
+      "name": "dob",
+      "comment": null,
+      "values": [
+        "1990-01-01"
+      ],
+      "expected": [
+        {
+          "label": "pii.date_of_birth",
+          "labelType": "classification",
+          "value": "confidential",
+          "confidence": 0.8,
+          "evidence": "name"
+        }
+      ]
+    }
+  ]
+}

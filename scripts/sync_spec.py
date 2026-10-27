@@ -32,8 +32,8 @@ REPO = Path(__file__).resolve().parents[1]
 PACKAGE_SPEC = REPO / "src" / "agentfrontier" / "spec"
 CONFORMANCE = REPO / "tests" / "conformance"
 LOCK = REPO / "scripts" / "spec.lock"
-PACKAGE_ITEMS = ["definitions", "sinks", "schemas", "entities.json", "streams.json", "auth-methods.json",
-                 "index.json"]
+PACKAGE_ITEMS = ["definitions", "sinks", "schemas", "classification", "entities.json", "streams.json",
+                 "auth-methods.json", "index.json"]
 
 
 def _files(root: Path) -> set[str]:

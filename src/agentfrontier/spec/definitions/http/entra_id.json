@@ -1,0 +1,314 @@
+{
+  "specVersion": "1",
+  "id": "entra_id",
+  "name": "Microsoft Entra ID",
+  "aliases": [
+    "azure_ad"
+  ],
+  "protocol": "http",
+  "category": "identity",
+  "status": "experimental",
+  "description": "Microsoft Entra ID (Azure AD) through Microsoft Graph v1.0, read only and metadata level: users, groups and service principals as principals, directory role definitions as role principals, directory role assignments as grants, and delegated permission grants (oauth2PermissionGrants) as delegations. Principals are named by their object id, which is what every assignment refers to; display names are properties. Group memberships and app role assignments are not read yet: Graph lists them per group or per service principal. Exercised against recorded responses; not yet run against a live tenant.",
+  "properties": [
+    {
+      "key": "tenantId",
+      "label": "Tenant ID",
+      "type": "string",
+      "required": true,
+      "help": "Directory (tenant) ID or a verified domain, e.g. contoso.onmicrosoft.com"
+    },
+    {
+      "key": "graphUrl",
+      "label": "Microsoft Graph URL",
+      "type": "string",
+      "default": "https://graph.microsoft.com",
+      "help": "Change only for a national cloud, e.g. https://graph.microsoft.us"
+    },
+    {
+      "key": "authorityUrl",
+      "label": "Sign-in authority URL",
+      "type": "string",
+      "default": "https://login.microsoftonline.com",
+      "help": "Change only for a national cloud, e.g. https://login.microsoftonline.us"
+    },
+    {
+      "key": "timeoutSeconds",
+      "label": "Request timeout (s)",
+      "type": "integer",
+      "default": "30"
+    }
+  ],
+  "options": [
+    {
+      "key": "permissionGrants",
+      "label": "Read delegated permission grants",
+      "type": "boolean",
+      "default": "true",
+      "help": "oauth2PermissionGrants: which apps may act on behalf of users, with which scopes."
+    }
+  ],
+  "auth": [
+    "oauth2_client_credentials",
+    "oauth2_access_token",
+    "token"
+  ],
+  "connection": {
+    "http": {
+      "baseUrl": "{{graphUrl}}/v1.0",
+      "timeoutSeconds": "{{timeoutSeconds}}",
+      "headers": {
+        "Accept": "application/json"
+      },
+      "retry": {
+        "attempts": 3,
+        "on": [
+          429,
+          503,
+          504
+        ],
+        "backoffMs": 1000
+      },
+      "auth": {
+        "oauth2_client_credentials": {
+          "oauth2": {
+            "tokenUrl": "{{authorityUrl}}/{{tenantId}}/oauth2/v2.0/token",
+            "scope": "{{graphUrl}}/.default"
+          },
+          "headers": {
+            "Authorization": "Bearer {{token.accessToken}}"
+          }
+        },
+        "oauth2_access_token": {
+          "headers": {
+            "Authorization": "Bearer {{auth.accessToken}}"
+          }
+        },
+        "token": {
+          "headers": {
+            "Authorization": "Bearer {{auth.token}}"
+          }
+        }
+      }
+    }
+  },
+  "hierarchy": [],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "request": {
+        "path": "/organization",
+        "query": {
+          "$select": "id,displayName"
+        }
+      },
+      "records": "$.value[0]",
+      "fields": {
+        "tenantId": "id",
+        "organization": "displayName"
+      },
+      "extras": "drop"
+    },
+    "source": {
+      "entity": "source",
+      "request": {
+        "path": "/organization",
+        "query": {
+          "$select": "id,displayName"
+        }
+      },
+      "records": "$.value[0]",
+      "fields": {
+        "product": {
+          "value": "Microsoft Entra ID"
+        },
+        "comment": "displayName",
+        "tenantId": "id"
+      },
+      "extras": "drop"
+    },
+    "users": {
+      "entity": "principal",
+      "paging": {
+        "mode": "nextUrl",
+        "next": "$['@odata.nextLink']",
+        "size": 999
+      },
+      "request": {
+        "path": "/users",
+        "query": {
+          "$select": "id,displayName,userPrincipalName,mail,accountEnabled,userType,createdDateTime",
+          "$top": "{{limit}}"
+        }
+      },
+      "records": "$.value[*]",
+      "fields": {
+        "name": "id",
+        "canLogin": "accountEnabled",
+        "displayName": "displayName",
+        "userPrincipalName": "userPrincipalName",
+        "mail": "mail",
+        "userType": "userType",
+        "createdAt": "createdDateTime"
+      },
+      "set": {
+        "type": "user"
+      },
+      "extras": "drop"
+    },
+    "groups": {
+      "entity": "principal",
+      "paging": {
+        "mode": "nextUrl",
+        "next": "$['@odata.nextLink']",
+        "size": 999
+      },
+      "request": {
+        "path": "/groups",
+        "query": {
+          "$select": "id,displayName,description,mail,mailEnabled,securityEnabled,groupTypes,createdDateTime",
+          "$top": "{{limit}}"
+        }
+      },
+      "records": "$.value[*]",
+      "fields": {
+        "name": "id",
+        "comment": "description",
+        "displayName": "displayName",
+        "mail": "mail",
+        "mailEnabled": "mailEnabled",
+        "securityEnabled": "securityEnabled",
+        "groupTypes": "groupTypes",
+        "createdAt": "createdDateTime"
+      },
+      "set": {
+        "type": "group",
+        "canLogin": false
+      },
+      "extras": "drop"
+    },
+    "servicePrincipals": {
+      "entity": "principal",
+      "paging": {
+        "mode": "nextUrl",
+        "next": "$['@odata.nextLink']",
+        "size": 999
+      },
+      "request": {
+        "path": "/servicePrincipals",
+        "query": {
+          "$select": "id,appId,displayName,description,servicePrincipalType,accountEnabled,appOwnerOrganizationId",
+          "$top": "{{limit}}"
+        }
+      },
+      "records": "$.value[*]",
+      "fields": {
+        "name": "id",
+        "canLogin": "accountEnabled",
+        "comment": "description",
+        "displayName": "displayName",
+        "appId": "appId",
+        "servicePrincipalType": "servicePrincipalType",
+        "appOwnerOrganizationId": "appOwnerOrganizationId"
+      },
+      "set": {
+        "type": "service"
+      },
+      "extras": "drop"
+    },
+    "directoryRoles": {
+      "entity": "principal",
+      "paging": {
+        "mode": "nextUrl",
+        "next": "$['@odata.nextLink']"
+      },
+      "request": {
+        "path": "/roleManagement/directory/roleDefinitions",
+        "query": {
+          "$select": "id,displayName,description,isBuiltIn,isEnabled,templateId"
+        }
+      },
+      "records": "$.value[*]",
+      "fields": {
+        "name": "id",
+        "comment": "description",
+        "superuser": {
+          "from": "templateId",
+          "values": {
+            "62e90394-69f5-4237-9190-012177145e10": true
+          },
+          "else": false
+        },
+        "displayName": "displayName",
+        "isBuiltIn": "isBuiltIn",
+        "isEnabled": "isEnabled"
+      },
+      "set": {
+        "type": "role",
+        "canLogin": false
+      },
+      "extras": "drop"
+    },
+    "roleAssignments": {
+      "entity": "grant",
+      "paging": {
+        "mode": "nextUrl",
+        "next": "$['@odata.nextLink']"
+      },
+      "request": {
+        "path": "/roleManagement/directory/roleAssignments",
+        "query": {
+          "$select": "id,principalId,roleDefinitionId,directoryScopeId,appScopeId"
+        }
+      },
+      "records": "$.value[*]",
+      "fields": {
+        "principal": "principalId",
+        "privilege": "roleDefinitionId",
+        "objectType": {
+          "from": "directoryScopeId",
+          "values": {
+            "/": "directory"
+          },
+          "else": "directory_scope"
+        },
+        "dataset": {
+          "template": "{{directoryScopeId|removePrefix:/}}"
+        },
+        "directoryScopeId": "directoryScopeId",
+        "appScopeId": "appScopeId",
+        "assignmentId": "id"
+      },
+      "extras": "drop"
+    },
+    "permissionGrants": {
+      "entity": "delegation",
+      "enabledBy": "permissionGrants",
+      "paging": {
+        "mode": "nextUrl",
+        "next": "$['@odata.nextLink']"
+      },
+      "request": {
+        "path": "/oauth2PermissionGrants"
+      },
+      "records": "$.value[*]",
+      "fields": {
+        "principal": {
+          "from": "principalId",
+          "default": "PUBLIC"
+        },
+        "delegate": "clientId",
+        "scope": {
+          "from": "scope",
+          "split": " "
+        },
+        "consentType": "consentType",
+        "resourceId": "resourceId",
+        "grantId": "id"
+      },
+      "set": {
+        "delegateType": "service"
+      },
+      "extras": "drop"
+    }
+  }
+}

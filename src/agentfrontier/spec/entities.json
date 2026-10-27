@@ -291,7 +291,7 @@
     "label": {
       "aspect": "governance",
       "category": "classification_labels",
-      "description": "A label, classification, sensitivity level or glossary term on an object or a piece of content, with where it came from. Source-declared labels are never overwritten by inferred ones: each engine's labels are separate records.",
+      "description": "A label, classification, sensitivity level or glossary term on an object or a piece of content, with where it came from. Source-declared labels are never overwritten by inferred ones: each engine's labels are separate records. A label without `engine` is declared by the source. `confidence` and `evidence` (what matched: name, comment or values) are set by classifiers; see docs/classification.md.",
       "fields": {
         "name": "string",
         "value": "string",
@@ -303,7 +303,9 @@
         "engine": "string",
         "ruleVersion": "string",
         "reviewStatus": "string",
-        "expiresAt": "string"
+        "expiresAt": "string",
+        "confidence": "double",
+        "evidence": "string"
       },
       "enums": {
         "labelType": {
@@ -360,7 +362,7 @@
     "audit_event": {
       "aspect": "activity",
       "category": "audit",
-      "description": "An action an actor took on a resource and the decision about it, as an audit log records it.",
+      "description": "An action an actor took on a resource and the decision about it, as an audit log records it. Events the SDK emits about its own actions are hash-chained per run: `sequence`, `previousHash` and `hash` follow docs/audit.md.",
       "fields": {
         "actor": "string",
         "actorType": "string",
@@ -372,7 +374,12 @@
         "policyVersion": "string",
         "outcome": "string",
         "correlationId": "string",
-        "occurredAt": "string"
+        "occurredAt": "string",
+        "records": "long",
+        "reason": "string",
+        "sequence": "long",
+        "previousHash": "string",
+        "hash": "string"
       },
       "enums": {
         "decision": {

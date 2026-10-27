@@ -1,0 +1,27 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#groups(id,displayName,description,mail,mailEnabled,securityEnabled,groupTypes,createdDateTime)",
+  "value": [
+    {
+      "id": "02bd9fd6-8f93-4758-87c3-1fb73740a315",
+      "displayName": "Finance",
+      "description": "Finance team: budgets and payroll",
+      "mail": "finance@contoso.onmicrosoft.com",
+      "mailEnabled": true,
+      "securityEnabled": true,
+      "groupTypes": [
+        "Unified"
+      ],
+      "createdDateTime": "2023-03-01T10:00:00Z"
+    },
+    {
+      "id": "0a6c4d2e-91b8-4f1d-a3c7-5e2f8b9d6a14",
+      "displayName": "Tenant Admins",
+      "description": null,
+      "mail": null,
+      "mailEnabled": false,
+      "securityEnabled": true,
+      "groupTypes": [],
+      "createdDateTime": "2023-03-02T11:30:00Z"
+    }
+  ]
+}

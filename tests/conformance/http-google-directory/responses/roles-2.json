@@ -1,0 +1,19 @@
+{
+  "kind": "admin#directory#roles",
+  "etag": "\"r0\"",
+  "items": [
+    {
+      "kind": "admin#directory#role",
+      "etag": "\"r3\"",
+      "roleId": "9170516996784155",
+      "roleName": "Contractor manager",
+      "roleDescription": "Suspends and restores contractor accounts",
+      "rolePrivileges": [
+        {
+          "privilegeName": "USERS_SUSPEND",
+          "serviceId": "00haapch16h1ysv"
+        }
+      ]
+    }
+  ]
+}

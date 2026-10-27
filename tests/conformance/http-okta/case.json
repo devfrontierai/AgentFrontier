@@ -1,0 +1,29 @@
+{
+  "description": "HTTP engine on the Okta Management API with no hierarchy: SSWS API token, Link-header paging with the next URL in a separate Link header (users) and in one combined Link header after the self link (apps), a single page with only a self link (groups), users with their status mapped to canLogin, groups and app integrations as principals, and an organisation record from the public well-known endpoint.",
+  "server": {
+    "routes": "routes.json"
+  },
+  "connection": {
+    "id": "conf-okta",
+    "name": "Conformance Okta",
+    "type": "okta",
+    "properties": {
+      "baseUrl": "{{baseUrl}}"
+    },
+    "auth": {
+      "method": "api_key",
+      "apiKey": "conf-okta-token"
+    }
+  },
+  "pipeline": {
+    "aspects": [
+      "metadata",
+      "governance"
+    ]
+  },
+  "envelope": {
+    "tenantId": "conformance",
+    "expected": "expected-envelope.jsonl"
+  },
+  "expected": "expected.jsonl"
+}

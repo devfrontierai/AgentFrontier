@@ -1,0 +1,17 @@
+[
+  {
+    "id": "0oa2reportingSvc697",
+    "name": "oidc_client",
+    "label": "Reporting service",
+    "status": "INACTIVE",
+    "lastUpdated": "2025-11-03T10:00:00.000Z",
+    "created": "2025-01-15T10:00:00.000Z",
+    "signOnMode": "OPENID_CONNECT",
+    "features": [],
+    "_links": {
+      "users": {
+        "href": "{{baseUrl}}/api/v1/apps/0oa2reportingSvc697/users"
+      }
+    }
+  }
+]

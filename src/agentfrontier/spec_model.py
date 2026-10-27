@@ -290,3 +290,7 @@ class SpecResources:
 
     def streams(self) -> StreamCatalog:
         return StreamCatalog(self.read("streams.json"))
+
+    def classification_rules(self) -> dict:
+        """The built-in classification rules (spec docs/classification.md)."""
+        return self.read("classification/rules.json")

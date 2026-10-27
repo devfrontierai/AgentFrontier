@@ -1,0 +1,20 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#roleManagement/directory/roleAssignments(id,principalId,roleDefinitionId,directoryScopeId,appScopeId)",
+  "@odata.nextLink": "{{baseUrl}}/v1.0/roleManagement/directory/roleAssignments?$select=id,principalId,roleDefinitionId,directoryScopeId,appScopeId&$skiptoken=RFNwdAoAAQAAAAAAAAAAFAAAAJC2sEqbR_9Hr48lds9SGHIBAAAAAAAAAAAAAAAAAAAXMS4yLjg0MC4xMTM1NTYuMS40LjIzMzEGAAAAAAABA",
+  "value": [
+    {
+      "id": "lAPpYvVpN0KRkAEhdxReEO1J04fXRONDmoNfJAbe5b0-1",
+      "principalId": "87d349ed-44d7-43e1-9a83-5f2406dee5bd",
+      "roleDefinitionId": "62e90394-69f5-4237-9190-012177145e10",
+      "directoryScopeId": "/",
+      "appScopeId": null
+    },
+    {
+      "id": "LJnv8vs6uUa3z6Em7nTEUS5d0gpPkR9Po8deL4udahQ-1",
+      "principalId": "0a6c4d2e-91b8-4f1d-a3c7-5e2f8b9d6a14",
+      "roleDefinitionId": "f2ef992c-3afb-46b9-b7cf-a126ee74c451",
+      "directoryScopeId": "/",
+      "appScopeId": null
+    }
+  ]
+}

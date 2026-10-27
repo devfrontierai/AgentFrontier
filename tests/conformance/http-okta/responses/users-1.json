@@ -1,0 +1,68 @@
+[
+  {
+    "id": "00u1abcdEFGHijklm697",
+    "status": "ACTIVE",
+    "created": "2022-05-17T16:02:11.000Z",
+    "activated": "2022-05-17T16:02:11.000Z",
+    "statusChanged": "2022-05-17T16:02:11.000Z",
+    "lastLogin": "2026-10-26T07:55:40.000Z",
+    "lastUpdated": "2022-05-17T16:02:11.000Z",
+    "passwordChanged": "2022-05-17T16:02:11.000Z",
+    "type": {
+      "id": "oty1fuh8bnHo8uGnI697"
+    },
+    "profile": {
+      "firstName": "Ana",
+      "lastName": "Lopez",
+      "mobilePhone": null,
+      "secondEmail": null,
+      "login": "ana.lopez@altostrat.com",
+      "email": "ana.lopez@altostrat.com"
+    },
+    "credentials": {
+      "password": {},
+      "provider": {
+        "type": "OKTA",
+        "name": "OKTA"
+      }
+    },
+    "_links": {
+      "self": {
+        "href": "{{baseUrl}}/api/v1/users/00u1abcdEFGHijklm697"
+      }
+    }
+  },
+  {
+    "id": "00u2bcdeFGHIjklmn697",
+    "status": "PASSWORD_EXPIRED",
+    "created": "2023-08-01T09:30:00.000Z",
+    "activated": "2023-08-01T09:30:00.000Z",
+    "statusChanged": "2023-08-01T09:30:00.000Z",
+    "lastLogin": "2026-07-02T13:11:09.000Z",
+    "lastUpdated": "2023-08-01T09:30:00.000Z",
+    "passwordChanged": "2023-08-01T09:30:00.000Z",
+    "type": {
+      "id": "oty1fuh8bnHo8uGnI697"
+    },
+    "profile": {
+      "firstName": "Ben",
+      "lastName": "Okafor",
+      "mobilePhone": null,
+      "secondEmail": null,
+      "login": "ben.okafor@altostrat.com",
+      "email": "ben.okafor@altostrat.com"
+    },
+    "credentials": {
+      "password": {},
+      "provider": {
+        "type": "OKTA",
+        "name": "OKTA"
+      }
+    },
+    "_links": {
+      "self": {
+        "href": "{{baseUrl}}/api/v1/users/00u2bcdeFGHIjklmn697"
+      }
+    }
+  }
+]

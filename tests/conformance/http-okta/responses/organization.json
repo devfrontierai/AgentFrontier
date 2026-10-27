@@ -1,0 +1,17 @@
+{
+  "id": "00o1n8sbwArJ7OQRw697",
+  "pipeline": "idx",
+  "_links": {
+    "organization": {
+      "href": "https://altostrat.okta.com"
+    },
+    "alternate": {
+      "href": "https://login.altostrat.com"
+    }
+  },
+  "settings": {
+    "analyticsCollectionEnabled": false,
+    "bugReportingEnabled": true,
+    "omEnabled": false
+  }
+}

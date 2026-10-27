@@ -1,0 +1,71 @@
+{
+  "require": {
+    "headers": {
+      "Authorization": "SSWS conf-okta-token"
+    }
+  },
+  "routes": [
+    {
+      "path": "/.well-known/okta-organization",
+      "require": {},
+      "body": "responses/organization.json"
+    },
+    {
+      "path": "/api/v1/users",
+      "query": {
+        "limit": "200",
+        "after": "00u2bcdeFGHIjklmn697"
+      },
+      "headers": {
+        "Link": "<{{baseUrl}}/api/v1/users?after=00u2bcdeFGHIjklmn697&limit=200>; rel=\"self\""
+      },
+      "body": "responses/users-2.json"
+    },
+    {
+      "path": "/api/v1/users",
+      "query": {
+        "limit": "200",
+        "after": null
+      },
+      "headers": {
+        "Link": [
+          "<{{baseUrl}}/api/v1/users?limit=200>; rel=\"self\"",
+          "<{{baseUrl}}/api/v1/users?after=00u2bcdeFGHIjklmn697&limit=200>; rel=\"next\""
+        ]
+      },
+      "body": "responses/users-1.json"
+    },
+    {
+      "path": "/api/v1/groups",
+      "query": {
+        "limit": "200"
+      },
+      "headers": {
+        "Link": "<{{baseUrl}}/api/v1/groups?limit=200>; rel=\"self\""
+      },
+      "body": "responses/groups.json"
+    },
+    {
+      "path": "/api/v1/apps",
+      "query": {
+        "limit": "200",
+        "after": "0oa1salesforceAB697"
+      },
+      "headers": {
+        "Link": "<{{baseUrl}}/api/v1/apps?after=0oa1salesforceAB697&limit=200>; rel=\"self\""
+      },
+      "body": "responses/apps-2.json"
+    },
+    {
+      "path": "/api/v1/apps",
+      "query": {
+        "limit": "200",
+        "after": null
+      },
+      "headers": {
+        "Link": "<{{baseUrl}}/api/v1/apps?limit=200>; rel=\"self\", <{{baseUrl}}/api/v1/apps?after=0oa1salesforceAB697&limit=200>; rel=\"next\""
+      },
+      "body": "responses/apps-1.json"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "kind": "admin#directory#users",
+  "etag": "\"pXlTCWQyR4MzBhT1t4dmc7S2ttmKjM\"",
+  "users": [
+    {
+      "kind": "admin#directory#user",
+      "id": "117805936211954082233",
+      "etag": "\"a3\"",
+      "primaryEmail": "sam@altostrat.com",
+      "name": {
+        "givenName": "Sam",
+        "familyName": "Patel",
+        "fullName": "Sam Patel"
+      },
+      "isAdmin": false,
+      "isDelegatedAdmin": false,
+      "lastLoginTime": "1970-01-01T00:00:00.000Z",
+      "creationTime": "2023-01-09T14:30:00.000Z",
+      "agreedToTerms": true,
+      "suspended": true,
+      "suspensionReason": "ADMIN",
+      "archived": false,
+      "changePasswordAtNextLogin": false,
+      "ipWhitelisted": false,
+      "emails": [
+        {
+          "address": "sam@altostrat.com",
+          "primary": true
+        }
+      ],
+      "customerId": "C03az79cb",
+      "orgUnitPath": "/Engineering/Contractors",
+      "isMailboxSetup": true,
+      "isEnrolledIn2Sv": false,
+      "isEnforcedIn2Sv": false,
+      "includeInGlobalAddressList": true
+    }
+  ]
+}

@@ -1,0 +1,177 @@
+{
+  "specVersion": "1",
+  "id": "okta",
+  "name": "Okta",
+  "protocol": "http",
+  "category": "identity",
+  "status": "experimental",
+  "description": "Okta Workforce Identity through the Management API, read only and metadata level: users, groups and app integrations as principals. Pages are followed through the Link header. Principals are named by their Okta id; logins, e-mail addresses and labels are properties. Deprovisioned users are left out, as the API does by default. Group memberships and app assignments are not read yet: the API lists them per group or per app. Exercised against recorded responses; not yet run against a live org.",
+  "properties": [
+    {
+      "key": "baseUrl",
+      "label": "Okta org URL",
+      "type": "string",
+      "required": true,
+      "help": "https://<org>.okta.com (or your custom domain)"
+    },
+    {
+      "key": "timeoutSeconds",
+      "label": "Request timeout (s)",
+      "type": "integer",
+      "default": "30"
+    }
+  ],
+  "auth": [
+    "api_key",
+    "oauth2_access_token"
+  ],
+  "connection": {
+    "http": {
+      "baseUrl": "{{baseUrl}}",
+      "timeoutSeconds": "{{timeoutSeconds}}",
+      "headers": {
+        "Accept": "application/json"
+      },
+      "retry": {
+        "attempts": 3,
+        "on": [
+          429,
+          503
+        ],
+        "backoffMs": 1000
+      },
+      "auth": {
+        "api_key": {
+          "headers": {
+            "Authorization": "SSWS {{auth.apiKey}}"
+          }
+        },
+        "oauth2_access_token": {
+          "headers": {
+            "Authorization": "Bearer {{auth.accessToken}}"
+          }
+        }
+      }
+    }
+  },
+  "hierarchy": [],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "request": {
+        "path": "/api/v1/users",
+        "query": {
+          "limit": "1"
+        }
+      },
+      "records": "$[0]",
+      "fields": {
+        "userId": "id"
+      },
+      "extras": "drop"
+    },
+    "source": {
+      "entity": "source",
+      "request": {
+        "path": "/.well-known/okta-organization"
+      },
+      "fields": {
+        "product": {
+          "value": "Okta"
+        },
+        "comment": "$._links.organization.href",
+        "orgId": "id",
+        "pipeline": "pipeline"
+      },
+      "extras": "drop"
+    },
+    "users": {
+      "entity": "principal",
+      "paging": {
+        "mode": "linkHeader",
+        "size": 200
+      },
+      "request": {
+        "path": "/api/v1/users",
+        "query": {
+          "limit": "{{limit}}"
+        }
+      },
+      "records": "$[*]",
+      "fields": {
+        "name": "id",
+        "canLogin": {
+          "from": "status",
+          "values": {
+            "ACTIVE": true,
+            "PASSWORD_EXPIRED": true
+          },
+          "else": false
+        },
+        "login": "$.profile.login",
+        "email": "$.profile.email",
+        "firstName": "$.profile.firstName",
+        "lastName": "$.profile.lastName",
+        "status": "status",
+        "createdAt": "created",
+        "lastLogin": "lastLogin"
+      },
+      "set": {
+        "type": "user"
+      },
+      "extras": "drop"
+    },
+    "groups": {
+      "entity": "principal",
+      "paging": {
+        "mode": "linkHeader",
+        "size": 200
+      },
+      "request": {
+        "path": "/api/v1/groups",
+        "query": {
+          "limit": "{{limit}}"
+        }
+      },
+      "records": "$[*]",
+      "fields": {
+        "name": "id",
+        "comment": "$.profile.description",
+        "displayName": "$.profile.name",
+        "groupType": "type",
+        "createdAt": "created"
+      },
+      "set": {
+        "type": "group",
+        "canLogin": false
+      },
+      "extras": "drop"
+    },
+    "apps": {
+      "entity": "principal",
+      "paging": {
+        "mode": "linkHeader",
+        "size": 200
+      },
+      "request": {
+        "path": "/api/v1/apps",
+        "query": {
+          "limit": "{{limit}}"
+        }
+      },
+      "records": "$[*]",
+      "fields": {
+        "name": "id",
+        "displayName": "label",
+        "appName": "name",
+        "status": "status",
+        "signOnMode": "signOnMode",
+        "createdAt": "created"
+      },
+      "set": {
+        "type": "service"
+      },
+      "extras": "drop"
+    }
+  }
+}

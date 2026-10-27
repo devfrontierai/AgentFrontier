@@ -1,0 +1,13 @@
+{
+  "kind": "admin#directory#customer",
+  "id": "C03az79cb",
+  "etag": "\"nMRhx1BpKq-6pLz0rVlLVo7G0W5aTzMqh2FzzURyOfk\"",
+  "customerDomain": "altostrat.com",
+  "alternateEmail": "it-ops@example.org",
+  "postalAddress": {
+    "organizationName": "Altostrat",
+    "countryCode": "US"
+  },
+  "customerCreationTime": "2019-04-02T17:18:32.000Z",
+  "language": "en"
+}

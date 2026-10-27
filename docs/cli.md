@@ -20,6 +20,9 @@ success, 1 on failure, 2 on bad usage.
 | `run <pipeline.json>` | runs a pipeline file; progress events on standard error, the report on standard output |
 | `query <connection.json> "<sql>"` | read-only query, prints columns, rows, `truncated`, `elapsedMs` |
 | `sample <connection.json> <dataset>` | first rows of a dataset as a JSON array |
+| `policy-decide --rules <rules.json> [request.json]` | decides one policy request (standard input when no file); prints the decision, exit 1 on deny (Python only) |
+| `audit-verify <dir>` | checks the audit hash chain a jsonl sink wrote against `run.json`; `--key-env VAR` also checks the signature (Python only) |
+| `authority <dir>` | effective grants from an extraction's `principal`, `grant`, `delegation` and `agent_permission` files: `--principal <name>`, `--who-can PRIVILEGE:resource`, or the whole graph (Python only) |
 
 Options:
 
@@ -31,6 +34,10 @@ Options:
 | `--sink <spec>` | extract | `jsonl:<dir>`, `json:<file>`, `console`, `memory`, or a sink JSON file (repeatable; default `console`) |
 | `--parallelism N` `--page-size N` `--batch-size N` `--sample-rows N` | extract | pipeline settings |
 | `--envelope` `--tenant <id>` | extract | write raw-stream events (tenant `default` unless given) instead of plain records. Put `--envelope` after the connection file, or write `--envelope true`, since an option takes the next argument as its value |
+| `--policy <rules.json>` | extract, query, sample | decide every read with these rules: denies, masks, row filters (see [governance](governance.md)) |
+| `--subject <id>` `--purpose <text>` | extract, query, sample | who the run acts for and why, for the policy and the audit trail |
+| `--classify` | extract, query, sample | label fields with the built-in classifiers (names, comments, sample values) |
+| `--audit` `--audit-key-env VAR` | extract | write hash-chained `audit_event` records; sign the manifest with the key in `$VAR` |
 | `--max-rows N` | query | row cap (default 1000) |
 | `--scope level=value,...` | query, sample | where to run, for example `--scope database=shopdb,schema=shop` |
 | `--limit N` | sample | rows (default 10) |

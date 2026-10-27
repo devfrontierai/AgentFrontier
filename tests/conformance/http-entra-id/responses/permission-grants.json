@@ -1,0 +1,21 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#oauth2PermissionGrants",
+  "value": [
+    {
+      "clientId": "b1f3c8d2-5e6a-4b7c-8d9e-0f1a2b3c4d5e",
+      "consentType": "AllPrincipals",
+      "id": "0vMbsV5eekuNnQ8aKzxNXSKD9wNvXsBMuHbGaQ-2V5I",
+      "principalId": null,
+      "resourceId": "6f1b2c4e-8a3d-4e5f-9b7c-1d2e3f4a5b6c",
+      "scope": " User.Read openid profile"
+    },
+    {
+      "clientId": "b1f3c8d2-5e6a-4b7c-8d9e-0f1a2b3c4d5e",
+      "consentType": "Principal",
+      "id": "0vMbsV5eekuNnQ8aKzxNXSKD9wNvXsBMuHbGaQ-2V5LtSdOH10TkQ5qDXyQG3uW9",
+      "principalId": "87d349ed-44d7-43e1-9a83-5f2406dee5bd",
+      "resourceId": "6f1b2c4e-8a3d-4e5f-9b7c-1d2e3f4a5b6c",
+      "scope": "Mail.Read Calendars.Read"
+    }
+  ]
+}

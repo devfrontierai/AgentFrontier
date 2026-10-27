@@ -1,0 +1,60 @@
+[
+  {
+    "id": "00g1everyoneABCDE697",
+    "created": "2021-01-04T19:50:00.000Z",
+    "lastUpdated": "2021-01-04T19:50:00.000Z",
+    "lastMembershipUpdated": "2026-10-25T10:00:00.000Z",
+    "objectClass": [
+      "okta:user_group"
+    ],
+    "type": "BUILT_IN",
+    "profile": {
+      "name": "Everyone",
+      "description": "All users in your organization"
+    },
+    "_links": {
+      "users": {
+        "href": "{{baseUrl}}/api/v1/groups/00g1everyoneABCDE697/users"
+      }
+    }
+  },
+  {
+    "id": "00g2financeBCDEFG697",
+    "created": "2022-03-10T08:00:00.000Z",
+    "lastUpdated": "2022-03-10T08:00:00.000Z",
+    "lastMembershipUpdated": "2026-09-30T12:00:00.000Z",
+    "objectClass": [
+      "okta:user_group"
+    ],
+    "type": "OKTA_GROUP",
+    "profile": {
+      "name": "Finance",
+      "description": "Finance department"
+    },
+    "_links": {
+      "users": {
+        "href": "{{baseUrl}}/api/v1/groups/00g2financeBCDEFG697/users"
+      }
+    }
+  },
+  {
+    "id": "00g3sfdcAdminsCDE697",
+    "created": "2023-06-12T15:20:00.000Z",
+    "lastUpdated": "2023-06-12T15:20:00.000Z",
+    "lastMembershipUpdated": "2026-08-14T09:00:00.000Z",
+    "objectClass": [
+      "okta:windows_security_principal"
+    ],
+    "type": "APP_GROUP",
+    "profile": {
+      "name": "SFDC-Admins",
+      "description": null,
+      "windowsDomainQualifiedName": "ALTOSTRAT\\SFDC-Admins"
+    },
+    "_links": {
+      "users": {
+        "href": "{{baseUrl}}/api/v1/groups/00g3sfdcAdminsCDE697/users"
+      }
+    }
+  }
+]

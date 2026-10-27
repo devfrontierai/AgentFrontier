@@ -119,7 +119,7 @@ progress handler) and fetches at most `max_rows + 1` rows.
 ```python
 PipelineConfig(connection, aspects=None, operations=None, scope=None, sinks=None,
                page_size=0, batch_size=0, parallelism=0, sample_rows=0, name=None,
-               envelope=False, tenant_id=None)
+               envelope=False, tenant_id=None, governance=None)
 PipelineConfig.of(connection, aspects, sinks)
 PipelineConfig.from_file(path)  /  PipelineConfig.from_json(obj_or_text, base_dir=None)
 report = af.run(config, listener=lambda event, data: ...)
@@ -131,7 +131,11 @@ Defaults: aspects `["metadata"]`, page size 500, batch size 200, parallelism 1, 
 
 `RunReport`: `run_id`, `pipeline`, `source`, `definition`, `version`, `variant`, `status` (SUCCEEDED, PARTIAL,
 FAILED), `counts`, `warnings`, `errors`, `elapsed_ms`, `load`, `started_at`, `finished_at`, `count(entity)`,
-`to_map()` (the JSON shape of `run.json`).
+`to_map()` (the JSON shape of `run.json`), and with governance on, `policy` (denied requests, withheld records,
+masked rows) and `audit` (the hash-chain manifest).
+
+`governance` is the pipeline JSON's `governance` block: subject, purpose, policy, classification and auditing; see
+[governance.md](governance.md).
 
 ## Raw-stream events
 
@@ -142,6 +146,14 @@ sinks work unchanged. Its `envelope` dict holds `envelopeVersion`, `eventId`, `t
 `assertion` and `confidence`. `record` is the wrapped record, and `to_json()` returns the envelope with the record as
 `body`, so the JSON sinks write events. The rules for `eventId` and `nativeObjectId` are in the spec's
 `docs/envelope.md`; `agentfrontier.envelope.event_id(...)` and `native_object_id(record, levels)` compute them.
+
+## Governance
+
+`agentfrontier.governance`: `Governance` (the enforcement point), `RulePDP`, `OpaPDP`, `CombinedPDP`,
+`FailClosedPDP`, `Decision`, `PolicyDenied`, `ApprovalRequired`, `RuleClassifier`, `reconcile`, `LabelIndex`,
+`AuthorityGraph`, `AuditLog`, `verify`, `verify_directory`. `AgentFrontier(governance=...)` or
+`af.open(conn, governance=...)` returns a `GovernedSession`: the same methods, decided before they run and
+released through the policy. See [governance.md](governance.md).
 
 ## Sinks
 
@@ -163,7 +175,8 @@ subclass `Sink` (`begin`, `write`, `end`, `close`) and are registered with a `Si
 ## Errors
 
 Every failure is an `AgentFrontierError` with a stable `code`: `INVALID_CONFIG`, `INVALID_DEFINITION`,
-`UNSUPPORTED`, `CONNECTION_FAILED`, `QUERY_FAILED`, `QUERY_REJECTED`, `AUTH_FAILED`, `SINK_FAILED`. Messages never
+`UNSUPPORTED`, `CONNECTION_FAILED`, `QUERY_FAILED`, `QUERY_REJECTED`, `AUTH_FAILED`, `SINK_FAILED`,
+`POLICY_DENIED`. Messages never
 contain credentials.
 
 ## Lower-level modules

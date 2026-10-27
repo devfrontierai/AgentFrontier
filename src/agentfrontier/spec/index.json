@@ -4,6 +4,9 @@
   "definitions": [
     "files/local_files.json",
     "http/elasticsearch.json",
+    "http/entra_id.json",
+    "http/google_directory.json",
+    "http/okta.json",
     "http/opensearch.json",
     "http/unity_catalog.json",
     "sql/mysql.json",

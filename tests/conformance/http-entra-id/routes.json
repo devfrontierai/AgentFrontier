@@ -1,0 +1,89 @@
+{
+  "require": {
+    "headers": {
+      "Authorization": "Bearer conf-graph-token"
+    }
+  },
+  "routes": [
+    {
+      "method": "POST",
+      "path": "/test-tenant/oauth2/v2.0/token",
+      "require": {},
+      "form": {
+        "grant_type": "client_credentials",
+        "client_id": "conf-client",
+        "client_secret": "conf-secret",
+        "scope": "{{baseUrl}}/.default"
+      },
+      "body": "responses/token.json"
+    },
+    {
+      "path": "/v1.0/organization",
+      "query": {
+        "$select": "id,displayName"
+      },
+      "body": "responses/organization.json"
+    },
+    {
+      "path": "/v1.0/users",
+      "query": {
+        "$select": "id,displayName,userPrincipalName,mail,accountEnabled,userType,createdDateTime",
+        "$top": "999",
+        "$skiptoken": "RFNwdAIAAQAAACM6QWxleFdAY29udG9zby5vbm1pY3Jvc29mdC5jb20pVXNlcl8yNjhmNWRkZS0zZWQ2LTRmYTgtYTI1Yy0yZjE2N2UxNjk2Y2E"
+      },
+      "body": "responses/users-2.json"
+    },
+    {
+      "path": "/v1.0/users",
+      "query": {
+        "$select": "id,displayName,userPrincipalName,mail,accountEnabled,userType,createdDateTime",
+        "$top": "999",
+        "$skiptoken": null
+      },
+      "body": "responses/users-1.json"
+    },
+    {
+      "path": "/v1.0/groups",
+      "query": {
+        "$select": "id,displayName,description,mail,mailEnabled,securityEnabled,groupTypes,createdDateTime",
+        "$top": "999"
+      },
+      "body": "responses/groups.json"
+    },
+    {
+      "path": "/v1.0/servicePrincipals",
+      "query": {
+        "$select": "id,appId,displayName,description,servicePrincipalType,accountEnabled,appOwnerOrganizationId",
+        "$top": "999"
+      },
+      "body": "responses/service-principals.json"
+    },
+    {
+      "path": "/v1.0/roleManagement/directory/roleDefinitions",
+      "query": {
+        "$select": "id,displayName,description,isBuiltIn,isEnabled,templateId"
+      },
+      "body": "responses/role-definitions.json"
+    },
+    {
+      "path": "/v1.0/roleManagement/directory/roleAssignments",
+      "query": {
+        "$select": "id,principalId,roleDefinitionId,directoryScopeId,appScopeId",
+        "$skiptoken": "RFNwdAoAAQAAAAAAAAAAFAAAAJC2sEqbR_9Hr48lds9SGHIBAAAAAAAAAAAAAAAAAAAXMS4yLjg0MC4xMTM1NTYuMS40LjIzMzEGAAAAAAABA"
+      },
+      "body": "responses/role-assignments-2.json"
+    },
+    {
+      "path": "/v1.0/roleManagement/directory/roleAssignments",
+      "query": {
+        "$select": "id,principalId,roleDefinitionId,directoryScopeId,appScopeId",
+        "$skiptoken": null
+      },
+      "body": "responses/role-assignments-1.json"
+    },
+    {
+      "path": "/v1.0/oauth2PermissionGrants",
+      "body": "responses/permission-grants.json"
+    }
+  ]
+}

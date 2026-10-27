@@ -1,0 +1,40 @@
+{
+  "kind": "admin#directory#roles",
+  "etag": "\"r0\"",
+  "items": [
+    {
+      "kind": "admin#directory#role",
+      "etag": "\"r1\"",
+      "roleId": "9170516996784129",
+      "roleName": "_SEED_ADMIN_ROLE",
+      "roleDescription": "Google Workspace Administrator Seed Role",
+      "rolePrivileges": [
+        {
+          "privilegeName": "SUPER_ADMIN",
+          "serviceId": "01ci93xb3tmzyin"
+        }
+      ],
+      "isSystemRole": true,
+      "isSuperAdminRole": true
+    },
+    {
+      "kind": "admin#directory#role",
+      "etag": "\"r2\"",
+      "roleId": "9170516996784130",
+      "roleName": "_HELP_DESK_ADMIN_ROLE",
+      "roleDescription": "Help Desk Administrator",
+      "rolePrivileges": [
+        {
+          "privilegeName": "USERS_RETRIEVE",
+          "serviceId": "00haapch16h1ysv"
+        },
+        {
+          "privilegeName": "USERS_RESET_PASSWORD",
+          "serviceId": "00haapch16h1ysv"
+        }
+      ],
+      "isSystemRole": true
+    }
+  ],
+  "nextPageToken": "AFHUbwgOAEzZ0xzVXlxZHRjc2RGUU9ZcGQ"
+}

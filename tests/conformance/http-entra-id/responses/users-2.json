@@ -1,0 +1,23 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users(id,displayName,userPrincipalName,mail,accountEnabled,userType,createdDateTime)",
+  "value": [
+    {
+      "id": "268f5dde-3ed6-4fa8-a25c-2f167e1696ca",
+      "displayName": "Alex Wilber",
+      "userPrincipalName": "AlexW@contoso.onmicrosoft.com",
+      "mail": "AlexW@contoso.onmicrosoft.com",
+      "accountEnabled": true,
+      "userType": "Member",
+      "createdDateTime": "2023-02-14T09:22:05Z"
+    },
+    {
+      "id": "c9a0d8e2-7f5b-4b8e-9d41-3e6a2b0f1c77",
+      "displayName": "Former Employee",
+      "userPrincipalName": "former@contoso.onmicrosoft.com",
+      "mail": null,
+      "accountEnabled": false,
+      "userType": "Member",
+      "createdDateTime": "2022-11-30T08:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+[
+  {
+    "id": "00u3cdefGHIJklmno697",
+    "status": "SUSPENDED",
+    "created": "2021-02-23T11:45:12.000Z",
+    "activated": "2021-02-23T11:45:12.000Z",
+    "statusChanged": "2021-02-23T11:45:12.000Z",
+    "lastLogin": "2025-12-19T18:20:31.000Z",
+    "lastUpdated": "2021-02-23T11:45:12.000Z",
+    "passwordChanged": "2021-02-23T11:45:12.000Z",
+    "type": {
+      "id": "oty1fuh8bnHo8uGnI697"
+    },
+    "profile": {
+      "firstName": "Chen",
+      "lastName": "Wu",
+      "mobilePhone": null,
+      "secondEmail": null,
+      "login": "chen.wu@altostrat.com",
+      "email": "chen.wu@altostrat.com"
+    },
+    "credentials": {
+      "password": {},
+      "provider": {
+        "type": "OKTA",
+        "name": "OKTA"
+      }
+    },
+    "_links": {
+      "self": {
+        "href": "{{baseUrl}}/api/v1/users/00u3cdefGHIJklmno697"
+      }
+    }
+  },
+  {
+    "id": "00u4defgHIJKlmnop697",
+    "status": "STAGED",
+    "created": "2026-10-25T10:00:00.000Z",
+    "activated": null,
+    "statusChanged": "2026-10-25T10:00:00.000Z",
+    "lastLogin": null,
+    "lastUpdated": "2026-10-25T10:00:00.000Z",
+    "passwordChanged": "2026-10-25T10:00:00.000Z",
+    "type": {
+      "id": "oty1fuh8bnHo8uGnI697"
+    },
+    "profile": {
+      "firstName": "Dana",
+      "lastName": "Fox",
+      "mobilePhone": null,
+      "secondEmail": null,
+      "login": "dana.fox@altostrat.com",
+      "email": "dana.fox@altostrat.com"
+    },
+    "credentials": {
+      "password": {},
+      "provider": {
+        "type": "OKTA",
+        "name": "OKTA"
+      }
+    },
+    "_links": {
+      "self": {
+        "href": "{{baseUrl}}/api/v1/users/00u4defgHIJKlmnop697"
+      }
+    }
+  }
+]

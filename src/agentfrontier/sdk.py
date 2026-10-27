@@ -31,6 +31,7 @@ from .capabilities import capabilities as capabilities_of
 from .definitions import DefinitionRegistry, SourceDefinition
 from .engine import Detected, EngineSession
 from .errors import AgentFrontierError, root_message
+from .governance.enforce import GovernedSession, Governance
 from .model import ConnectionConfig, Record, SessionStats, TestResult
 from .pipeline import Pipeline, PipelineConfig, RunListener, RunReport
 from .protocols import Protocol, ProtocolContext
@@ -69,11 +70,13 @@ class AgentFrontier:
     ``protocols`` / ``sinks``: extra protocol engines and sink providers (also discovered through the
     ``agentfrontier.protocols`` and ``agentfrontier.sinks`` entry point groups); ``secret_resolvers``: extra
     ``${scheme:...}`` resolvers; ``environment``: where ``${env:...}`` reads from; ``detection_ttl``: seconds a
-    detected version is reused."""
+    detected version is reused; ``governance``: the policy enforcement point every :meth:`open` uses unless it is
+    given its own (spec docs/policy.md)."""
 
     def __init__(self, definitions: Iterable[str | Path] = (), protocols: Iterable[Protocol] = (),
                  sinks: Iterable[SinkProvider] = (), secret_resolvers: Iterable[SecretResolver] = (),
-                 environment: Callable[[str], str | None] | None = None, detection_ttl: float = 600.0):
+                 environment: Callable[[str], str | None] | None = None, detection_ttl: float = 600.0,
+                 governance: Governance | None = None):
         self.spec = SpecResources()
         self.definitions = DefinitionRegistry(self.spec, list(definitions))
         self.entity_model = self.spec.entities()
@@ -100,6 +103,7 @@ class AgentFrontier:
         self._detection_ttl = detection_ttl
         self._detections: dict[str, tuple[Detected, float]] = {}
         self._lock = threading.Lock()
+        self.governance = governance
 
     @staticmethod
     def create() -> "AgentFrontier":
@@ -190,8 +194,10 @@ class AgentFrontier:
         except Exception as e:  # noqa: BLE001
             return TestResult.failed(root_message(e), (time.perf_counter_ns() - start) // 1_000_000)
 
-    def open(self, c: ConnectionConfig) -> EngineSession:
-        """Validates, resolves secrets, connects and detects the version."""
+    def open(self, c: ConnectionConfig, governance: Governance | None = None) -> EngineSession:
+        """Validates, resolves secrets, connects and detects the version. With ``governance`` (or the SDK's), the
+        session is a :class:`~agentfrontier.governance.GovernedSession`: reads are decided by the policy before they
+        run and their records released through it."""
         problems = self.validate(c)
         if problems:
             raise AgentFrontierError.invalid_config("; ".join(problems))
@@ -248,6 +254,11 @@ class AgentFrontier:
         except BaseException:
             session.close()
             raise
+        gov = governance if governance is not None else self.governance
+        if gov is not None:
+            if gov.aspect_of is None:
+                gov.aspect_of = self.entity_model.aspect_of
+            return GovernedSession(session, gov)  # type: ignore[return-value]
         return session
 
     def clear_detection_cache(self) -> None:

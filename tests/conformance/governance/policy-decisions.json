@@ -1,0 +1,563 @@
+{
+  "description": "Built-in rule PDP (docs/policy.md §3): for each request, the decision, its obligations in order, the policy version and the rule ids named as evidence (null for the default decision). Reasons are free text and not compared.",
+  "rules": {
+    "version": "conformance-1",
+    "defaultDecision": "allow",
+    "highRiskActions": [
+      "write",
+      "delete",
+      "execute"
+    ],
+    "rules": [
+      {
+        "id": "agents-no-secrets",
+        "effect": "deny",
+        "match": {
+          "delegateAgent.id": {
+            "exists": true
+          },
+          "resource.labels": {
+            "anyOf": [
+              "secret.*"
+            ]
+          }
+        }
+      },
+      {
+        "id": "mask-pii",
+        "effect": "allow",
+        "match": {
+          "action": [
+            "sample",
+            "query"
+          ],
+          "purpose": {
+            "not": "support"
+          }
+        },
+        "obligations": [
+          {
+            "type": "mask",
+            "labels": [
+              "pii.*"
+            ],
+            "method": "hash"
+          }
+        ]
+      },
+      {
+        "id": "mask-pii-again",
+        "effect": "allow",
+        "match": {
+          "action": "sample",
+          "resource.labels": {
+            "anyOf": [
+              "pii.*"
+            ]
+          }
+        },
+        "obligations": [
+          {
+            "type": "mask",
+            "labels": [
+              "pii.*"
+            ],
+            "method": "hash"
+          },
+          {
+            "type": "limit_rows",
+            "max": 100
+          }
+        ]
+      },
+      {
+        "id": "finance-only-finance",
+        "effect": "deny",
+        "match": {
+          "resource.path.schema": {
+            "glob": "fin*"
+          },
+          "subject.attributes.department": {
+            "not": "finance"
+          }
+        }
+      },
+      {
+        "id": "etl-may-write",
+        "effect": "allow",
+        "match": {
+          "action": "write",
+          "subject.groups": {
+            "allOf": [
+              "etl",
+              "prod-*"
+            ]
+          }
+        }
+      },
+      {
+        "id": "no-raw-tables",
+        "effect": "deny",
+        "match": {
+          "resource.dataset": {
+            "glob": "raw_*"
+          },
+          "resource.labels": {
+            "noneOf": [
+              "approved"
+            ]
+          }
+        }
+      },
+      {
+        "id": "risk-cap",
+        "effect": "deny",
+        "match": {
+          "context.risk": {
+            "gte": 0.8
+          }
+        }
+      },
+      {
+        "id": "level-one",
+        "effect": "allow",
+        "match": {
+          "context.level": 1
+        },
+        "obligations": [
+          {
+            "type": "audit"
+          }
+        ]
+      },
+      {
+        "id": "flag-true",
+        "effect": "deny",
+        "match": {
+          "context.flag": true
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "default allow, no rule matches",
+      "request": {
+        "subject": "alice",
+        "action": "read",
+        "resource": {
+          "type": "dataset",
+          "source": "retail"
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          null
+        ]
+      }
+    },
+    {
+      "name": "allow with obligations merged without duplicates",
+      "request": {
+        "subject": "alice",
+        "action": "sample",
+        "resource": {
+          "type": "dataset",
+          "source": "retail",
+          "dataset": "customers",
+          "labels": [
+            "pii.email"
+          ]
+        },
+        "purpose": "analytics"
+      },
+      "expected": {
+        "decision": "allow",
+        "obligations": [
+          {
+            "type": "mask",
+            "labels": [
+              "pii.*"
+            ],
+            "method": "hash"
+          },
+          {
+            "type": "limit_rows",
+            "max": 100
+          }
+        ],
+        "policyVersion": "conformance-1",
+        "rules": [
+          "mask-pii",
+          "mask-pii-again"
+        ]
+      }
+    },
+    {
+      "name": "purpose condition: support is not masked",
+      "request": {
+        "subject": "alice",
+        "action": "query",
+        "resource": {
+          "type": "dataset",
+          "source": "retail"
+        },
+        "purpose": "support"
+      },
+      "expected": {
+        "decision": "allow",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          null
+        ]
+      }
+    },
+    {
+      "name": "deny overrides allow",
+      "request": {
+        "subject": "alice",
+        "action": "sample",
+        "resource": {
+          "type": "dataset",
+          "dataset": "customers",
+          "labels": [
+            "pii.email",
+            "secret.password"
+          ]
+        },
+        "delegateAgent": "support-bot",
+        "purpose": "analytics"
+      },
+      "expected": {
+        "decision": "deny",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          "agents-no-secrets"
+        ]
+      }
+    },
+    {
+      "name": "exists: no agent, so secrets are not denied by that rule",
+      "request": {
+        "subject": "alice",
+        "action": "read",
+        "resource": {
+          "type": "field",
+          "labels": [
+            "secret.password"
+          ]
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          null
+        ]
+      }
+    },
+    {
+      "name": "glob on a path and attribute not-equal",
+      "request": {
+        "subject": {
+          "id": "bob",
+          "attributes": {
+            "department": "sales"
+          }
+        },
+        "action": "read",
+        "resource": {
+          "type": "dataset",
+          "path": {
+            "schema": "finance"
+          },
+          "dataset": "ledger"
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          "finance-only-finance"
+        ]
+      }
+    },
+    {
+      "name": "same, for a finance subject",
+      "request": {
+        "subject": {
+          "id": "carol",
+          "attributes": {
+            "department": "finance"
+          }
+        },
+        "action": "read",
+        "resource": {
+          "type": "dataset",
+          "path": {
+            "schema": "finance"
+          }
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          null
+        ]
+      }
+    },
+    {
+      "name": "high-risk action without an allowing rule fails closed",
+      "request": {
+        "subject": "alice",
+        "action": "write",
+        "resource": {
+          "type": "dataset",
+          "source": "retail"
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          null
+        ]
+      }
+    },
+    {
+      "name": "allOf over groups allows the high-risk action",
+      "request": {
+        "subject": {
+          "id": "etl-bot",
+          "groups": [
+            "etl",
+            "prod-eu"
+          ]
+        },
+        "action": "write",
+        "resource": {
+          "type": "dataset",
+          "source": "retail"
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          "etl-may-write"
+        ]
+      }
+    },
+    {
+      "name": "allOf needs every pattern",
+      "request": {
+        "subject": {
+          "id": "etl-bot",
+          "groups": [
+            "etl"
+          ]
+        },
+        "action": "write",
+        "resource": {
+          "type": "dataset",
+          "source": "retail"
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          null
+        ]
+      }
+    },
+    {
+      "name": "noneOf",
+      "request": {
+        "subject": "alice",
+        "action": "read",
+        "resource": {
+          "type": "dataset",
+          "dataset": "raw_events",
+          "labels": []
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          "no-raw-tables"
+        ]
+      }
+    },
+    {
+      "name": "noneOf satisfied by a label",
+      "request": {
+        "subject": "alice",
+        "action": "read",
+        "resource": {
+          "type": "dataset",
+          "dataset": "raw_events",
+          "labels": [
+            "approved"
+          ]
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          null
+        ]
+      }
+    },
+    {
+      "name": "numeric gte",
+      "request": {
+        "subject": "alice",
+        "action": "read",
+        "resource": {
+          "type": "dataset",
+          "source": "retail"
+        },
+        "context": {
+          "risk": 0.9
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          "risk-cap"
+        ]
+      }
+    },
+    {
+      "name": "numeric gte below",
+      "request": {
+        "subject": "alice",
+        "action": "read",
+        "resource": {
+          "type": "dataset",
+          "source": "retail"
+        },
+        "context": {
+          "risk": 0.5
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          null
+        ]
+      }
+    },
+    {
+      "name": "numbers compare by value",
+      "request": {
+        "subject": "alice",
+        "action": "read",
+        "resource": {
+          "type": "dataset",
+          "source": "retail"
+        },
+        "context": {
+          "level": 1.0
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "obligations": [
+          {
+            "type": "audit"
+          }
+        ],
+        "policyVersion": "conformance-1",
+        "rules": [
+          "level-one"
+        ]
+      }
+    },
+    {
+      "name": "a boolean is not a number",
+      "request": {
+        "subject": "alice",
+        "action": "read",
+        "resource": {
+          "type": "dataset",
+          "source": "retail"
+        },
+        "context": {
+          "level": true
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          null
+        ]
+      }
+    },
+    {
+      "name": "boolean equality",
+      "request": {
+        "subject": "alice",
+        "action": "read",
+        "resource": {
+          "type": "dataset",
+          "source": "retail"
+        },
+        "context": {
+          "flag": true
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          "flag-true"
+        ]
+      }
+    },
+    {
+      "name": "a missing path is null",
+      "request": {
+        "subject": "alice",
+        "action": "read",
+        "resource": {
+          "type": "dataset",
+          "source": "retail"
+        },
+        "context": {}
+      },
+      "expected": {
+        "decision": "allow",
+        "obligations": [],
+        "policyVersion": "conformance-1",
+        "rules": [
+          null
+        ]
+      }
+    }
+  ]
+}

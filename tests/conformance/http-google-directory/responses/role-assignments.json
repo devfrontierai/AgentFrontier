@@ -1,0 +1,34 @@
+{
+  "kind": "admin#directory#roleAssignments",
+  "etag": "\"ra0\"",
+  "items": [
+    {
+      "kind": "admin#directory#roleAssignment",
+      "etag": "\"ra1\"",
+      "roleAssignmentId": "9170516996784140",
+      "roleId": "9170516996784129",
+      "assignedTo": "104598712035586720147",
+      "assigneeType": "user",
+      "scopeType": "CUSTOMER"
+    },
+    {
+      "kind": "admin#directory#roleAssignment",
+      "etag": "\"ra2\"",
+      "roleAssignmentId": "9170516996784141",
+      "roleId": "9170516996784130",
+      "assignedTo": "03rdcrjn2fy7wkp",
+      "assigneeType": "group",
+      "scopeType": "CUSTOMER"
+    },
+    {
+      "kind": "admin#directory#roleAssignment",
+      "etag": "\"ra3\"",
+      "roleAssignmentId": "9170516996784142",
+      "roleId": "9170516996784155",
+      "assignedTo": "113264087509283741658",
+      "assigneeType": "user",
+      "scopeType": "ORG_UNIT",
+      "orgUnitId": "03ph8a2z3kw5v1d"
+    }
+  ]
+}

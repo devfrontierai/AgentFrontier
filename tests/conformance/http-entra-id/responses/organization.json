@@ -1,0 +1,9 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#organization(id,displayName)",
+  "value": [
+    {
+      "id": "0c7e1a5b-3f2d-4e9a-b8c6-d1e2f3a4b5c6",
+      "displayName": "Contoso"
+    }
+  ]
+}

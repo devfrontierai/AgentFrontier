@@ -1,0 +1,32 @@
+{
+  "description": "HTTP engine on the Google Admin SDK Directory API with no hierarchy: OAuth refresh-token grant against a token URL the connection overrides (form fields checked, no scope sent), nextPageToken cursor paging (users, roles), users, groups, organizational units (memberOf: the parent unit, and a user's unit) and admin roles as principals, admin role assignments to users and groups, customer-wide and per organizational unit, as grants.",
+  "server": {
+    "routes": "routes.json"
+  },
+  "connection": {
+    "id": "conf-gws",
+    "name": "Conformance Google directory",
+    "type": "google_directory",
+    "properties": {
+      "baseUrl": "{{baseUrl}}"
+    },
+    "auth": {
+      "method": "oauth2_refresh_token",
+      "tokenUrl": "{{baseUrl}}/token",
+      "clientId": "conf-client.apps.googleusercontent.com",
+      "clientSecret": "conf-secret",
+      "refreshToken": "conf-refresh-token"
+    }
+  },
+  "pipeline": {
+    "aspects": [
+      "metadata",
+      "governance"
+    ]
+  },
+  "envelope": {
+    "tenantId": "conformance",
+    "expected": "expected-envelope.jsonl"
+  },
+  "expected": "expected.jsonl"
+}
