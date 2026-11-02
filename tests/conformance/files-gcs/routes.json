@@ -1,0 +1,57 @@
+{
+  "require": {
+    "headers": {
+      "Authorization": "Bearer conf-gcs-token"
+    }
+  },
+  "routes": [
+    {
+      "method": "POST",
+      "path": "/token",
+      "require": {},
+      "form": {
+        "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        "assertion": {
+          "pattern": "eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]{300,}"
+        }
+      },
+      "body": "responses/token.json"
+    },
+    {
+      "path": "/storage/v1/b/conf-bucket/iam",
+      "body": "responses/iam.json"
+    },
+    {
+      "path": "/storage/v1/b/conf-bucket/o",
+      "query": {
+        "prefix": "exports/",
+        "pageToken": "p 2"
+      },
+      "body": "responses/objects-2.json"
+    },
+    {
+      "path": "/storage/v1/b/conf-bucket/o",
+      "query": {
+        "prefix": "exports/",
+        "pageToken": null
+      },
+      "body": "responses/objects-1.json"
+    },
+    {
+      "path": "/storage/v1/b/conf-bucket/o/exports/daily/sales.csv",
+      "query": {
+        "alt": "media"
+      },
+      "contentType": "text/csv",
+      "file": "data/sales.csv"
+    },
+    {
+      "path": "/storage/v1/b/conf-bucket/o/exports/events/2026-10-30.avro",
+      "query": {
+        "alt": "media"
+      },
+      "contentType": "application/avro",
+      "file": "data/events.avro"
+    }
+  ]
+}

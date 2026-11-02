@@ -1,0 +1,165 @@
+{
+  "specVersion": "1",
+  "id": "s3",
+  "name": "Amazon S3",
+  "aliases": [
+    "aws_s3",
+    "minio"
+  ],
+  "protocol": "files",
+  "category": "object_storage",
+  "status": "experimental",
+  "description": "An Amazon S3 bucket or an S3-compatible store (MinIO, Ceph, Cloudflare R2) through a custom endpoint. Folders under the prefix that hold matching files are containers, files are datasets; fields are inferred from CSV, TSV, JSON, JSON Lines, Avro and (Python, parquet extra) Parquet content. Object tags and the bucket ACL can be read too. Requests are signed with SigV4. Exercised against recorded responses; not yet run against a live account.",
+  "properties": [
+    {
+      "key": "bucket",
+      "label": "Bucket",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "prefix",
+      "label": "Prefix",
+      "type": "string",
+      "help": "Only keys under this prefix, e.g. raw/sales/"
+    },
+    {
+      "key": "region",
+      "label": "Region",
+      "type": "string",
+      "default": "us-east-1"
+    },
+    {
+      "key": "endpoint",
+      "label": "Endpoint",
+      "type": "string",
+      "help": "For S3-compatible stores, e.g. http://minio:9000 (path-style requests)."
+    },
+    {
+      "key": "include",
+      "label": "Include",
+      "type": "list",
+      "default": "**/*.csv,**/*.tsv,**/*.json,**/*.jsonl,**/*.ndjson,**/*.avro,**/*.parquet",
+      "help": "Glob patterns relative to the prefix."
+    },
+    {
+      "key": "exclude",
+      "label": "Exclude",
+      "type": "list",
+      "help": "Glob patterns relative to the prefix."
+    }
+  ],
+  "options": [
+    {
+      "key": "sampleRows",
+      "label": "Rows to sample for schema inference",
+      "type": "integer",
+      "default": "1000"
+    },
+    {
+      "key": "maxBytes",
+      "label": "Bytes read per file",
+      "type": "integer",
+      "default": "4194304",
+      "help": "Schema inference and samples read at most this much of each file."
+    },
+    {
+      "key": "objectTags",
+      "label": "Read object tags",
+      "type": "boolean",
+      "default": "false",
+      "help": "One request per file (GetObjectTagging)."
+    }
+  ],
+  "auth": [
+    "aws_iam",
+    "none"
+  ],
+  "connection": {
+    "files": {
+      "storage": "s3",
+      "bucket": "{{bucket}}",
+      "prefix": "{{prefix}}",
+      "region": "{{region}}",
+      "endpoint": "{{endpoint}}",
+      "maxBytes": "{{options.maxBytes}}",
+      "auth": {
+        "aws_iam": {
+          "sigv4": {
+            "service": "s3",
+            "region": "{{region}}"
+          }
+        },
+        "none": {}
+      }
+    }
+  },
+  "hierarchy": [
+    {
+      "level": "folder",
+      "label": "Folder",
+      "list": "folders"
+    }
+  ],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "files": {
+        "op": "stat"
+      }
+    },
+    "folders": {
+      "entity": "container",
+      "files": {
+        "op": "folders",
+        "include": "{{include}}",
+        "exclude": "{{exclude}}"
+      }
+    },
+    "datasets": {
+      "entity": "dataset",
+      "scope": "folder",
+      "files": {
+        "op": "files",
+        "include": "{{include}}",
+        "exclude": "{{exclude}}"
+      }
+    },
+    "fields": {
+      "entity": "field",
+      "scope": "dataset",
+      "files": {
+        "op": "schema",
+        "sampleRows": "{{options.sampleRows}}"
+      }
+    },
+    "sample": {
+      "entity": "row",
+      "aspect": "data",
+      "scope": "dataset",
+      "files": {
+        "op": "rows",
+        "limit": "{{limit}}"
+      }
+    },
+    "tags": {
+      "entity": "tag",
+      "aspect": "governance",
+      "scope": "dataset",
+      "enabledBy": "objectTags",
+      "onError": "warn",
+      "files": {
+        "op": "tags"
+      }
+    },
+    "grants": {
+      "entity": "grant",
+      "aspect": "governance",
+      "scope": "source",
+      "onError": "warn",
+      "files": {
+        "op": "grants"
+      }
+    }
+  }
+}

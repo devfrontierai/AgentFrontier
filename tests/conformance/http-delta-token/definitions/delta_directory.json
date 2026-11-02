@@ -1,0 +1,69 @@
+{
+  "specVersion": "1",
+  "id": "delta_directory",
+  "name": "Delta directory (conformance)",
+  "protocol": "http",
+  "category": "identity",
+  "status": "experimental",
+  "description": "Conformance only: a Microsoft Graph style /users/delta endpoint read with a delta token.",
+  "properties": [
+    {
+      "key": "baseUrl",
+      "label": "Base URL",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "auth": [
+    "token"
+  ],
+  "connection": {
+    "http": {
+      "baseUrl": "{{baseUrl}}",
+      "headers": {
+        "Accept": "application/json"
+      },
+      "auth": {
+        "token": {
+          "headers": {
+            "Authorization": "Bearer {{auth.token}}"
+          }
+        }
+      }
+    }
+  },
+  "hierarchy": [],
+  "operations": {
+    "users": {
+      "entity": "principal",
+      "paging": {
+        "mode": "nextUrl",
+        "next": "$['@odata.nextLink']",
+        "size": 2
+      },
+      "request": {
+        "path": "/users/delta",
+        "query": {
+          "$top": "{{limit}}"
+        }
+      },
+      "records": "$.value[*]",
+      "fields": {
+        "name": "id",
+        "canLogin": "accountEnabled",
+        "displayName": "displayName",
+        "removed": "$['@removed'].reason"
+      },
+      "set": {
+        "type": "user"
+      },
+      "extras": "drop",
+      "incremental": {
+        "mode": "delta_token",
+        "token": "$['@odata.deltaLink']",
+        "resume": "url",
+        "deleted": "removed"
+      }
+    }
+  }
+}

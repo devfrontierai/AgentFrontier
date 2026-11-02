@@ -1,0 +1,92 @@
+{
+  "require": {
+    "headers": {
+      "Authorization": "Bearer conf-bq-token"
+    }
+  },
+  "routes": [
+    {
+      "path": "/bigquery/v2/projects",
+      "query": {
+        "maxResults": "1"
+      },
+      "body": "responses/projects-one.json"
+    },
+    {
+      "path": "/bigquery/v2/projects",
+      "query": {
+        "maxResults": "1000",
+        "pageToken": null
+      },
+      "body": "responses/projects.json"
+    },
+    {
+      "path": "/bigquery/v2/projects/conf-project/datasets",
+      "query": {
+        "maxResults": "1000",
+        "pageToken": null
+      },
+      "body": "responses/datasets.json"
+    },
+    {
+      "path": "/bigquery/v2/projects/conf-project/datasets/sales",
+      "body": "responses/dataset-sales.json"
+    },
+    {
+      "path": "/bigquery/v2/projects/conf-project/datasets/sales/tables",
+      "query": {
+        "maxResults": "500",
+        "pageToken": "t2"
+      },
+      "body": "responses/tables-2.json"
+    },
+    {
+      "path": "/bigquery/v2/projects/conf-project/datasets/sales/tables",
+      "query": {
+        "maxResults": "500",
+        "pageToken": null
+      },
+      "body": "responses/tables-1.json"
+    },
+    {
+      "path": "/bigquery/v2/projects/conf-project/datasets/sales/tables/customers",
+      "body": "responses/table-customers.json"
+    },
+    {
+      "path": "/bigquery/v2/projects/conf-project/datasets/sales/tables/orders",
+      "body": "responses/table-orders.json"
+    },
+    {
+      "path": "/bigquery/v2/projects/conf-project/datasets/sales/tables/raw_events",
+      "body": "responses/table-raw_events.json"
+    },
+    {
+      "path": "/bigquery/v2/projects/conf-project/datasets/sales/tables/v_revenue",
+      "body": "responses/table-v_revenue.json"
+    },
+    {
+      "path": "/bigquery/v2/projects/conf-project/jobs",
+      "query": {
+        "allUsers": "true",
+        "projection": "full",
+        "stateFilter": "done",
+        "maxResults": "1000",
+        "pageToken": null,
+        "minCreationTime": "1761825600000"
+      },
+      "body": "responses/jobs-since.json"
+    },
+    {
+      "path": "/bigquery/v2/projects/conf-project/jobs",
+      "query": {
+        "allUsers": "true",
+        "projection": "full",
+        "stateFilter": "done",
+        "maxResults": "1000",
+        "pageToken": null,
+        "minCreationTime": null
+      },
+      "body": "responses/jobs.json"
+    }
+  ]
+}

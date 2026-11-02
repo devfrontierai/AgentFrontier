@@ -1,0 +1,4 @@
+order_id,customer,amount,ordered_at,express
+1001,Ada Lovelace,129.90,2026-10-01T09:15:00Z,true
+1002,"Turing, Alan",15.00,2026-10-02T11:00:00Z,false
+1003,Grace Hopper,,2026-10-03T16:45:00Z,true

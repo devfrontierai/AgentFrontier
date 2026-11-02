@@ -1,0 +1,4 @@
+{"canLogin":true,"entity":"principal","name":"u1","properties":{"displayName":"Ana"},"source":"conf-delta","type":"user"}
+{"canLogin":true,"entity":"principal","name":"u2","properties":{"displayName":"Bob"},"source":"conf-delta","type":"user"}
+{"canLogin":true,"entity":"principal","name":"u3","properties":{"displayName":"Cy"},"source":"conf-delta","type":"user"}
+{"definition":"delta_directory","entity":"source","name":"Conformance delta","product":"Delta directory (conformance)","source":"conf-delta"}

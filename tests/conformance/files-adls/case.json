@@ -1,0 +1,45 @@
+{
+  "description": "Files engine on Azure Data Lake Storage Gen2: an Entra ID client-credentials token from a custom authority host, a recursive path listing paged through the x-ms-continuation header, directories skipped, RFC 1123 times, reads capped by maxBytes (a JSON Lines file whose last line is cut is inferred from its complete lines, a JSON document that does not fit has no fields) and the directory's named ACL entries as grants.",
+  "server": {
+    "routes": "routes.json"
+  },
+  "connection": {
+    "id": "conf-adls",
+    "name": "Conformance ADLS",
+    "type": "adls",
+    "properties": {
+      "account": "confaccount",
+      "filesystem": "conf-fs",
+      "prefix": "landing",
+      "endpoint": "{{baseUrl}}"
+    },
+    "options": {
+      "maxBytes": 300
+    },
+    "auth": {
+      "method": "azure_service_principal",
+      "tenantId": "conf-tenant",
+      "clientId": "conf-client",
+      "clientSecret": "conf-secret",
+      "authorityHost": "{{baseUrl}}"
+    }
+  },
+  "pipeline": {
+    "aspects": [
+      "metadata",
+      "governance"
+    ]
+  },
+  "sample": {
+    "scope": {
+      "folder": "customers"
+    },
+    "dataset": "customers.jsonl",
+    "limit": 2
+  },
+  "envelope": {
+    "tenantId": "conformance",
+    "expected": "expected-envelope.jsonl"
+  },
+  "expected": "expected.jsonl"
+}

@@ -1,0 +1,21 @@
+{
+  "has_more": false,
+  "jobs": [
+    {
+      "job_id": 12,
+      "creator_user_name": "bob@example.com",
+      "created_time": 1759395600000,
+      "settings": {
+        "name": "refresh dashboards",
+        "tasks": [
+          {
+            "task_key": "refresh",
+            "sql_task": {
+              "warehouse_id": "wh-1"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

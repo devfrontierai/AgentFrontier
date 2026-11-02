@@ -1,0 +1,243 @@
+{
+  "specVersion": "1",
+  "id": "databricks",
+  "name": "Databricks workspace",
+  "aliases": [
+    "databricks_workspace"
+  ],
+  "protocol": "http",
+  "category": "data_platform",
+  "status": "experimental",
+  "dialect": "databricks",
+  "description": "A Databricks workspace through its REST API, read only: jobs and notebooks as routines and the SQL query history as usage, read incrementally by start time. Tables, columns and lineage come from the unity_catalog definition on the same workspace. Exercised against recorded responses; not yet run against a live workspace.",
+  "properties": [
+    {
+      "key": "baseUrl",
+      "label": "Workspace URL",
+      "type": "string",
+      "required": true,
+      "help": "https://<workspace>.cloud.databricks.com or https://adb-<id>.azuredatabricks.net"
+    },
+    {
+      "key": "notebookPath",
+      "label": "Notebook folder",
+      "type": "string",
+      "default": "/Shared",
+      "help": "The workspace folder whose notebooks are listed (not recursive)."
+    },
+    {
+      "key": "timeoutSeconds",
+      "label": "Request timeout (s)",
+      "type": "integer",
+      "default": "30"
+    }
+  ],
+  "options": [
+    {
+      "key": "notebooks",
+      "label": "Read notebooks",
+      "type": "boolean",
+      "default": "true"
+    }
+  ],
+  "auth": [
+    "token",
+    "oauth2_client_credentials",
+    "azure_service_principal"
+  ],
+  "connection": {
+    "http": {
+      "baseUrl": "{{baseUrl}}",
+      "timeoutSeconds": "{{timeoutSeconds}}",
+      "headers": {
+        "Accept": "application/json"
+      },
+      "retry": {
+        "attempts": 3,
+        "on": [
+          429,
+          503
+        ],
+        "backoffMs": 1000
+      },
+      "auth": {
+        "token": {
+          "headers": {
+            "Authorization": "Bearer {{auth.token}}"
+          }
+        },
+        "oauth2_client_credentials": {
+          "oauth2": {
+            "tokenUrl": "{{baseUrl}}/oidc/v1/token",
+            "scope": "all-apis"
+          },
+          "headers": {
+            "Authorization": "Bearer {{token.accessToken}}"
+          }
+        },
+        "azure_service_principal": {
+          "oauth2": {
+            "scope": "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default"
+          },
+          "headers": {
+            "Authorization": "Bearer {{token.accessToken}}"
+          }
+        }
+      }
+    }
+  },
+  "hierarchy": [],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "request": {
+        "path": "/api/2.0/preview/scim/v2/Me"
+      },
+      "fields": {
+        "login": "userName"
+      },
+      "extras": "drop"
+    },
+    "source": {
+      "entity": "source",
+      "request": {
+        "path": "/api/2.0/preview/scim/v2/Me"
+      },
+      "fields": {
+        "product": {
+          "value": "Databricks"
+        },
+        "login": "userName"
+      },
+      "extras": "drop"
+    },
+    "jobs": {
+      "entity": "routine",
+      "paging": {
+        "mode": "cursor",
+        "next": "$.next_page_token",
+        "size": 100
+      },
+      "request": {
+        "path": "/api/2.1/jobs/list",
+        "query": {
+          "limit": "{{limit}}",
+          "page_token": "{{cursor}}",
+          "expand_tasks": "true"
+        }
+      },
+      "records": "$.jobs[*]",
+      "fields": {
+        "name": {
+          "template": "{{job_id}}"
+        },
+        "type": {
+          "value": "job"
+        },
+        "comment": "$.settings.name",
+        "owner": "creator_user_name",
+        "definition": {
+          "template": "{{settings.tasks|json}}"
+        },
+        "createdAt": {
+          "template": "{{created_time|epochMs}}"
+        },
+        "schedule": "$.settings.schedule.quartz_cron_expression"
+      },
+      "extras": "drop"
+    },
+    "notebooks": {
+      "entity": "routine",
+      "enabledBy": "notebooks",
+      "onError": "warn",
+      "request": {
+        "path": "/api/2.0/workspace/list",
+        "query": {
+          "path": "{{notebookPath}}"
+        }
+      },
+      "records": "$.objects[*]",
+      "fields": {
+        "name": "path",
+        "type": {
+          "value": "notebook"
+        },
+        "language": {
+          "from": "language",
+          "values": {
+            "PYTHON": "python",
+            "SQL": "sql",
+            "SCALA": "scala",
+            "R": "r"
+          }
+        },
+        "objectType": "object_type",
+        "createdAt": {
+          "template": "{{created_at|epochMs}}"
+        },
+        "updatedAt": {
+          "template": "{{modified_at|epochMs}}"
+        }
+      },
+      "extras": "drop",
+      "filter": {
+        "objectType": {
+          "include": [
+            "NOTEBOOK"
+          ]
+        }
+      }
+    },
+    "usage": {
+      "entity": "usage",
+      "onError": "warn",
+      "paging": {
+        "mode": "cursor",
+        "next": "$.next_page_token",
+        "size": 100
+      },
+      "request": {
+        "path": "/api/2.0/sql/history/queries",
+        "query": {
+          "max_results": "{{limit}}",
+          "page_token": "{{cursor}}",
+          "include_metrics": "true",
+          "filter_by.query_start_time_range.start_time_ms": "{{since|toEpochMs}}"
+        }
+      },
+      "records": "$.res[*]",
+      "fields": {
+        "queryId": "query_id",
+        "queryText": "query_text",
+        "user": "user_name",
+        "startedAt": {
+          "template": "{{query_start_time_ms|epochMs}}"
+        },
+        "durationMs": "duration",
+        "rowsProduced": "rows_produced",
+        "status": {
+          "from": "status",
+          "values": {
+            "FINISHED": "succeeded",
+            "FAILED": "failed",
+            "CANCELED": "cancelled"
+          }
+        },
+        "warehouseId": "warehouse_id"
+      },
+      "extras": "drop",
+      "incremental": {
+        "mode": "watermark",
+        "field": "startedAt"
+      }
+    }
+  },
+  "capabilities": {
+    "apiVersion": "2.1",
+    "operations": {
+      "usage": {
+        "comment": "Query history of SQL warehouses and serverless compute, from the start time"
+      }
+    }
+  }
+}

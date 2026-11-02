@@ -5,20 +5,22 @@
   "protocol": "files",
   "category": "file_storage",
   "status": "verified",
-  "description": "A folder on a local or mounted file system (including network shares and synced OneDrive / SharePoint folders). Folders that hold matching files are containers, files are datasets, and fields are inferred from CSV, TSV, JSON and JSON Lines content.",
+  "description": "A folder on a local or mounted file system (including network shares and synced OneDrive / SharePoint folders). Folders that hold matching files are containers, files are datasets, and fields are inferred from CSV, TSV, JSON, JSON Lines, Avro and (Python, parquet extra) Parquet content.",
   "properties": [
     {"key": "root", "label": "Root folder", "type": "string", "required": true},
-    {"key": "include", "label": "Include", "type": "list", "default": "**/*.csv,**/*.tsv,**/*.json,**/*.jsonl,**/*.ndjson", "help": "Glob patterns relative to the root."},
+    {"key": "include", "label": "Include", "type": "list", "default": "**/*.csv,**/*.tsv,**/*.json,**/*.jsonl,**/*.ndjson,**/*.avro,**/*.parquet", "help": "Glob patterns relative to the root."},
     {"key": "exclude", "label": "Exclude", "type": "list", "help": "Glob patterns relative to the root, for example **/tmp/**."}
   ],
   "options": [
-    {"key": "sampleRows", "label": "Rows to sample for schema inference", "type": "integer", "default": "1000"}
+    {"key": "sampleRows", "label": "Rows to sample for schema inference", "type": "integer", "default": "1000"},
+    {"key": "maxBytes", "label": "Bytes read per file", "type": "integer", "default": "4194304", "help": "Schema inference and samples read at most this much of each file."}
   ],
   "auth": ["none"],
   "connection": {
     "files": {
       "storage": "local",
       "root": "{{root}}",
+      "maxBytes": "{{options.maxBytes}}",
       "auth": {"none": {}}
     }
   },

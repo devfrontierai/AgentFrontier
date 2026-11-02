@@ -16,12 +16,14 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any
+from typing import Any, Callable
 
 from .. import json_util as J
 from .. import template as T
+from ..auth import aws_credentials
 from ..errors import AUTH_FAILED, INVALID_CONFIG, QUERY_FAILED, AgentFrontierError, root_message
 from ..model import Scope
+from ..sigv4 import sign
 from . import Protocol, ProtocolContext, ProtocolSession, RawResult
 
 MAX_ERROR_BODY = 500
@@ -121,7 +123,17 @@ class HttpSession(ProtocolSession):
             self._add_all(form, req.get("form"), vars)
             body = form_encode(form).encode("utf-8")
             _put_header_if_absent(headers, "Content-Type", "application/x-www-form-urlencoded")
-        return self._send(method, url, {k: v for k, v in headers.values()}, body)
+        signer = None
+        sigv4 = self.auth_block.get("sigv4")
+        if isinstance(sigv4, dict):
+            service = T.render_text(J.text(sigv4, "service", ""), vars, T.LENIENT, None)
+            token = self.ctx.token()
+            region = T.render_text(J.text(sigv4, "region", ""), vars, T.LENIENT, None) or J.jstr(token.get("region"))
+            creds = aws_credentials(token)
+
+            def signer(m: str, u: str, h: dict[str, str], b: bytes | None) -> dict[str, str]:
+                return sign(m, u, h, b, creds, region, service)
+        return self._send(method, url, {k: v for k, v in headers.values()}, body, signer)
 
     def _add_all(self, target: dict[str, str], block: Any, vars: T.Vars) -> None:
         if not isinstance(block, dict):
@@ -138,15 +150,17 @@ class HttpSession(ProtocolSession):
         for k, v in tmp.items():
             _put_header(target, k, v)
 
-    def _send(self, method: str, url: str, headers: dict[str, str], body: bytes | None) -> RawResult:
+    def _send(self, method: str, url: str, headers: dict[str, str], body: bytes | None,
+              signer: Callable[[str, str, dict[str, str], bytes | None], dict[str, str]] | None = None) -> RawResult:
         start = time.perf_counter_ns()
         records = 0
         try:
             attempt = 1
             while True:
                 self._throttle()
+                sent = headers if signer is None else dict(headers, **signer(method, url, headers, body))
                 try:
-                    request = urllib.request.Request(url, data=body, method=method, headers=headers)
+                    request = urllib.request.Request(url, data=body, method=method, headers=sent)
                 except ValueError as e:
                     raise AgentFrontierError(INVALID_CONFIG, "invalid request URL for " + self.ctx.definition.name
                                              + ": " + str(e)) from e
@@ -171,6 +185,7 @@ class HttpSession(ProtocolSession):
                     if attempt < self.attempts:
                         _sleep(self.backoff_ms * (1 << (attempt - 1)))
                         attempt += 1
+                        self.ctx.stats.record_retry()
                         continue
                     raise AgentFrontierError.connection("request to " + _host_of(url) + " failed: "
                                                         + root_message(_reason(e)), e) from e
@@ -182,6 +197,7 @@ class HttpSession(ProtocolSession):
                     wait = _seconds((resp_headers.get("retry-after") or [None])[0])
                     _sleep(wait * 1000 if wait >= 0 else self.backoff_ms * (1 << (attempt - 1)))
                     attempt += 1
+                    self.ctx.stats.record_retry()
                     continue
                 code = AUTH_FAILED if status in (401, 403) else QUERY_FAILED
                 path = urllib.parse.unquote(urllib.parse.urlsplit(url).path)

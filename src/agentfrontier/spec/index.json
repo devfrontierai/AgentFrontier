@@ -2,7 +2,12 @@
   "specVersion": "1",
   "description": "Files of the built-in spec. Implementations read this list instead of scanning directories, which some packaging formats (nested jars, zip imports) cannot do. A test in each implementation fails when this list and the folders disagree.",
   "definitions": [
+    "files/adls.json",
+    "files/gcs.json",
     "files/local_files.json",
+    "files/s3.json",
+    "http/bigquery.json",
+    "http/databricks.json",
     "http/elasticsearch.json",
     "http/entra_id.json",
     "http/google_directory.json",

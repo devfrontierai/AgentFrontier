@@ -1,0 +1,13 @@
+[
+  {
+    "region": "EMEA",
+    "revenue": 1200.5,
+    "quarter": "Q4"
+  },
+  {
+    "region": "APAC",
+    "revenue": 980,
+    "quarter": "Q4",
+    "notes": null
+  }
+]

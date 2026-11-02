@@ -1,0 +1,39 @@
+{
+  "require": {
+    "headers": {
+      "Authorization": "Bearer conf-delta-token"
+    }
+  },
+  "routes": [
+    {
+      "path": "/users/delta",
+      "query": {
+        "$deltatoken": "d1"
+      },
+      "body": "responses/users-delta-1.json"
+    },
+    {
+      "path": "/users/delta",
+      "query": {
+        "$deltatoken": "d2"
+      },
+      "body": "responses/users-delta-2.json"
+    },
+    {
+      "path": "/users/delta",
+      "query": {
+        "$skiptoken": "s2"
+      },
+      "body": "responses/users-2.json"
+    },
+    {
+      "path": "/users/delta",
+      "query": {
+        "$top": "2",
+        "$skiptoken": null,
+        "$deltatoken": null
+      },
+      "body": "responses/users-1.json"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "kind": "bigquery#dataset",
+  "id": "conf-project:sales",
+  "datasetReference": {
+    "datasetId": "sales",
+    "projectId": "conf-project"
+  },
+  "access": [
+    {
+      "role": "OWNER",
+      "specialGroup": "projectOwners"
+    },
+    {
+      "role": "READER",
+      "groupByEmail": "analysts@example.com"
+    },
+    {
+      "role": "WRITER",
+      "userByEmail": "etl@conf-project.iam.gserviceaccount.com"
+    },
+    {
+      "role": "READER",
+      "domain": "example.com"
+    },
+    {
+      "role": "READER",
+      "iamMember": "allAuthenticatedUsers"
+    },
+    {
+      "view": {
+        "projectId": "conf-project",
+        "datasetId": "reporting",
+        "tableId": "v_public"
+      }
+    }
+  ]
+}

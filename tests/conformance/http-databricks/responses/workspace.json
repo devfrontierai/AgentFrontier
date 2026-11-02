@@ -1,0 +1,30 @@
+{
+  "objects": [
+    {
+      "object_type": "DIRECTORY",
+      "path": "/Shared/etl",
+      "object_id": 501
+    },
+    {
+      "object_type": "NOTEBOOK",
+      "path": "/Shared/revenue_report",
+      "language": "SQL",
+      "object_id": 502,
+      "created_at": 1759309300000,
+      "modified_at": 1761823000000
+    },
+    {
+      "object_type": "NOTEBOOK",
+      "path": "/Shared/churn_model",
+      "language": "PYTHON",
+      "object_id": 503,
+      "created_at": 1759309400000,
+      "modified_at": 1761824000000
+    },
+    {
+      "object_type": "FILE",
+      "path": "/Shared/readme.md",
+      "object_id": 504
+    }
+  ]
+}

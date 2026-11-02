@@ -1,0 +1,8 @@
+{"customer_id":1,"name":"Customer 1","country":"NL","vip":false}
+{"customer_id":2,"name":"Customer 2","country":"DE","vip":false}
+{"customer_id":3,"name":"Customer 3","country":"IN","vip":true}
+{"customer_id":4,"name":"Customer 4","country":"US","vip":false}
+{"customer_id":5,"name":"Customer 5","country":"NL","vip":false}
+{"customer_id":6,"name":"Customer 6","country":"FR","vip":true}
+{"customer_id":7,"name":"Customer 7","country":"IN","vip":false}
+{"customer_id":8,"name":"Customer 8","country":"BR","vip":false}

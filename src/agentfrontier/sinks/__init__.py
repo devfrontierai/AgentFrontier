@@ -1,6 +1,8 @@
 """Where a pipeline's records go. Built in:
 
 * ``jsonl``: one ``<entity>.jsonl`` file per entity plus ``run.json`` in ``path``;
+* ``csv``: one ``<entity>.csv`` file per entity plus ``run.json`` (spec docs/sinks.md);
+* ``parquet``: the same as Parquet files (``pip install "agentfrontier[parquet]"``);
 * ``json``: one document ``{"run": ..., "records": {"dataset": [...], ...}}`` at ``path``;
 * ``console``: JSON Lines on standard output;
 * ``memory``: kept in the process, read back with ``MemorySink.get(name)``;
@@ -94,8 +96,10 @@ def run_json(ctx: RunContext) -> dict:
 
 
 class JsonlSink(Sink):
-    def __init__(self, directory: str | Path):
+    def __init__(self, directory: str | Path, partition: list[str] | None = None, model: Any = None):
         self.dir = Path(directory)
+        self.partition = list(partition or [])
+        self.model = model
         self._writers: dict[str, TextIO] = {}
         self._lock = threading.Lock()
         self._ctx: RunContext | None = None
@@ -104,7 +108,7 @@ class JsonlSink(Sink):
         self._ctx = context
         try:
             self.dir.mkdir(parents=True, exist_ok=True)
-            for p in self.dir.iterdir():
+            for p in (self.dir.rglob("*.jsonl") if self.partition else self.dir.iterdir()):
                 if p.name.endswith(".jsonl") and p.is_file():
                     p.unlink()
         except OSError as e:
@@ -114,10 +118,16 @@ class JsonlSink(Sink):
         with self._lock:
             try:
                 for r in records:
-                    w = self._writers.get(r.entity)
+                    rel = r.entity + ".jsonl"
+                    if self.partition:
+                        from .files import partition_dir
+                        rel = partition_dir(r, self.partition, self.model) + "/" + rel
+                    w = self._writers.get(rel)
                     if w is None:
-                        w = open(self.dir / (r.entity + ".jsonl"), "a", encoding="utf-8", newline="\n")
-                        self._writers[r.entity] = w
+                        path = self.dir / rel
+                        path.parent.mkdir(parents=True, exist_ok=True)
+                        w = open(path, "a", encoding="utf-8", newline="\n")
+                        self._writers[rel] = w
                     w.write(J.write(r.to_json()))
                     w.write("\n")
             except OSError as e:
@@ -301,9 +311,26 @@ def _neo4j(c: dict, sdk: Any) -> Sink:
     return Neo4jSink(c, sdk)
 
 
+def _csv(c: dict, sdk: Any) -> Sink:
+    from .files import CsvSink, partition_by
+    return CsvSink(require(c, "path"), partition_by(c), sdk.entity_model)
+
+
+def _parquet(c: dict, sdk: Any) -> Sink:
+    from .files import ParquetSink, partition_by
+    return ParquetSink(require(c, "path"), partition_by(c), sdk.entity_model)
+
+
+def _jsonl(c: dict, sdk: Any) -> Sink:
+    from .files import partition_by
+    return JsonlSink(require(c, "path"), partition_by(c), sdk.entity_model)
+
+
 def built_in() -> list[SinkProvider]:
     return [
-        _Provider("jsonl", lambda c, sdk: JsonlSink(require(c, "path"))),
+        _Provider("jsonl", _jsonl),
+        _Provider("csv", _csv),
+        _Provider("parquet", _parquet),
         _Provider("json", lambda c, sdk: JsonSink(require(c, "path"))),
         _Provider("console", lambda c, sdk: ConsoleSink()),
         _Provider("memory", lambda c, sdk: MemorySink.named(J.text(c, "name", "default"))),

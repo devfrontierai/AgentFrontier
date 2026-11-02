@@ -1,6 +1,6 @@
 {
   "specVersion": "2",
-  "description": "The canonical records every AgentFrontier implementation emits. Operations in a source definition map their results onto these fields; anything that does not map lands in the record's `properties` map. Hierarchy level values (for example `database`, `schema`, `folder`) are added to every record by the engine and are not listed here. Each entity belongs to one aspect (what a pipeline selects) and one raw-stream category (see streams.json); with the envelope enabled, the record becomes the `body` of a raw-stream event (see schemas/envelope.schema.json). Rows of data (entity `row`: `dataset` plus a `values` map) are not mapped onto fields and are not listed here; their aspect is `data` and their category `data_read`.",
+  "description": "The canonical records every AgentFrontier implementation emits. Operations in a source definition map their results onto these fields; anything that does not map lands in the record's `properties` map. Hierarchy level values (for example `database`, `schema`, `folder`) are added to every record by the engine and are not listed here. Each entity belongs to one aspect (what a pipeline selects) and one raw-stream category (see streams.json); with the envelope enabled, the record becomes the `body` of a raw-stream event (see schemas/envelope.schema.json). Rows of data (entity `row`: `dataset` plus a `values` map) are not mapped onto fields and are not listed here; their aspect is `data` and their category `data_read`. Entities with `\"kind\": \"event\"` record something that happened (a query, an audit event, a check result); every other entity is state, which incremental runs compare with the previous run and tombstone when it disappears (see docs/incremental.md). Rows behave as events.",
   "types": {
     "string": "text; numbers and booleans are converted with their plain text form",
     "long": "64-bit integer; numeric text is parsed, anything else becomes null",
@@ -235,6 +235,7 @@
       }
     },
     "usage": {
+      "kind": "event",
       "aspect": "usage",
       "category": "audit",
       "description": "One query or access event.",
@@ -360,6 +361,7 @@
       }
     },
     "audit_event": {
+      "kind": "event",
       "aspect": "activity",
       "category": "audit",
       "description": "An action an actor took on a resource and the decision about it, as an audit log records it. Events the SDK emits about its own actions are hash-chained per run: `sequence`, `previousHash` and `hash` follow docs/audit.md.",
@@ -389,6 +391,7 @@
       }
     },
     "change": {
+      "kind": "event",
       "aspect": "metadata",
       "category": "change",
       "description": "A change to a source object reported by the source (CDC, delta query, change log). `before` and `after` are only filled when policy allows.",
@@ -483,6 +486,7 @@
       }
     },
     "activity": {
+      "kind": "event",
       "aspect": "activity",
       "category": "activity_execution",
       "description": "One execution by a user, agent or application: a tool call, query, job run or API request.",
@@ -507,6 +511,7 @@
       }
     },
     "quality_result": {
+      "kind": "event",
       "aspect": "quality",
       "category": "quality_observability",
       "description": "The result of a quality check, freshness measurement or connector health check.",
@@ -577,6 +582,7 @@
       }
     },
     "usage_cost": {
+      "kind": "event",
       "aspect": "cost",
       "category": "usage_cost",
       "description": "Usage and cost for one charge period, aligned with the FOCUS specification (column names in camelCase) and extended with LLM token counts.",

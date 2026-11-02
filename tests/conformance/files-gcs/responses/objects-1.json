@@ -1,0 +1,29 @@
+{
+  "kind": "storage#objects",
+  "nextPageToken": "p 2",
+  "items": [
+    {
+      "kind": "storage#object",
+      "name": "exports/daily/",
+      "bucket": "conf-bucket",
+      "size": "0",
+      "updated": "2026-10-01T00:00:00.000Z",
+      "etag": "CAE=",
+      "generation": "1700000000000001"
+    },
+    {
+      "kind": "storage#object",
+      "name": "exports/daily/sales.csv",
+      "bucket": "conf-bucket",
+      "size": "95",
+      "updated": "2026-10-30T23:59:58.120Z",
+      "etag": "CJjSyY2B6YkDEAE=",
+      "generation": "1761868798120000",
+      "contentType": "text/csv",
+      "metadata": {
+        "owner": "finance",
+        "contains_pii": "false"
+      }
+    }
+  ]
+}

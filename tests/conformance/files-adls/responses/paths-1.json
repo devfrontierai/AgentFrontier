@@ -1,0 +1,27 @@
+{
+  "paths": [
+    {
+      "name": "landing",
+      "isDirectory": "true",
+      "lastModified": "Thu, 01 Oct 2026 08:00:00 GMT",
+      "etag": "0x8DCF0000000001",
+      "contentLength": "0",
+      "owner": "$superuser",
+      "group": "$superuser",
+      "permissions": "rwxr-x---"
+    },
+    {
+      "name": "landing/customers",
+      "isDirectory": "true",
+      "lastModified": "Thu, 01 Oct 2026 08:00:00 GMT",
+      "etag": "0x8DCF0000000002",
+      "contentLength": "0"
+    },
+    {
+      "name": "landing/customers/customers.jsonl",
+      "lastModified": "Fri, 30 Oct 2026 06:30:15 GMT",
+      "etag": "0x8DCF0000000003",
+      "contentLength": "518"
+    }
+  ]
+}

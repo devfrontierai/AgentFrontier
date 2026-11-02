@@ -106,6 +106,8 @@ class EngineSession:
         self._alternative_choice: dict[str, int] = {}
         self._scope_cache: dict[str, tuple[Scope, list[dict]]] = {}
         self._info: SourceInfo | None = None
+        self._last_body: dict[str, Any] = {}
+        self.failures = 0
 
     def __enter__(self) -> "EngineSession":
         return self
@@ -505,19 +507,28 @@ class EngineSession:
         v.update(scope.as_map())
         return v
 
+    def last_body(self, operation: str) -> Any:
+        """The parsed body of the last page an operation read (delta tokens, spec docs/incremental.md)."""
+        return self._last_body.get(operation)
+
     def run_all(self, name: str, op: dict, scope: Scope, vars: dict) -> list[dict]:
-        """Every page of an operation."""
+        """Every page of an operation. A delta-token operation with ``resume: url`` starts from the stored token."""
         paging = op.get("paging")
         mode = J.text(paging, "mode")
         if mode is None:
-            return self._execute_once(name, op, scope, vars).records
+            m = self._execute_once(name, op, scope, vars)
+            self._last_body[name] = m.raw.body
+            return m.records
         size = J.integer(paging, "size", DEFAULT_PAGE)
         all_: list[dict] = []
         cursor = None
+        if J.text(op.get("incremental"), "resume") == "url" and vars.get("since") is not None                 and mode in ("nextUrl", "linkHeader"):
+            cursor = J.jstr(vars.get("since"))
         for _ in range(MAX_PAGES):
             v = dict(vars)
             v.update(self._page_vars(op, mode, cursor, size))
             m = self._execute_once(name, op, scope, v)
+            self._last_body[name] = m.raw.body
             all_.extend(m.records)
             nxt = self._next_cursor(op, mode, m, cursor, size)
             if nxt is None or nxt == cursor:
@@ -632,6 +643,7 @@ class EngineSession:
         raise last
 
     def _handle(self, name: str, op: dict, e: AgentFrontierError) -> None:
+        self.failures += 1
         policy = J.text(op, "onError", "fail")
         if policy == "skip":
             log.debug("%s: operation %s skipped: %s", self._connection.id, name, e.message)

@@ -1,0 +1,34 @@
+{
+  "kind": "bigquery#table",
+  "id": "conf-project:sales.customers",
+  "tableReference": {
+    "projectId": "conf-project",
+    "datasetId": "sales",
+    "tableId": "customers"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "customer_id",
+        "type": "INTEGER",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "email",
+        "type": "STRING",
+        "description": "Primary e-mail"
+      },
+      {
+        "name": "address",
+        "type": "RECORD",
+        "mode": "NULLABLE",
+        "fields": [
+          {
+            "name": "city",
+            "type": "STRING"
+          }
+        ]
+      }
+    ]
+  }
+}

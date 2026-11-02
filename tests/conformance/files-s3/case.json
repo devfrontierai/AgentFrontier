@@ -1,0 +1,46 @@
+{
+  "description": "Files engine on S3 through an S3-compatible endpoint (path-style): SigV4 signing with credentials from an STS AssumeRole call (form post signed for sts, XML answer), ListObjectsV2 paged with a continuation token that needs encoding, folder markers and a file outside the include globs skipped, a key with a space, CSV, JSON, JSON Lines and Avro (header schema with a nullable union, logical types, an array and a three-way union) inferred from ranged reads, object tags (objectTags on) and the bucket ACL as grants.",
+  "server": {
+    "routes": "routes.json"
+  },
+  "connection": {
+    "id": "conf-s3",
+    "name": "Conformance S3",
+    "type": "s3",
+    "properties": {
+      "bucket": "conf-bucket",
+      "prefix": "raw",
+      "region": "eu-west-1",
+      "endpoint": "{{baseUrl}}"
+    },
+    "options": {
+      "objectTags": true
+    },
+    "auth": {
+      "method": "aws_iam",
+      "accessKeyId": "AKIAAGENTFRONTIERCF",
+      "secretAccessKey": "conformance/secret/key+1",
+      "roleArn": "arn:aws:iam::123456789012:role/conformance-reader",
+      "externalId": "conf-external",
+      "stsEndpoint": "{{baseUrl}}/sts/"
+    }
+  },
+  "pipeline": {
+    "aspects": [
+      "metadata",
+      "governance"
+    ]
+  },
+  "sample": {
+    "scope": {
+      "folder": "sales"
+    },
+    "dataset": "orders.csv",
+    "limit": 2
+  },
+  "envelope": {
+    "tenantId": "conformance",
+    "expected": "expected-envelope.jsonl"
+  },
+  "expected": "expected.jsonl"
+}

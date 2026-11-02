@@ -100,7 +100,8 @@ class EnvelopeBuilder:
         self.run_id = run_id
         self.levels = list(levels)
 
-    def wrap(self, r: Record, observed_at: str, operation: dict | None = None, op: str = "upsert") -> Event:
+    def wrap(self, r: Record, observed_at: str, operation: dict | None = None, op: str = "upsert",
+             object_id: str | None = None) -> Event:
         category = self.entity_model.category_of(r.entity)
         family = self.streams.family_of(category)
         if family is None:
@@ -109,7 +110,8 @@ class EnvelopeBuilder:
         assertion = J.text(operation, "assertion", "observed") if operation else "observed"
         confidence = J.get(operation, "confidence") if operation else None
         body = r.to_json()
-        object_id = native_object_id(r, self.levels)
+        if object_id is None:
+            object_id = native_object_id(r, self.levels)
         env: dict[str, Any] = {
             "envelopeVersion": ENVELOPE_VERSION,
             "eventId": event_id(self.tenant_id, self.source_system_id, r.entity, object_id, op, body),

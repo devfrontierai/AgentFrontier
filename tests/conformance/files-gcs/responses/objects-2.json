@@ -1,0 +1,24 @@
+{
+  "kind": "storage#objects",
+  "items": [
+    {
+      "kind": "storage#object",
+      "name": "exports/events/2026-10-30.avro",
+      "bucket": "conf-bucket",
+      "size": "479",
+      "updated": "2026-10-31T01:02:03Z",
+      "etag": "CKih16GB6YkDEAE=",
+      "generation": "1761872523000000",
+      "contentType": "application/avro"
+    },
+    {
+      "kind": "storage#object",
+      "name": "exports/notes.md",
+      "bucket": "conf-bucket",
+      "size": "42",
+      "updated": "2026-10-01T00:00:00Z",
+      "etag": "CAI=",
+      "generation": "1700000000000002"
+    }
+  ]
+}

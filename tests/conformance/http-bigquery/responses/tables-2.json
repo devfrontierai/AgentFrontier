@@ -1,0 +1,28 @@
+{
+  "kind": "bigquery#tableList",
+  "totalItems": 4,
+  "tables": [
+    {
+      "kind": "bigquery#table",
+      "id": "conf-project:sales.raw_events",
+      "tableReference": {
+        "projectId": "conf-project",
+        "datasetId": "sales",
+        "tableId": "raw_events"
+      },
+      "type": "EXTERNAL",
+      "creationTime": "1759395600000"
+    },
+    {
+      "kind": "bigquery#table",
+      "id": "conf-project:sales.v_revenue",
+      "tableReference": {
+        "projectId": "conf-project",
+        "datasetId": "sales",
+        "tableId": "v_revenue"
+      },
+      "type": "VIEW",
+      "creationTime": "1759482000123"
+    }
+  ]
+}

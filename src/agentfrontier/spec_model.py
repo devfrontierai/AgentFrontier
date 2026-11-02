@@ -159,6 +159,7 @@ class Entity:
     fields: dict[str, str]
     enums: dict[str, Enumeration]
     category: str | None = None
+    kind: str = "state"
 
     def canonical(self, column: str) -> str | None:
         norm = normalize(column)
@@ -179,7 +180,8 @@ class EntityModel:
             for en_name, en in ((e or {}).get("enums") or {}).items():
                 enums[en_name] = Enumeration(J.strings(J.get(en, "values")),
                                              {k: J.as_text(v) for k, v in (J.get(en, "synonyms") or {}).items()})
-            self._entities[name] = Entity(name, J.text(e, "aspect", "metadata"), fields, enums, J.text(e, "category"))
+            self._entities[name] = Entity(name, J.text(e, "aspect", "metadata"), fields, enums, J.text(e, "category"),
+                                          J.text(e, "kind", "state") or "state")
         self._aspects = {k: J.as_text(v) for k, v in ((doc or {}).get("aspects") or {}).items()}
         self._spec_version = J.text(doc, "specVersion", "1")
 
@@ -212,6 +214,12 @@ class EntityModel:
             return "data_read"
         e = self._entities.get(entity)
         return None if e is None else e.category
+
+    @property
+    def event_entities(self) -> set[str]:
+        """Entities that record something that happened (``"kind": "event"``) plus ``row``; incremental runs never
+        compare or tombstone them."""
+        return {n for n, e in self._entities.items() if e.kind == "event"} | {"row"}
 
     @staticmethod
     def known_types() -> list[str]:

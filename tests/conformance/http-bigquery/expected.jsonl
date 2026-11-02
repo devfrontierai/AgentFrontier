@@ -1,0 +1,28 @@
+{"comment":"Conformance Project","entity":"container","level":"project","name":"conf-project","project":"conf-project","properties":{"numericId":"100000000001"},"source":"conf-bigquery"}
+{"comment":"Primary e-mail","dataType":"STRING","dataset":"customers","entity":"field","name":"email","nullable":true,"project":"conf-project","schema":"sales","source":"conf-bigquery"}
+{"createdAt":"2025-10-01T09:00:00Z","entity":"dataset","isPartition":false,"name":"customers","project":"conf-project","schema":"sales","source":"conf-bigquery","type":"table"}
+{"createdAt":"2025-10-01T09:01:00Z","entity":"dataset","isPartition":false,"name":"orders","project":"conf-project","properties":{"labels":{"tier":"gold"},"partitioning":"DAY"},"schema":"sales","source":"conf-bigquery","type":"table"}
+{"createdAt":"2025-10-02T09:00:00Z","entity":"dataset","isPartition":false,"name":"raw_events","project":"conf-project","schema":"sales","source":"conf-bigquery","type":"external_table"}
+{"createdAt":"2025-10-03T09:00:00Z","entity":"dataset","isPartition":false,"name":"v_revenue","project":"conf-project","schema":"sales","source":"conf-bigquery","type":"view"}
+{"dataType":"DATE","dataset":"v_revenue","entity":"field","name":"day","nullable":true,"project":"conf-project","schema":"sales","source":"conf-bigquery"}
+{"dataType":"INTEGER","dataset":"customers","entity":"field","name":"customer_id","nullable":false,"project":"conf-project","properties":{"mode":"REQUIRED"},"schema":"sales","source":"conf-bigquery"}
+{"dataType":"INTEGER","dataset":"orders","entity":"field","name":"customer_id","nullable":true,"project":"conf-project","schema":"sales","source":"conf-bigquery"}
+{"dataType":"INTEGER","dataset":"orders","entity":"field","name":"order_id","nullable":false,"project":"conf-project","properties":{"mode":"REQUIRED"},"schema":"sales","source":"conf-bigquery"}
+{"dataType":"JSON","dataset":"raw_events","entity":"field","name":"payload","nullable":true,"project":"conf-project","schema":"sales","source":"conf-bigquery"}
+{"dataType":"NUMERIC","dataset":"orders","entity":"field","name":"amount","nullable":true,"project":"conf-project","schema":"sales","source":"conf-bigquery"}
+{"dataType":"NUMERIC","dataset":"v_revenue","entity":"field","name":"revenue","nullable":true,"project":"conf-project","schema":"sales","source":"conf-bigquery"}
+{"dataType":"RECORD","dataset":"customers","entity":"field","name":"address","nullable":true,"project":"conf-project","properties":{"mode":"NULLABLE"},"schema":"sales","source":"conf-bigquery"}
+{"dataType":"STRING","dataset":"orders","entity":"field","name":"items","nullable":true,"project":"conf-project","properties":{"mode":"REPEATED"},"schema":"sales","source":"conf-bigquery"}
+{"dataType":"TIMESTAMP","dataset":"orders","entity":"field","name":"ordered_at","nullable":true,"project":"conf-project","schema":"sales","source":"conf-bigquery"}
+{"definition":"bigquery","entity":"source","name":"Conformance BigQuery","product":"Google BigQuery","source":"conf-bigquery"}
+{"durationMs":850,"entity":"usage","project":"conf-project","properties":{"bytesProcessed":"1048576","jobType":"LOAD"},"queryId":"job_a3","source":"conf-bigquery","startedAt":"2025-10-30T12:00:00Z","status":"succeeded","user":"etl@conf-project.iam.gserviceaccount.com"}
+{"durationMs":850,"entity":"usage","project":"conf-project","properties":{"bytesProcessed":"1048576","jobType":"QUERY"},"queryId":"job_a1","queryText":"SELECT * FROM sales.orders","source":"conf-bigquery","startedAt":"2025-10-30T10:00:00Z","status":"succeeded","user":"ana@example.com"}
+{"durationMs":850,"entity":"usage","project":"conf-project","properties":{"bytesProcessed":"1048576","jobType":"QUERY"},"queryId":"job_a2","queryText":"SELECT bad FROM sales.orders","source":"conf-bigquery","startedAt":"2025-10-30T11:00:00Z","status":"invalidQuery","user":"ana@example.com"}
+{"durationMs":850,"entity":"usage","project":"conf-project","properties":{"bytesProcessed":"1048576","jobType":"QUERY"},"queryId":"job_a3b","queryText":"SELECT COUNT(*) FROM sales.customers","source":"conf-bigquery","startedAt":"2025-10-30T12:00:00Z","status":"succeeded","user":"bob@example.com"}
+{"entity":"container","level":"schema","name":"sales","project":"conf-project","properties":{"labels":{"domain":"sales"},"location":"EU"},"schema":"sales","source":"conf-bigquery"}
+{"entity":"grant","objectType":"schema","principal":"allAuthenticatedUsers","privilege":"READER","project":"conf-project","schema":"sales","source":"conf-bigquery"}
+{"entity":"grant","objectType":"schema","principal":"analysts@example.com","privilege":"READER","project":"conf-project","schema":"sales","source":"conf-bigquery"}
+{"entity":"grant","objectType":"schema","principal":"etl@conf-project.iam.gserviceaccount.com","privilege":"WRITER","project":"conf-project","schema":"sales","source":"conf-bigquery"}
+{"entity":"grant","objectType":"schema","principal":"example.com","privilege":"READER","project":"conf-project","schema":"sales","source":"conf-bigquery"}
+{"entity":"grant","objectType":"schema","principal":"projectOwners","privilege":"OWNER","project":"conf-project","schema":"sales","source":"conf-bigquery"}
+{"entity":"grant","objectType":"schema","principal":"v_public","privilege":"AUTHORIZED_VIEW","project":"conf-project","properties":{"authorizedView":{"datasetId":"reporting","projectId":"conf-project","tableId":"v_public"}},"schema":"sales","source":"conf-bigquery"}

@@ -1,0 +1,41 @@
+{
+  "description": "HTTP engine on the BigQuery REST API: projects and datasets as the project and schema levels, tables paged with pageToken (tables, an external table and a view), epoch-millisecond creation times, columns from each table (REQUIRED and REPEATED modes), dataset access entries of every grantee kind as grants (an authorized view without a role included), and the job history as usage with the failed job's reason as its status. Incremental: the second run asks for jobs from the watermark (minCreationTime, through the toEpochMs filter) and gets the boundary job again, which is not emitted twice.",
+  "server": {
+    "routes": "routes.json"
+  },
+  "connection": {
+    "id": "conf-bigquery",
+    "name": "Conformance BigQuery",
+    "type": "bigquery",
+    "properties": {
+      "apiUrl": "{{baseUrl}}/bigquery/v2"
+    },
+    "auth": {
+      "method": "token",
+      "token": "conf-bq-token"
+    }
+  },
+  "pipeline": {
+    "aspects": [
+      "metadata",
+      "governance",
+      "usage"
+    ]
+  },
+  "envelope": {
+    "tenantId": "conformance",
+    "expected": "expected-envelope.jsonl"
+  },
+  "incremental": {
+    "tenantId": "conformance",
+    "runs": [
+      {
+        "expected": "expected-incremental-1.jsonl"
+      },
+      {
+        "expected": "expected-incremental-2.jsonl"
+      }
+    ]
+  },
+  "expected": "expected.jsonl"
+}

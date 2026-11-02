@@ -1,0 +1,28 @@
+{"columns":["customer_id"],"dataset":"orders","entity":"constraint","name":"fk_orders_0","refColumns":["id"],"refDataset":"customers","source":"conf-incremental","type":"foreign_key"}
+{"columns":["id"],"dataset":"customers","entity":"constraint","name":"pk_customers","source":"conf-incremental","type":"primary_key"}
+{"columns":["id"],"dataset":"orders","entity":"constraint","name":"pk_orders","source":"conf-incremental","type":"primary_key"}
+{"columns":["query_id"],"dataset":"query_log","entity":"constraint","name":"pk_query_log","source":"conf-incremental","type":"primary_key"}
+{"columns":["query_id"],"dataset":"query_log","entity":"index","isPrimary":true,"isUnique":true,"name":"sqlite_autoindex_query_log_1","source":"conf-incremental"}
+{"dataType":"INTEGER","dataset":"big_orders","entity":"field","isGenerated":false,"name":"id","nullable":true,"ordinal":1,"source":"conf-incremental"}
+{"dataType":"INTEGER","dataset":"customers","entity":"field","isGenerated":false,"name":"id","nullable":false,"ordinal":1,"source":"conf-incremental"}
+{"dataType":"INTEGER","dataset":"orders","entity":"field","isGenerated":false,"name":"customer_id","nullable":true,"ordinal":2,"source":"conf-incremental"}
+{"dataType":"INTEGER","dataset":"orders","entity":"field","isGenerated":false,"name":"id","nullable":false,"ordinal":1,"source":"conf-incremental"}
+{"dataType":"INTEGER","dataset":"tmp_load","entity":"field","isGenerated":false,"name":"id","nullable":true,"ordinal":1,"source":"conf-incremental"}
+{"dataType":"REAL","dataset":"big_orders","entity":"field","isGenerated":false,"name":"total","nullable":true,"ordinal":2,"source":"conf-incremental"}
+{"dataType":"REAL","dataset":"orders","entity":"field","isGenerated":false,"name":"total","nullable":true,"ordinal":3,"source":"conf-incremental"}
+{"dataType":"TEXT","dataset":"big_orders","entity":"field","isGenerated":false,"name":"email","nullable":true,"ordinal":3,"source":"conf-incremental"}
+{"dataType":"TEXT","dataset":"customers","entity":"field","isGenerated":false,"name":"email","nullable":true,"ordinal":3,"source":"conf-incremental"}
+{"dataType":"TEXT","dataset":"customers","entity":"field","isGenerated":false,"name":"name","nullable":false,"ordinal":2,"source":"conf-incremental"}
+{"dataType":"TEXT","dataset":"query_log","entity":"field","isGenerated":false,"name":"query_id","nullable":false,"ordinal":1,"source":"conf-incremental"}
+{"dataType":"TEXT","dataset":"query_log","entity":"field","isGenerated":false,"name":"query_text","nullable":true,"ordinal":2,"source":"conf-incremental"}
+{"dataType":"TEXT","dataset":"query_log","entity":"field","isGenerated":false,"name":"started_at","nullable":true,"ordinal":4,"source":"conf-incremental"}
+{"dataType":"TEXT","dataset":"query_log","entity":"field","isGenerated":false,"name":"user_name","nullable":true,"ordinal":3,"source":"conf-incremental"}
+{"definition":"CREATE VIEW big_orders as select o.id, o.total, c.email from orders o join customers c on c.id = o.customer_id where o.total > 100","entity":"dataset","name":"big_orders","source":"conf-incremental","type":"view"}
+{"definition":"sqlite_query_log","entity":"source","name":"Conformance incremental","product":"SQLite","source":"conf-incremental"}
+{"entity":"dataset","name":"customers","source":"conf-incremental","type":"table"}
+{"entity":"dataset","name":"orders","source":"conf-incremental","type":"table"}
+{"entity":"dataset","name":"query_log","source":"conf-incremental","type":"table"}
+{"entity":"dataset","name":"tmp_load","source":"conf-incremental","type":"table"}
+{"entity":"usage","queryId":"q1","queryText":"select * from orders","source":"conf-incremental","startedAt":"2026-10-30T09:00:00Z","user":"ana"}
+{"entity":"usage","queryId":"q2","queryText":"select * from customers","source":"conf-incremental","startedAt":"2026-10-30T10:00:00Z","user":"bob"}
+{"entity":"usage","queryId":"q3","queryText":"select count(*) from orders","source":"conf-incremental","startedAt":"2026-10-30T10:00:00Z","user":"ana"}

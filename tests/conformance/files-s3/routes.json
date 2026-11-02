@@ -1,0 +1,125 @@
+{
+  "require": {
+    "headers": {
+      "Authorization": {
+        "pattern": "AWS4-HMAC-SHA256 Credential=ASIACONFORMANCETEMP/\\d{8}/eu-west-1/s3/aws4_request, SignedHeaders=host(;range)?;x-amz-content-sha256;x-amz-date;x-amz-security-token, Signature=[0-9a-f]{64}"
+      },
+      "X-Amz-Security-Token": "conf-session-token",
+      "X-Amz-Content-Sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "routes": [
+    {
+      "method": "POST",
+      "path": "/sts/",
+      "contentType": "text/xml",
+      "require": {
+        "headers": {
+          "Authorization": {
+            "pattern": "AWS4-HMAC-SHA256 Credential=AKIAAGENTFRONTIERCF/\\d{8}/eu-west-1/sts/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=[0-9a-f]{64}"
+          }
+        }
+      },
+      "form": {
+        "Action": "AssumeRole",
+        "RoleArn": "arn:aws:iam::123456789012:role/conformance-reader",
+        "RoleSessionName": "agentfrontier",
+        "Version": "2011-06-15",
+        "ExternalId": "conf-external"
+      },
+      "body": "responses/sts.xml"
+    },
+    {
+      "path": "/conf-bucket/",
+      "query": {
+        "acl": ""
+      },
+      "contentType": "application/xml",
+      "body": "responses/acl.xml"
+    },
+    {
+      "path": "/conf-bucket/",
+      "query": {
+        "list-type": "2",
+        "prefix": "raw/",
+        "continuation-token": "1/page two+"
+      },
+      "contentType": "application/xml",
+      "body": "responses/list-2.xml"
+    },
+    {
+      "path": "/conf-bucket/",
+      "query": {
+        "list-type": "2",
+        "prefix": "raw/",
+        "continuation-token": null
+      },
+      "contentType": "application/xml",
+      "body": "responses/list-1.xml"
+    },
+    {
+      "path": "/conf-bucket/raw/sales/orders.csv",
+      "query": {
+        "tagging": ""
+      },
+      "contentType": "application/xml",
+      "body": "responses/tags-orders.xml"
+    },
+    {
+      "path": "/conf-bucket/raw/sales/orders.csv",
+      "query": {
+        "tagging": null
+      },
+      "contentType": "text/csv",
+      "file": "data/orders.csv"
+    },
+    {
+      "path": "/conf-bucket/raw/sales/events.avro",
+      "query": {
+        "tagging": ""
+      },
+      "contentType": "application/xml",
+      "body": "responses/tags-empty.xml"
+    },
+    {
+      "path": "/conf-bucket/raw/sales/events.avro",
+      "query": {
+        "tagging": null
+      },
+      "contentType": "application/octet-stream",
+      "file": "data/events.avro"
+    },
+    {
+      "path": "/conf-bucket/raw/sales/q4 report.json",
+      "query": {
+        "tagging": ""
+      },
+      "contentType": "application/xml",
+      "body": "responses/tags-empty.xml"
+    },
+    {
+      "path": "/conf-bucket/raw/sales/q4 report.json",
+      "query": {
+        "tagging": null
+      },
+      "contentType": "application/json",
+      "file": "data/q4 report.json"
+    },
+    {
+      "path": "/conf-bucket/raw/logs/2026/10/app.jsonl",
+      "query": {
+        "tagging": ""
+      },
+      "contentType": "application/xml",
+      "body": "responses/tags-empty.xml"
+    },
+    {
+      "path": "/conf-bucket/raw/logs/2026/10/app.jsonl",
+      "query": {
+        "tagging": null
+      },
+      "contentType": "application/x-ndjson",
+      "file": "data/app.jsonl"
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+{
+  "specVersion": "1",
+  "id": "adls",
+  "name": "Azure Data Lake Storage Gen2",
+  "aliases": [
+    "azure_data_lake",
+    "abfss"
+  ],
+  "protocol": "files",
+  "category": "object_storage",
+  "status": "experimental",
+  "description": "A file system (container) of an Azure Data Lake Storage Gen2 account with a hierarchical namespace, through the Data Lake Storage REST API. Folders that hold matching files are containers, files are datasets; fields are inferred from CSV, TSV, JSON, JSON Lines, Avro and (Python, parquet extra) Parquet content; the POSIX ACL of the directory is read as grants. Exercised against recorded responses; not yet run against a live account.",
+  "properties": [
+    {
+      "key": "account",
+      "label": "Storage account",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "filesystem",
+      "label": "File system (container)",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "prefix",
+      "label": "Directory",
+      "type": "string",
+      "help": "Only paths under this directory, e.g. raw/sales"
+    },
+    {
+      "key": "endpoint",
+      "label": "Endpoint",
+      "type": "string",
+      "default": "https://{{account}}.dfs.core.windows.net",
+      "help": "Change only for a national cloud or a private endpoint."
+    },
+    {
+      "key": "include",
+      "label": "Include",
+      "type": "list",
+      "default": "**/*.csv,**/*.tsv,**/*.json,**/*.jsonl,**/*.ndjson,**/*.avro,**/*.parquet",
+      "help": "Glob patterns relative to the directory."
+    },
+    {
+      "key": "exclude",
+      "label": "Exclude",
+      "type": "list",
+      "help": "Glob patterns relative to the directory."
+    }
+  ],
+  "options": [
+    {
+      "key": "sampleRows",
+      "label": "Rows to sample for schema inference",
+      "type": "integer",
+      "default": "1000"
+    },
+    {
+      "key": "maxBytes",
+      "label": "Bytes read per file",
+      "type": "integer",
+      "default": "4194304",
+      "help": "Schema inference and samples read at most this much of each file."
+    }
+  ],
+  "auth": [
+    "azure_service_principal",
+    "azure_managed_identity",
+    "oauth2_access_token",
+    "token"
+  ],
+  "connection": {
+    "files": {
+      "storage": "adls",
+      "account": "{{account}}",
+      "filesystem": "{{filesystem}}",
+      "prefix": "{{prefix}}",
+      "endpoint": "{{endpoint}}",
+      "maxBytes": "{{options.maxBytes}}",
+      "auth": {
+        "azure_service_principal": {
+          "oauth2": {
+            "scope": "https://storage.azure.com/.default"
+          },
+          "headers": {
+            "Authorization": "Bearer {{token.accessToken}}"
+          }
+        },
+        "azure_managed_identity": {
+          "oauth2": {
+            "scope": "https://storage.azure.com/.default"
+          },
+          "headers": {
+            "Authorization": "Bearer {{token.accessToken}}"
+          }
+        },
+        "oauth2_access_token": {
+          "headers": {
+            "Authorization": "Bearer {{auth.accessToken}}"
+          }
+        },
+        "token": {
+          "sas": "{{auth.token}}"
+        }
+      }
+    }
+  },
+  "hierarchy": [
+    {
+      "level": "folder",
+      "label": "Folder",
+      "list": "folders"
+    }
+  ],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "files": {
+        "op": "stat"
+      }
+    },
+    "folders": {
+      "entity": "container",
+      "files": {
+        "op": "folders",
+        "include": "{{include}}",
+        "exclude": "{{exclude}}"
+      }
+    },
+    "datasets": {
+      "entity": "dataset",
+      "scope": "folder",
+      "files": {
+        "op": "files",
+        "include": "{{include}}",
+        "exclude": "{{exclude}}"
+      }
+    },
+    "fields": {
+      "entity": "field",
+      "scope": "dataset",
+      "files": {
+        "op": "schema",
+        "sampleRows": "{{options.sampleRows}}"
+      }
+    },
+    "sample": {
+      "entity": "row",
+      "aspect": "data",
+      "scope": "dataset",
+      "files": {
+        "op": "rows",
+        "limit": "{{limit}}"
+      }
+    },
+    "grants": {
+      "entity": "grant",
+      "aspect": "governance",
+      "scope": "source",
+      "onError": "warn",
+      "files": {
+        "op": "grants"
+      }
+    }
+  }
+}

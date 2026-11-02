@@ -1,0 +1,5 @@
+{
+  "@odata.context": "{{baseUrl}}/$metadata#users",
+  "value": [],
+  "@odata.deltaLink": "{{baseUrl}}/users/delta?$deltatoken=d3"
+}

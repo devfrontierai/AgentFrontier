@@ -1,14 +1,15 @@
 """The file storage engine: folders are containers, files are datasets, fields are inferred from content.
 
 Built-in operations (``files.op``): ``stat`` (connection test), ``folders`` (folders holding matching files, root is
-``.``), ``files`` (matching files directly in a folder), ``schema`` (inferred fields of one file) and ``rows`` (first
-rows of one file). Storage ``local`` covers local disks, network shares and synced cloud folders.
+``.``), ``files`` (matching files directly in a folder), ``schema`` (inferred fields of one file), ``rows`` (first
+rows of one file), ``tags`` (tags of one file) and ``grants`` (who may read the bucket or directory). Storage
+``local`` covers local disks, network shares and synced cloud folders; ``s3``, ``adls`` and ``gcs`` read object
+storage (spec docs/storage.md).
 """
 
 from __future__ import annotations
 
-import datetime as _dt
-import os
+import io
 import time
 from typing import Any
 
@@ -17,26 +18,26 @@ from .. import template as T
 from ..errors import AgentFrontierError
 from ..model import Scope
 from . import Protocol, ProtocolContext, ProtocolSession, RawResult
+from .formats import avro_fields, parquet_fields, parquet_rows
 from .inference import BOM, CsvReader, PathGlob, delimited, file_format, json_records, json_schema
-
-
-def _iso(ts: float) -> str:
-    return _dt.datetime.fromtimestamp(int(ts // 1), tz=_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+from .storage import DEFAULT_MAX_BYTES, Entry, LocalStorage, Storage, open_storage
 
 
 class FilesSession(ProtocolSession):
     def __init__(self, ctx: ProtocolContext):
         self.ctx = ctx
         files = ctx.definition.connection("files")
-        storage = J.text(files, "storage", "local")
-        if storage != "local":
-            raise AgentFrontierError.unsupported("file storage '" + storage + "' is not available in this version")
-        r = T.render_text(J.text(files, "root"), ctx.connect_vars({}), T.STRICT, None)
-        if r is None:
-            raise AgentFrontierError.invalid_config("property 'root' is required")
-        self.root = os.path.normpath(os.path.abspath(r))
+        files = files if isinstance(files, dict) else {}
+        self.storage: Storage = open_storage(ctx, files)
+        self.max_bytes = _int_var(files.get("maxBytes"), ctx.connect_vars({}), DEFAULT_MAX_BYTES)
+        if self.max_bytes <= 0:
+            self.max_bytes = DEFAULT_MAX_BYTES
         h = ctx.hierarchy
         self.folder_level = h[0].level if h else None
+
+    @property
+    def root(self) -> str:
+        return self.storage.describe()
 
     def execute(self, op: dict, vars: T.Vars, scope: Scope) -> RawResult:
         spec = op.get("files") if isinstance(op.get("files"), dict) else {}
@@ -45,108 +46,121 @@ class FilesSession(ProtocolSession):
         rows: list[dict] = []
         try:
             if kind == "stat":
-                rows.append(self._stat())
+                rows.append(self.storage.stat())
             elif kind == "folders":
                 rows.extend(self._folders(self._globs(spec, vars)))
             elif kind == "files":
                 rows.extend(self._files(self._globs(spec, vars),
                                         None if self.folder_level is None else scope.get(self.folder_level)))
             elif kind == "schema":
-                rows.extend(self._schema(self._file(scope, vars), _int_var(spec.get("sampleRows"), vars, 1000),
+                rows.extend(self._schema(self._path(scope, vars), _int_var(spec.get("sampleRows"), vars, 1000),
                                          J.jstr(vars.get("dataset"))))
             elif kind == "rows":
-                rows.extend(self._rows(self._file(scope, vars), _int_var(spec.get("limit"), vars, 100)))
+                rows.extend(self._rows(self._path(scope, vars), _int_var(spec.get("limit"), vars, 100)))
+            elif kind == "tags":
+                rows.extend(self.storage.tags(self._path(scope, vars)))
+            elif kind == "grants":
+                rows.extend(self.storage.grants())
             else:
                 raise AgentFrontierError.invalid_definition("unknown files op '" + kind + "'")
             return RawResult.of_rows(rows)
         except (OSError, ValueError) as e:
             raise AgentFrontierError.query("cannot read " + self.root + ": " + str(e), e) from e
         finally:
-            self.ctx.stats.record_statement(len(rows), time.perf_counter_ns() - start)
-
-    def _stat(self) -> dict:
-        if not os.path.isdir(self.root):
-            raise AgentFrontierError.connection("folder not found: " + self.root, None)
-        return {"root": self.root, "readable": os.access(self.root, os.R_OK)}
+            if isinstance(self.storage, LocalStorage):
+                self.ctx.stats.record_statement(len(rows), time.perf_counter_ns() - start)
 
     def _globs(self, spec: dict, vars: T.Vars) -> PathGlob:
         return PathGlob(_list(spec.get("include"), vars), _list(spec.get("exclude"), vars))
 
-    def _matching(self, glob: PathGlob) -> list[str]:
-        if not os.path.isdir(self.root):
-            raise AgentFrontierError.connection("folder not found: " + self.root, None)
-        out = []
-        for base, dirs, names in os.walk(self.root):
-            dirs.sort()
-            for n in names:
-                p = os.path.join(base, n)
-                if os.path.isfile(p) and glob.accepts(self._relative(p)):
-                    out.append(p)
-        out.sort()
-        return out
+    def _matching(self, glob: PathGlob) -> list[Entry]:
+        return [e for e in self.storage.list() if glob.accepts(e.path)]
 
-    def _relative(self, p: str) -> str:
-        return os.path.relpath(p, self.root).replace("\\", "/")
-
-    def _folder_of(self, p: str) -> str:
-        rel = self._relative(p)
-        i = rel.rfind("/")
-        return "." if i < 0 else rel[:i]
+    @staticmethod
+    def _folder_of(path: str) -> str:
+        i = path.rfind("/")
+        return "." if i < 0 else path[:i]
 
     def _folders(self, glob: PathGlob) -> list[dict]:
         counts: dict[str, int] = {}
-        for p in self._matching(glob):
-            f = self._folder_of(p)
+        for e in self._matching(glob):
+            f = self._folder_of(e.path)
             counts[f] = counts.get(f, 0) + 1
         return [{"name": f, "file_count": counts[f]} for f in sorted(counts)]
 
     def _files(self, glob: PathGlob, folder: str | None) -> list[dict]:
         out = []
-        for p in self._matching(glob):
-            if folder is not None and self._folder_of(p) != folder:
+        for e in self._matching(glob):
+            if folder is not None and self._folder_of(e.path) != folder:
                 continue
-            st = os.stat(p)
-            out.append({"name": self._relative(p) if folder is None else os.path.basename(p), "type": "file",
-                        "format": file_format(os.path.basename(p)), "size_bytes": st.st_size,
-                        "updated_at": _iso(st.st_mtime), "location": self._relative(p)})
+            base = e.path.rsplit("/", 1)[-1]
+            r = {"name": e.path if folder is None else base, "type": "file", "format": file_format(base),
+                 "size_bytes": e.size, "updated_at": e.updated_at, "location": e.location}
+            r.update(e.properties)
+            out.append(r)
         out.sort(key=lambda r: J.jstr(r.get("name")))
         return out
 
-    def _file(self, scope: Scope, vars: T.Vars) -> str:
+    def _path(self, scope: Scope, vars: T.Vars) -> str:
         dataset = vars.get("dataset")
         if dataset is None:
             raise AgentFrontierError.invalid_definition("files op needs a dataset")
         folder = None if self.folder_level is None else scope.get(self.folder_level)
         ds = J.jstr(dataset)
-        p = os.path.join(self.root, ds) if folder is None or folder == "." else os.path.join(self.root, folder, ds)
-        p = os.path.normpath(p)
-        if os.path.commonpath([os.path.normcase(p), os.path.normcase(self.root)]) != os.path.normcase(self.root):
+        path = ds if folder is None or folder == "." else folder + "/" + ds
+        parts = [p for p in path.replace("\\", "/").split("/") if p not in ("", ".")]
+        if ".." in parts:
             raise AgentFrontierError.invalid_config("path escapes the root folder: " + ds)
-        return p
+        return "/".join(parts)
 
-    @staticmethod
-    def _open(p: str):  # noqa: ANN205
-        return open(p, "r", encoding="utf-8", errors="replace", newline="")
+    def _text(self, path: str) -> tuple[io.StringIO | Any, bool]:
+        """A text stream over a file: the whole local file, or the first ``maxBytes`` of a remote one (with the
+        last, incomplete line dropped when the file is longer)."""
+        local = self.storage.local_path(path)
+        if local is not None:
+            return open(local, "r", encoding="utf-8", errors="replace", newline=""), True
+        data, whole = self.storage.read(path, self.max_bytes)
+        if not whole:
+            cut = data.rfind(b"\n")
+            data = data[:cut + 1] if cut >= 0 else b""
+        return io.StringIO(data.decode("utf-8", errors="replace"), newline=""), whole
 
-    def _schema(self, p: str, sample_rows: int, dataset: str) -> list[dict]:
-        fmt = file_format(os.path.basename(p))
-        with self._open(p) as stream:
-            if fmt == "csv":
-                r = delimited(stream, ",", sample_rows)
-            elif fmt == "tsv":
-                r = delimited(stream, "\t", sample_rows)
-            elif fmt in ("json", "jsonl"):
-                recs, complete = json_records(stream, fmt == "jsonl", sample_rows)
-                r = json_schema(recs, complete)
-            else:
-                return []
-        return [{"dataset": dataset, "name": f.name, "ordinal": f.ordinal, "data_type": f.data_type,
-                 "nullable": f.nullable, "parent": f.parent} for f in r.fields]
+    def _schema(self, path: str, sample_rows: int, dataset: str) -> list[dict]:
+        fmt = file_format(path.rsplit("/", 1)[-1])
+        if fmt == "avro":
+            fields = avro_fields(self.storage.read(path, self.max_bytes)[0])
+        elif fmt == "parquet":
+            fields = parquet_fields(self.storage, path)
+        else:
+            stream, whole = self._text(path)
+            with stream:
+                if fmt == "csv":
+                    r = delimited(stream, ",", sample_rows)
+                elif fmt == "tsv":
+                    r = delimited(stream, "\t", sample_rows)
+                elif fmt == "jsonl":
+                    recs, complete = json_records(stream, True, sample_rows)
+                    r = json_schema(recs, complete)
+                elif fmt == "json":
+                    if not whole:
+                        return []
+                    recs, complete = json_records(stream, False, sample_rows)
+                    r = json_schema(recs, complete)
+                else:
+                    return []
+            fields = [{"name": f.name, "ordinal": f.ordinal, "data_type": f.data_type, "nullable": f.nullable,
+                       "parent": f.parent} for f in r.fields]
+        return [dict({"dataset": dataset}, **f) for f in fields]
 
-    def _rows(self, p: str, limit: int) -> list[dict]:
-        fmt = file_format(os.path.basename(p))
+    def _rows(self, path: str, limit: int) -> list[dict]:
+        fmt = file_format(path.rsplit("/", 1)[-1])
+        if fmt == "parquet":
+            return parquet_rows(self.storage, path, limit, self.max_bytes)
+        if fmt not in ("csv", "tsv", "json", "jsonl"):
+            return []
         out: list[dict] = []
-        with self._open(p) as stream:
+        stream, whole = self._text(path)
+        with stream:
             if fmt in ("csv", "tsv"):
                 csv = CsvReader(stream, "," if fmt == "csv" else "\t")
                 header = csv.next()
@@ -161,7 +175,7 @@ class FilesSession(ProtocolSession):
                         h = J.jtrim(h).replace(BOM, "")
                         m["column_" + str(i + 1) if not h else h] = rec[i] if i < len(rec) else None
                     out.append(m)
-            elif fmt in ("json", "jsonl"):
+            elif fmt == "jsonl" or whole:
                 recs, _ = json_records(stream, fmt == "jsonl", limit)
                 out.extend(recs)
         return out

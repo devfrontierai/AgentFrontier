@@ -1,0 +1,15 @@
+{
+  "kind": "bigquery#projectList",
+  "totalItems": 1,
+  "projects": [
+    {
+      "kind": "bigquery#project",
+      "id": "conf-project",
+      "numericId": "100000000001",
+      "projectReference": {
+        "projectId": "conf-project"
+      },
+      "friendlyName": "Conformance Project"
+    }
+  ]
+}

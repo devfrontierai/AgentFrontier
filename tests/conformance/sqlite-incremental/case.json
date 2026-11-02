@@ -1,0 +1,58 @@
+{
+  "description": "Incremental runs on SQLite (docs/incremental.md) with a definition that extends sqlite by a query log read through a watermark. Run 1 reads everything. Run 2, after adding a column, a table and two queries (one at the watermark) and dropping a table: only the changes, tombstones for the dropped table and its field, and the new queries without the ones already at the boundary. Run 3, after replacing a view, a normal run: the new view, the old one tombstoned. Run 4 is a reconciliation run (full) after dropping the new view and table: tombstones for them, their fields and keys, and every query again. Run 5, a normal run without changes, emits nothing.",
+  "setup": {
+    "sqlite": "setup.sql"
+  },
+  "definitions": "definitions",
+  "connection": {
+    "id": "conf-incremental",
+    "name": "Conformance incremental",
+    "type": "sqlite_query_log",
+    "properties": {
+      "path": "{{workDir}}/incremental.db"
+    }
+  },
+  "pipeline": {
+    "aspects": [
+      "metadata",
+      "usage"
+    ]
+  },
+  "ignore": {
+    "source": [
+      "version",
+      "banner"
+    ]
+  },
+  "incremental": {
+    "tenantId": "conformance",
+    "runs": [
+      {
+        "expected": "expected-1.jsonl"
+      },
+      {
+        "before": {
+          "sqlite": "change-1.sql"
+        },
+        "expected": "expected-2.jsonl"
+      },
+      {
+        "before": {
+          "sqlite": "change-2.sql"
+        },
+        "expected": "expected-3.jsonl"
+      },
+      {
+        "before": {
+          "sqlite": "change-3.sql"
+        },
+        "full": true,
+        "expected": "expected-4.jsonl"
+      },
+      {
+        "expected": "expected-5.jsonl"
+      }
+    ]
+  },
+  "expected": "expected.jsonl"
+}

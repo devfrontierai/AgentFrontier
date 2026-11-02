@@ -320,20 +320,24 @@ class QueryResult:
 
 @dataclass(frozen=True)
 class Snapshot:
-    """Load put on a source: statements or requests sent, rows read, time spent waiting, connections opened."""
+    """Load put on a source: statements or requests sent, rows read, time spent waiting, connections opened, requests
+    retried."""
 
     statements: int = 0
     rows: int = 0
     elapsed_ms: int = 0
     connections: int = 0
+    retries: int = 0
 
     def minus(self, earlier: "Snapshot") -> "Snapshot":
         return Snapshot(self.statements - earlier.statements, self.rows - earlier.rows,
-                        self.elapsed_ms - earlier.elapsed_ms, self.connections - earlier.connections)
+                        self.elapsed_ms - earlier.elapsed_ms, self.connections - earlier.connections,
+                        self.retries - earlier.retries)
 
     def plus(self, other: "Snapshot") -> "Snapshot":
         return Snapshot(self.statements + other.statements, self.rows + other.rows,
-                        self.elapsed_ms + other.elapsed_ms, self.connections + other.connections)
+                        self.elapsed_ms + other.elapsed_ms, self.connections + other.connections,
+                        self.retries + other.retries)
 
 
 class SessionStats:
@@ -345,6 +349,7 @@ class SessionStats:
         self._rows = 0
         self._nanos = 0
         self._connections = 0
+        self._retries = 0
 
     def record_statement(self, row_count: int, elapsed_nanos: int) -> None:
         with self._lock:
@@ -356,9 +361,13 @@ class SessionStats:
         with self._lock:
             self._connections += 1
 
+    def record_retry(self) -> None:
+        with self._lock:
+            self._retries += 1
+
     def snapshot(self) -> Snapshot:
         with self._lock:
-            return Snapshot(self._statements, self._rows, self._nanos // 1_000_000, self._connections)
+            return Snapshot(self._statements, self._rows, self._nanos // 1_000_000, self._connections, self._retries)
 
 
 # ----------------------------------------------------------------------------------------------------- configuration

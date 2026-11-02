@@ -1,0 +1,24 @@
+{
+  "has_next_page": false,
+  "res": [
+    {
+      "query_id": "01f0aa11",
+      "query_text": "SELECT * FROM main.sales.orders LIMIT 10",
+      "user_name": "ana@example.com",
+      "query_start_time_ms": 1761818400000,
+      "duration": 1532,
+      "rows_produced": 10,
+      "status": "FINISHED",
+      "warehouse_id": "wh-1"
+    },
+    {
+      "query_id": "01f0aa12",
+      "query_text": "SELECT broken",
+      "user_name": "bob@example.com",
+      "query_start_time_ms": 1761822000000,
+      "duration": 12,
+      "status": "FAILED",
+      "warehouse_id": "wh-1"
+    }
+  ]
+}

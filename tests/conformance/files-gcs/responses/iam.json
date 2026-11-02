@@ -1,0 +1,22 @@
+{
+  "kind": "storage#policy",
+  "resourceId": "projects/_/buckets/conf-bucket",
+  "version": 1,
+  "etag": "CAE=",
+  "bindings": [
+    {
+      "role": "roles/storage.legacyBucketOwner",
+      "members": [
+        "projectEditor:conf-project",
+        "projectOwner:conf-project"
+      ]
+    },
+    {
+      "role": "roles/storage.objectViewer",
+      "members": [
+        "user:ana@example.com",
+        "group:analysts@example.com"
+      ]
+    }
+  ]
+}

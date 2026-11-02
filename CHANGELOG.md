@@ -3,7 +3,31 @@
 Versions follow semantic versioning. Each release names the spec tag it implements; see the spec's
 [VERSIONING.md](https://github.com/devfrontierai/agentfrontier-spec/blob/main/VERSIONING.md).
 
-## Unreleased (plan phase 2: governance)
+## 0.3.0 (unreleased): plan phase 1
+
+Implements **spec-v1.4.0**.
+
+* **Incremental runs.** `incremental` in pipelines (`--incremental <dir>` on the command line): checkpoints
+  (`FileCheckpointStore`, `MemoryCheckpointStore`), change detection by `eventId` with `upsert`, `delete` and
+  `tombstone` events, coverage per producer and scope (a failing scope or operation never tombstones what it could
+  not read; a vanished container takes its contents with it), `watermark` and `delta_token` operations with boundary
+  deduplication, reconciliation runs (`full`, `reconcileEvery`), commit only after a run that did not fail.
+* **Object storage.** The files engine on S3 (and S3-compatible stores), ADLS Gen2 and GCS: definitions `s3`,
+  `adls`, `gcs`, ranged reads capped by `maxBytes`, Avro header schemas, Parquet footers (`parquet` extra), object
+  tags, metadata and ACLs. `local_files` lists Avro and Parquet files too.
+* **Cloud credentials** with the standard library only: SigV4 signing (checked against AWS's published vectors), STS
+  AssumeRole, profiles; Entra ID client credentials (`azure_service_principal`), managed identity, and Google
+  service account JWTs (RS256, pure Python). HTTP definitions can ask for SigV4 signing.
+* **Data platforms.** `bigquery` and `databricks` definitions; `snowflake` query history as usage. Template filter
+  `toEpochMs`.
+* **Sinks.** `csv`, `parquet` (extra) and `partitionBy` for `jsonl`, `csv` and `parquet`.
+* **Observability.** `run_health` (`quality_result` records about the run), retried requests in the run report,
+  OpenTelemetry spans (`otel` extra).
+* **Parsed lineage.** `lineage={"parse": True}`: column lineage from view SQL with `sqlglot` (`lineage` extra),
+  `assertion: parsed` and a confidence per record.
+* The capability registry reports incremental modes (`watermark`, `delta_token`, `full_diff`).
+
+## 0.2.x (plan phase 2: governance)
 
 Implements **spec-v1.3.0**.
 

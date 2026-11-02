@@ -1,0 +1,26 @@
+{
+  "has_more": true,
+  "next_page_token": "CAEQ",
+  "jobs": [
+    {
+      "job_id": 11,
+      "creator_user_name": "ana@example.com",
+      "created_time": 1759309200000,
+      "settings": {
+        "name": "nightly orders load",
+        "schedule": {
+          "quartz_cron_expression": "0 0 2 * * ?",
+          "timezone_id": "UTC"
+        },
+        "tasks": [
+          {
+            "task_key": "load",
+            "notebook_task": {
+              "notebook_path": "/Shared/etl/load_orders"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

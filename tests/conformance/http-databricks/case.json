@@ -1,0 +1,29 @@
+{
+  "description": "HTTP engine on the Databricks REST API without a hierarchy: jobs paged with next_page_token as routines (task list as JSON text, epoch-millisecond times, cron schedule), notebooks of a folder (directories and files filtered out, languages mapped) and the SQL query history as usage with statuses mapped.",
+  "server": {
+    "routes": "routes.json"
+  },
+  "connection": {
+    "id": "conf-databricks",
+    "name": "Conformance Databricks",
+    "type": "databricks",
+    "properties": {
+      "baseUrl": "{{baseUrl}}"
+    },
+    "auth": {
+      "method": "token",
+      "token": "conf-dbx-token"
+    }
+  },
+  "pipeline": {
+    "aspects": [
+      "metadata",
+      "usage"
+    ]
+  },
+  "envelope": {
+    "tenantId": "conformance",
+    "expected": "expected-envelope.jsonl"
+  },
+  "expected": "expected.jsonl"
+}

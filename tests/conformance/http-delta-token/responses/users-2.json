@@ -1,0 +1,11 @@
+{
+  "@odata.context": "{{baseUrl}}/$metadata#users",
+  "value": [
+    {
+      "id": "u3",
+      "displayName": "Cy",
+      "accountEnabled": true
+    }
+  ],
+  "@odata.deltaLink": "{{baseUrl}}/users/delta?$deltatoken=d1"
+}

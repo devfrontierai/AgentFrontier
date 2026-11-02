@@ -148,7 +148,7 @@ def test_capabilities_read_the_declared_block(tmp_path: Path):
                          "operations": {"fields": {"incremental": ["watermark"], "comment": "by updated_at"}}}}),
         encoding="utf-8")
     caps = {r.string("operation"): r for r in AgentFrontier(definitions=[tmp_path]).capabilities("pg2")}
-    assert caps["fields"].strings("incremental") == ["watermark"]
+    assert caps["fields"].strings("incremental") == ["full_diff", "watermark"]  # derived, then declared
     assert caps["fields"].string("comment") == "by updated_at"
     assert caps["fields"].values["limits"] == {"maxConcurrency": 4} and caps["datasets"].string("apiVersion") == "16"
 

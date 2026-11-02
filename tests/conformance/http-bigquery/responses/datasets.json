@@ -1,0 +1,17 @@
+{
+  "kind": "bigquery#datasetList",
+  "datasets": [
+    {
+      "kind": "bigquery#dataset",
+      "id": "conf-project:sales",
+      "datasetReference": {
+        "datasetId": "sales",
+        "projectId": "conf-project"
+      },
+      "location": "EU",
+      "labels": {
+        "domain": "sales"
+      }
+    }
+  ]
+}

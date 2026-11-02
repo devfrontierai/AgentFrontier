@@ -1,0 +1,117 @@
+{
+  "kind": "bigquery#jobList",
+  "jobs": [
+    {
+      "kind": "bigquery#job",
+      "id": "conf-project:EU.job_a3b",
+      "jobReference": {
+        "projectId": "conf-project",
+        "jobId": "job_a3b",
+        "location": "EU"
+      },
+      "configuration": {
+        "jobType": "QUERY",
+        "query": {
+          "query": "SELECT COUNT(*) FROM sales.customers",
+          "useLegacySql": false
+        }
+      },
+      "state": "DONE",
+      "user_email": "bob@example.com",
+      "statistics": {
+        "creationTime": "1761825599880",
+        "startTime": "1761825600000",
+        "endTime": "1761825600900",
+        "finalExecutionDurationMs": "850",
+        "totalBytesProcessed": "1048576"
+      },
+      "status": {
+        "state": "DONE"
+      }
+    },
+    {
+      "kind": "bigquery#job",
+      "id": "conf-project:EU.job_a3",
+      "jobReference": {
+        "projectId": "conf-project",
+        "jobId": "job_a3",
+        "location": "EU"
+      },
+      "configuration": {
+        "jobType": "LOAD"
+      },
+      "state": "DONE",
+      "user_email": "etl@conf-project.iam.gserviceaccount.com",
+      "statistics": {
+        "creationTime": "1761825599880",
+        "startTime": "1761825600000",
+        "endTime": "1761825600900",
+        "finalExecutionDurationMs": "850",
+        "totalBytesProcessed": "1048576"
+      },
+      "status": {
+        "state": "DONE"
+      }
+    },
+    {
+      "kind": "bigquery#job",
+      "id": "conf-project:EU.job_a2",
+      "jobReference": {
+        "projectId": "conf-project",
+        "jobId": "job_a2",
+        "location": "EU"
+      },
+      "configuration": {
+        "jobType": "QUERY",
+        "query": {
+          "query": "SELECT bad FROM sales.orders",
+          "useLegacySql": false
+        }
+      },
+      "state": "DONE",
+      "user_email": "ana@example.com",
+      "statistics": {
+        "creationTime": "1761821999880",
+        "startTime": "1761822000000",
+        "endTime": "1761822000900",
+        "finalExecutionDurationMs": "850",
+        "totalBytesProcessed": "1048576"
+      },
+      "status": {
+        "state": "DONE",
+        "errorResult": {
+          "reason": "invalidQuery",
+          "message": "failed"
+        }
+      }
+    },
+    {
+      "kind": "bigquery#job",
+      "id": "conf-project:EU.job_a1",
+      "jobReference": {
+        "projectId": "conf-project",
+        "jobId": "job_a1",
+        "location": "EU"
+      },
+      "configuration": {
+        "jobType": "QUERY",
+        "query": {
+          "query": "SELECT * FROM sales.orders",
+          "useLegacySql": false
+        }
+      },
+      "state": "DONE",
+      "user_email": "ana@example.com",
+      "statistics": {
+        "creationTime": "1761818399880",
+        "startTime": "1761818400000",
+        "endTime": "1761818400900",
+        "finalExecutionDurationMs": "850",
+        "totalBytesProcessed": "1048576"
+      },
+      "status": {
+        "state": "DONE"
+      }
+    }
+  ]
+}

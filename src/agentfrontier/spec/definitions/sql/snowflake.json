@@ -220,6 +220,13 @@
         "where ref_database_name = {{database}} and ref_schema_name = {{schema}}"
       ]
     },
+    "usage": {
+      "entity": "usage", "scope": "source", "onError": "warn",
+      "description": "Query history from SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY (needs IMPORTED PRIVILEGES on the SNOWFLAKE database; up to 45 minutes behind), 10000 queries per run, read incrementally by start time.",
+      "sql": "select query_id, query_text, user_name, to_varchar(convert_timezone('UTC', start_time), 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') as start_time, total_elapsed_time, rows_produced, execution_status, database_name, schema_name, warehouse_name from snowflake.account_usage.query_history [[where start_time >= to_timestamp_tz({{since}})]] order by start_time limit 10000",
+      "fields": {"queryId": "QUERY_ID", "queryText": "QUERY_TEXT", "user": "USER_NAME", "startedAt": "START_TIME", "durationMs": "TOTAL_ELAPSED_TIME", "rowsProduced": "ROWS_PRODUCED", "status": "EXECUTION_STATUS"},
+      "incremental": {"mode": "watermark", "field": "startedAt"}
+    },
     "sample": {
       "entity": "row",
       "aspect": "data",

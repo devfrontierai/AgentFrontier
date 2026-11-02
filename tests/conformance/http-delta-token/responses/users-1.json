@@ -1,0 +1,16 @@
+{
+  "@odata.context": "{{baseUrl}}/$metadata#users",
+  "value": [
+    {
+      "id": "u1",
+      "displayName": "Ana",
+      "accountEnabled": true
+    },
+    {
+      "id": "u2",
+      "displayName": "Bob",
+      "accountEnabled": true
+    }
+  ],
+  "@odata.nextLink": "{{baseUrl}}/users/delta?$skiptoken=s2"
+}

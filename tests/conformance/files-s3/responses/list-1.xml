@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Name>conf-bucket</Name><Prefix>raw/</Prefix><KeyCount>5</KeyCount><MaxKeys>1000</MaxKeys><IsTruncated>true</IsTruncated><NextContinuationToken>1/page two+</NextContinuationToken>
+  <Contents><Key>raw/</Key><LastModified>2026-10-01T08:00:00.000Z</LastModified><ETag>&quot;d41d8cd98f00b204e9800998ecf8427e&quot;</ETag><Size>0</Size><StorageClass>STANDARD</StorageClass></Contents>
+  <Contents><Key>raw/readme.txt</Key><LastModified>2026-10-01T08:00:00.000Z</LastModified><ETag>&quot;0a1b2c3d4e5f60718293a4b5c6d7e8f9&quot;</ETag><Size>120</Size><StorageClass>STANDARD</StorageClass></Contents>
+  <Contents><Key>raw/sales/</Key><LastModified>2026-10-01T08:00:00.000Z</LastModified><ETag>&quot;d41d8cd98f00b204e9800998ecf8427e&quot;</ETag><Size>0</Size><StorageClass>STANDARD</StorageClass></Contents>
+  <Contents><Key>raw/sales/events.avro</Key><LastModified>2026-10-29T22:10:11.000Z</LastModified><ETag>&quot;5d41402abc4b2a76b9719d911017c592&quot;</ETag><Size>479</Size><StorageClass>STANDARD_IA</StorageClass></Contents>
+  <Contents><Key>raw/sales/orders.csv</Key><LastModified>2026-10-30T07:45:00.000Z</LastModified><ETag>&quot;9e107d9d372bb6826bd81d3542a419d6&quot;</ETag><Size>193</Size><StorageClass>STANDARD</StorageClass></Contents>
+</ListBucketResult>

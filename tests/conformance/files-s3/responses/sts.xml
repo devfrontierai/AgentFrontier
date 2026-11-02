@@ -1,0 +1,11 @@
+<AssumeRoleResponse xmlns="https://sts.amazonaws.com/doc/2011-06-15/">
+  <AssumeRoleResult>
+    <Credentials>
+      <AccessKeyId>ASIACONFORMANCETEMP</AccessKeyId>
+      <SecretAccessKey>temporary/secret+key</SecretAccessKey>
+      <SessionToken>conf-session-token</SessionToken>
+      <Expiration>2099-01-01T00:00:00Z</Expiration>
+    </Credentials>
+    <AssumedRoleUser><Arn>arn:aws:sts::123456789012:assumed-role/conformance-reader/agentfrontier</Arn><AssumedRoleId>AROACONFORMANCE:agentfrontier</AssumedRoleId></AssumedRoleUser>
+  </AssumeRoleResult>
+</AssumeRoleResponse>

@@ -1,0 +1,20 @@
+{"dataType":"array","dataset":"2026-10-30.avro","entity":"field","folder":"events","name":"tags","nullable":false,"ordinal":5,"source":"conf-gcs"}
+{"dataType":"date","dataset":"sales.csv","entity":"field","folder":"daily","name":"day","nullable":false,"ordinal":1,"source":"conf-gcs"}
+{"dataType":"decimal","dataset":"2026-10-30.avro","entity":"field","folder":"events","name":"amount","nullable":false,"ordinal":3,"source":"conf-gcs"}
+{"dataType":"double","dataset":"sales.csv","entity":"field","folder":"daily","name":"revenue","nullable":false,"ordinal":3,"source":"conf-gcs"}
+{"dataType":"long","dataset":"2026-10-30.avro","entity":"field","folder":"events","name":"event_id","nullable":false,"ordinal":1,"source":"conf-gcs"}
+{"dataType":"string","dataset":"2026-10-30.avro","entity":"field","folder":"events","name":"user","nullable":true,"ordinal":2,"source":"conf-gcs"}
+{"dataType":"string","dataset":"sales.csv","entity":"field","folder":"daily","name":"store","nullable":false,"ordinal":2,"source":"conf-gcs"}
+{"dataType":"timestamp-millis","dataset":"2026-10-30.avro","entity":"field","folder":"events","name":"ts","nullable":false,"ordinal":4,"source":"conf-gcs"}
+{"dataType":"union","dataset":"2026-10-30.avro","entity":"field","folder":"events","name":"payload","nullable":true,"ordinal":6,"source":"conf-gcs"}
+{"dataset":"sales.csv","entity":"tag","folder":"daily","name":"contains_pii","objectType":"dataset","source":"conf-gcs","value":"false"}
+{"dataset":"sales.csv","entity":"tag","folder":"daily","name":"owner","objectType":"dataset","source":"conf-gcs","value":"finance"}
+{"definition":"gcs","entity":"source","name":"Conformance GCS","product":"Google Cloud Storage","source":"conf-gcs"}
+{"entity":"container","folder":"daily","level":"folder","name":"daily","properties":{"file_count":1},"source":"conf-gcs"}
+{"entity":"container","folder":"events","level":"folder","name":"events","properties":{"file_count":1},"source":"conf-gcs"}
+{"entity":"dataset","folder":"daily","format":"csv","location":"gs://conf-bucket/exports/daily/sales.csv","name":"sales.csv","properties":{"contentType":"text/csv","etag":"CJjSyY2B6YkDEAE=","generation":"1761868798120000"},"sizeBytes":95,"source":"conf-gcs","type":"file","updatedAt":"2026-10-30T23:59:58Z"}
+{"entity":"dataset","folder":"events","format":"avro","location":"gs://conf-bucket/exports/events/2026-10-30.avro","name":"2026-10-30.avro","properties":{"contentType":"application/avro","etag":"CKih16GB6YkDEAE=","generation":"1761872523000000"},"sizeBytes":479,"source":"conf-gcs","type":"file","updatedAt":"2026-10-31T01:02:03Z"}
+{"entity":"grant","objectType":"bucket","principal":"group:analysts@example.com","privilege":"roles/storage.objectViewer","source":"conf-gcs"}
+{"entity":"grant","objectType":"bucket","principal":"projectEditor:conf-project","privilege":"roles/storage.legacyBucketOwner","source":"conf-gcs"}
+{"entity":"grant","objectType":"bucket","principal":"projectOwner:conf-project","privilege":"roles/storage.legacyBucketOwner","source":"conf-gcs"}
+{"entity":"grant","objectType":"bucket","principal":"user:ana@example.com","privilege":"roles/storage.objectViewer","source":"conf-gcs"}

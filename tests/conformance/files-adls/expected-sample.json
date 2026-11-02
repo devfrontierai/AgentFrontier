@@ -1,0 +1,11 @@
+[ {
+  "customer_id" : 1,
+  "name" : "Customer 1",
+  "country" : "NL",
+  "vip" : false
+}, {
+  "customer_id" : 2,
+  "name" : "Customer 2",
+  "country" : "DE",
+  "vip" : false
+} ]

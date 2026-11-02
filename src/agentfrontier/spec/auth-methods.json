@@ -101,34 +101,38 @@
       "id": "aws_iam",
       "name": "AWS IAM",
       "description": "Access keys, optionally assuming a role (S3, Redshift, Athena, Glue, RDS IAM).",
-      "provider": "static",
+      "provider": "aws_sigv4",
       "fields": [
         {"key": "accessKeyId", "label": "Access key ID", "type": "string", "required": false, "help": "Empty to use the default credential chain."},
         {"key": "secretAccessKey", "label": "Secret access key", "type": "secret", "required": false},
         {"key": "sessionToken", "label": "Session token", "type": "secret", "required": false},
         {"key": "roleArn", "label": "Role ARN to assume", "type": "string", "required": false},
         {"key": "region", "label": "Region", "type": "string", "required": false},
-        {"key": "profile", "label": "Profile", "type": "string", "required": false}
+        {"key": "profile", "label": "Profile", "type": "string", "required": false, "help": "A section of ~/.aws/credentials."},
+        {"key": "externalId", "label": "External ID", "type": "string", "required": false, "help": "Sent with the role to assume, when its trust policy requires one."},
+        {"key": "stsEndpoint", "label": "STS endpoint", "type": "string", "required": false, "help": "Overrides https://sts.<region>.amazonaws.com/ (VPC endpoints, tests)."}
       ]
     },
     {
       "id": "azure_service_principal",
       "name": "Azure service principal",
       "description": "Entra ID app registration (ADLS, Synapse, Azure SQL, Microsoft Graph for OneDrive and SharePoint).",
-      "provider": "static",
+      "provider": "azure_ad",
       "fields": [
         {"key": "tenantId", "label": "Tenant ID", "type": "string", "required": true},
         {"key": "clientId", "label": "Client ID", "type": "string", "required": true},
-        {"key": "clientSecret", "label": "Client secret", "type": "secret", "required": true}
+        {"key": "clientSecret", "label": "Client secret", "type": "secret", "required": true},
+        {"key": "authorityHost", "label": "Authority host", "type": "string", "required": false, "help": "Default https://login.microsoftonline.com; set it for sovereign clouds."}
       ]
     },
     {
       "id": "azure_managed_identity",
       "name": "Azure managed identity",
       "description": "The identity of the Azure resource the SDK runs on.",
-      "provider": "static",
+      "provider": "azure_managed_identity",
       "fields": [
-        {"key": "clientId", "label": "User-assigned identity client ID", "type": "string", "required": false}
+        {"key": "clientId", "label": "User-assigned identity client ID", "type": "string", "required": false},
+        {"key": "identityEndpoint", "label": "Identity endpoint", "type": "string", "required": false, "help": "Overrides the instance metadata endpoint."}
       ]
     },
     {
@@ -146,7 +150,7 @@
       "id": "gcp_service_account",
       "name": "GCP service account",
       "description": "Service account key JSON (BigQuery, GCS, Cloud SQL).",
-      "provider": "static",
+      "provider": "gcp_jwt",
       "fields": [
         {"key": "serviceAccountJson", "label": "Service account JSON", "type": "secret_text", "required": true},
         {"key": "projectId", "label": "Project ID", "type": "string", "required": false, "help": "Defaults to the project in the key."}

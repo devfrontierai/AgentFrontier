@@ -23,6 +23,21 @@ def _entity_of(name: str, op: dict, level_lists: set[str]) -> str:
     return J.text(op, "entity", "record")
 
 
+def _modes(op: Any, entity: str, declared: dict, entity_model: EntityModel) -> list[str]:
+    """Incremental modes (spec docs/capabilities.md): the operation's own ``incremental`` mode, ``full_diff`` for a
+    stateful entity, then what the capabilities block declares."""
+    out: list[str] = []
+    mode = J.text(J.get(op, "incremental"), "mode")
+    if mode:
+        out.append(mode)
+    if entity not in entity_model.event_entities and entity != "record":
+        out.append("full_diff")
+    for m in J.strings(declared.get("incremental")):
+        if m not in out:
+            out.append(m)
+    return out
+
+
 def capabilities(d: SourceDefinition, entity_model: EntityModel) -> list[Record]:
     """Capability records of a definition as written (overlays for particular versions are not applied)."""
     block = d.raw.get("capabilities") if isinstance(d.raw.get("capabilities"), dict) else {}
@@ -46,7 +61,7 @@ def capabilities(d: SourceDefinition, entity_model: EntityModel) -> list[Record]
             "aspect": aspect if aspect is not None else entity_model.aspect_of(entity),
             "category": entity_model.category_of(entity),
             "access": "read",
-            "incremental": J.strings(declared.get("incremental")),
+            "incremental": _modes(d.operation(name), entity, declared, entity_model),
             "apiVersion": J.text(block, "apiVersion"),
             "authMethods": list(d.auth),
             "limits": op_limits or None,

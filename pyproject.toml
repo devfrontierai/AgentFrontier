@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentfrontier"
-version = "0.2.0"
+version = "0.3.0"
 description = "Configuration-driven data source SDK: one engine per protocol, one JSON definition per source (Python edition)."
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -27,7 +27,10 @@ snowflake = ["snowflake-connector-python>=3.0"]
 sqlserver = ["pymssql>=2.3"]
 neo4j = ["neo4j>=5.0"]
 yaml = ["pyyaml>=6.0"]
-dev = ["pytest>=8", "jsonschema>=4.18"]
+parquet = ["pyarrow>=14"]
+lineage = ["sqlglot>=25"]
+otel = ["opentelemetry-api>=1.20"]
+dev = ["pytest>=8", "jsonschema>=4.18", "pyarrow>=14", "sqlglot>=25"]
 
 [project.scripts]
 agentfrontier = "agentfrontier.cli:main"

@@ -1,0 +1,44 @@
+{
+  "description": "Incremental runs with a delta token (docs/incremental.md): run 1 pages through /users/delta and stores the delta link of the last page; run 2 resumes from it and gets a changed user, a deletion (@removed, emitted as op delete) and a new user; run 3 resumes from the next link and gets nothing; run 4 is a reconciliation run that reads the full snapshot again, so the deleted user comes back and the changed one changes back.",
+  "server": {
+    "routes": "routes.json"
+  },
+  "definitions": "definitions",
+  "connection": {
+    "id": "conf-delta",
+    "name": "Conformance delta",
+    "type": "delta_directory",
+    "properties": {
+      "baseUrl": "{{baseUrl}}"
+    },
+    "auth": {
+      "method": "token",
+      "token": "conf-delta-token"
+    }
+  },
+  "pipeline": {
+    "aspects": [
+      "metadata",
+      "governance"
+    ]
+  },
+  "incremental": {
+    "tenantId": "conformance",
+    "runs": [
+      {
+        "expected": "expected-1.jsonl"
+      },
+      {
+        "expected": "expected-2.jsonl"
+      },
+      {
+        "expected": "expected-3.jsonl"
+      },
+      {
+        "full": true,
+        "expected": "expected-4.jsonl"
+      }
+    ]
+  },
+  "expected": "expected.jsonl"
+}

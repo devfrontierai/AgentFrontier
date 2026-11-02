@@ -119,7 +119,8 @@ progress handler) and fetches at most `max_rows + 1` rows.
 ```python
 PipelineConfig(connection, aspects=None, operations=None, scope=None, sinks=None,
                page_size=0, batch_size=0, parallelism=0, sample_rows=0, name=None,
-               envelope=False, tenant_id=None, governance=None)
+               envelope=False, tenant_id=None, governance=None, incremental=None, run_health=False,
+               lineage=None, tracing=False)
 PipelineConfig.of(connection, aspects, sinks)
 PipelineConfig.from_file(path)  /  PipelineConfig.from_json(obj_or_text, base_dir=None)
 report = af.run(config, listener=lambda event, data: ...)
@@ -136,6 +137,14 @@ masked rows) and `audit` (the hash-chain manifest).
 
 `governance` is the pipeline JSON's `governance` block: subject, purpose, policy, classification and auditing; see
 [governance.md](governance.md).
+
+`incremental` (pipeline JSON `"incremental"`, needs the envelope): `{"checkpoints": <folder, a CheckpointStore, or
+{"type": "memory", "name": ...}>, "full": bool, "reconcileEvery": n}`. The report then has `incremental`: upserts,
+unchanged, deletes, tombstones, whether it was a reconciliation run, and the checkpoint state (`pending` while the
+sinks run, then `committed` or `not committed`). `FileCheckpointStore(folder)` and `MemoryCheckpointStore(name)` are
+importable from `agentfrontier`. `run_health` (`"runHealth"`) adds `quality_result` records about the run;
+`lineage={"parse": True}` adds parsed column lineage (`sqlglot`); `tracing` reports OpenTelemetry spans. The report's
+`load.retries` counts retried requests.
 
 ## Raw-stream events
 
@@ -161,7 +170,9 @@ Sink configurations are JSON objects with a `type`:
 
 | Type | Configuration |
 |---|---|
-| `jsonl` | `path`: a folder; one `<entity>.jsonl` per entity plus `run.json` (old `.jsonl` files are removed first) |
+| `jsonl` | `path`: a folder; one `<entity>.jsonl` per entity plus `run.json` (old `.jsonl` files are removed first); `partitionBy` |
+| `csv` | `path`, `partitionBy`: one `<entity>.csv` per entity plus `run.json`, columns as the spec's `docs/sinks.md` |
+| `parquet` | `path`, `partitionBy`: the same columns as Parquet, typed from the entity model (`parquet` extra) |
 | `json` | `path`: one document `{"run": ..., "records": {"<entity>": [...]}}` |
 | `console` | JSON Lines on standard output |
 | `memory` | `name` (default `default`); read back with `MemorySink.get(name).records(entity=None)` |
@@ -194,3 +205,5 @@ JSON output) are importable for tooling and tests; their behaviour is part of th
 * `TestResult.details` keeps the order the test operation returned (Java's `Map.copyOf` has no defined order).
 * Definition origins read `package:definitions/...` instead of `classpath:definitions/...`.
 * The query row cap is applied while fetching (see the README).
+* Python only: the parquet sink and Parquet schemas, parsed column lineage, OpenTelemetry spans and the capability
+  registry.

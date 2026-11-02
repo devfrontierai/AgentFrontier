@@ -1,0 +1,36 @@
+{
+  "kind": "bigquery#tableList",
+  "nextPageToken": "t2",
+  "totalItems": 4,
+  "tables": [
+    {
+      "kind": "bigquery#table",
+      "id": "conf-project:sales.customers",
+      "tableReference": {
+        "projectId": "conf-project",
+        "datasetId": "sales",
+        "tableId": "customers"
+      },
+      "type": "TABLE",
+      "creationTime": "1759309200000"
+    },
+    {
+      "kind": "bigquery#table",
+      "id": "conf-project:sales.orders",
+      "tableReference": {
+        "projectId": "conf-project",
+        "datasetId": "sales",
+        "tableId": "orders"
+      },
+      "type": "TABLE",
+      "creationTime": "1759309260000",
+      "labels": {
+        "tier": "gold"
+      },
+      "timePartitioning": {
+        "type": "DAY",
+        "field": "ordered_at"
+      }
+    }
+  ]
+}

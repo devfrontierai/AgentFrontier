@@ -1,0 +1,24 @@
+{
+  "specVersion": "1",
+  "id": "sqlite_query_log",
+  "extends": "sqlite",
+  "name": "SQLite with a query log",
+  "description": "Conformance only: the sqlite definition plus a query log table read incrementally as usage.",
+  "operations": {
+    "usage": {
+      "entity": "usage",
+      "scope": "source",
+      "sql": "select query_id, query_text, user_name, started_at from query_log [[where started_at >= {{since}}]] order by started_at, query_id",
+      "fields": {
+        "queryId": "query_id",
+        "queryText": "query_text",
+        "user": "user_name",
+        "startedAt": "started_at"
+      },
+      "incremental": {
+        "mode": "watermark",
+        "field": "startedAt"
+      }
+    }
+  }
+}

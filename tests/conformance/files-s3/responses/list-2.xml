@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Name>conf-bucket</Name><Prefix>raw/</Prefix><KeyCount>2</KeyCount><MaxKeys>1000</MaxKeys><IsTruncated>false</IsTruncated><ContinuationToken>1/page two+</ContinuationToken>
+  <Contents><Key>raw/logs/2026/10/app.jsonl</Key><LastModified>2026-10-30T10:00:06.512Z</LastModified><ETag>&quot;e4d909c290d0fb1ca068ffaddf22cbd0&quot;</ETag><Size>129</Size><StorageClass>STANDARD</StorageClass></Contents>
+  <Contents><Key>raw/sales/q4 report.json</Key><LastModified>2026-10-28T12:00:00.000Z</LastModified><ETag>&quot;45c48cce2e2d7fbdea1afc51c7c6ad26&quot;</ETag><Size>167</Size><StorageClass>GLACIER_IR</StorageClass></Contents>
+</ListBucketResult>

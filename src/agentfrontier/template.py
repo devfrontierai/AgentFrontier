@@ -1,7 +1,7 @@
 """The template language shared by every implementation, the SQL renderer and the variables templates read.
 
 ``{{name}}`` or ``{{name|filter|filter:arg}}``. Filters: ``default:X`` (X may itself contain placeholders), ``int``,
-``mul:N``, ``add:N``, ``epochMs``, ``upper``, ``lower``, ``url``, ``join:SEP``, ``removePrefix:X``, ``file``, ``json``,
+``mul:N``, ``add:N``, ``epochMs``, ``toEpochMs``, ``upper``, ``lower``, ``url``, ``join:SEP``, ``removePrefix:X``, ``file``, ``json``,
 ``base64``; ``ident`` only means something in SQL.
 
 A template that is exactly one placeholder returns the value with its type (number, boolean, list); otherwise the
@@ -15,6 +15,7 @@ import atexit
 import base64
 import datetime as _dt
 import os
+import re
 import tempfile
 import threading
 from dataclasses import dataclass
@@ -358,6 +359,12 @@ def apply(name: str, arg: str | None, v: Any, vars: Vars, files: TempFiles | Non
         secs = ms // 1000
         t = _dt.datetime(1970, 1, 1, tzinfo=_dt.timezone.utc) + _dt.timedelta(seconds=secs)
         return t.strftime("%Y-%m-%dT%H:%M:%SZ")
+    if name == "toEpochMs":
+        if v is None or J.is_blank(J.jstr(v)):
+            return None
+        if J.is_number(v):
+            return v
+        return iso_to_epoch_ms(J.jstr(v))
     if name == "upper":
         return None if v is None else as_text(v).upper()
     if name == "lower":
@@ -387,6 +394,26 @@ def apply(name: str, arg: str | None, v: Any, vars: Vars, files: TempFiles | Non
     if name == "base64":
         return None if v is None else base64.b64encode(as_text(v).encode("utf-8")).decode("ascii")
     raise AgentFrontierError.invalid_definition("unknown template filter '" + name + "'")
+
+
+_ISO = re.compile(r"^(\d{4})-(\d\d)-(\d\d)(?:[T ](\d\d):(\d\d)(?::(\d\d)(?:\.(\d+))?)?)?"
+                  r"\s*(Z|[+-]\d\d:?\d\d)?$")
+
+
+def iso_to_epoch_ms(text: str) -> int:
+    """ISO-8601 date or time (UTC unless it carries an offset) to milliseconds since 1970; fractions beyond
+    milliseconds are cut off."""
+    m = _ISO.match(J.jtrim(text))
+    if m is None:
+        raise AgentFrontierError.invalid_config("expected an ISO-8601 time, got '" + text + "'")
+    y, mo, d, h, mi, s_, frac, tz = m.groups()
+    t = _dt.datetime(int(y), int(mo), int(d), int(h or 0), int(mi or 0), int(s_ or 0), tzinfo=_dt.timezone.utc)
+    if tz and tz != "Z":
+        sign = 1 if tz[0] == "+" else -1
+        digits = tz[1:].replace(":", "")
+        t -= sign * _dt.timedelta(hours=int(digits[:2]), minutes=int(digits[2:]))
+    ms = int((t - _dt.datetime(1970, 1, 1, tzinfo=_dt.timezone.utc)).total_seconds()) * 1000
+    return ms + (int((frac or "0")[:3].ljust(3, "0")) if frac else 0)
 
 
 def _text_or_null(x: Any) -> str:

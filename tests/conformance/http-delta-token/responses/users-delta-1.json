@@ -1,0 +1,22 @@
+{
+  "@odata.context": "{{baseUrl}}/$metadata#users",
+  "value": [
+    {
+      "id": "u2",
+      "displayName": "Bob",
+      "accountEnabled": false
+    },
+    {
+      "id": "u3",
+      "@removed": {
+        "reason": "changed"
+      }
+    },
+    {
+      "id": "u4",
+      "displayName": "Dee",
+      "accountEnabled": true
+    }
+  ],
+  "@odata.deltaLink": "{{baseUrl}}/users/delta?$deltatoken=d2"
+}

@@ -55,6 +55,9 @@ pip install "agentfrontier[postgres] @ git+https://github.com/devfrontierai/Agen
 | `snowflake` | snowflake-connector-python |
 | `sqlserver` | pymssql |
 | `neo4j` | the neo4j sink |
+| `parquet` | pyarrow: the parquet sink and Parquet schemas in the files engine |
+| `lineage` | sqlglot: column lineage parsed from view SQL |
+| `otel` | opentelemetry-api: spans for runs, scopes and operations |
 
 From a checkout: `pip install -e ".[dev,postgres,mysql,oracle,neo4j]"`. Once the package is on PyPI this becomes
 `pip install "agentfrontier[postgres]"`. [docs/integration.md](docs/integration.md) covers pinning, connection
@@ -118,8 +121,39 @@ agentfrontier extract shop.json --aspects metadata,lineage --sink jsonl:out/shop
 agentfrontier capabilities postgresql      # what a connector can read: entity, aspect, raw-stream category, limits
 ```
 
-The envelope is off by default in 0.2 and becomes the default in 0.3. The rules are in the spec's
-[docs/envelope.md](https://github.com/devfrontierai/agentfrontier-spec/blob/main/docs/envelope.md).
+The envelope is off by default (switching the default is still open; it is needed for incremental runs). The rules
+are in the spec's [docs/envelope.md](https://github.com/devfrontierai/agentfrontier-spec/blob/main/docs/envelope.md).
+
+## Incremental runs
+
+A pipeline with a checkpoint folder emits only what changed since its last run: new and changed objects
+(`op: upsert`), deletions the source reports (`op: delete`) and objects that disappeared (`op: tombstone`). Query
+histories and delta APIs read only from the saved watermark or delta token; everything else is compared with the
+previous run. A failing scope never deletes what it could not read, and the checkpoint is committed only after a
+run that did not fail, so replaying gives the same events.
+
+```bash
+agentfrontier extract shop.json --aspects metadata,lineage,usage --sink jsonl:out/shop --incremental state/ --tenant acme
+agentfrontier extract shop.json --sink csv:out/csv --partition-by tenant,source,category --incremental state/ --full
+```
+
+```python
+af.run(PipelineConfig(pg, aspects=["metadata"], sinks=[{"type": "csv", "path": "out"}], envelope=True,
+                      incremental={"checkpoints": "state/", "reconcileEvery": 7}, run_health=True))
+```
+
+`run_health` ends the run with `quality_result` records about the run (status, duration, errors, retries, the lag of
+incremental history); `lineage={"parse": True}` adds column lineage parsed from view SQL (the `lineage` extra). The
+rules are in the spec's `docs/incremental.md`, `observability.md` and `lineage.md`.
+
+## Object storage and cloud credentials
+
+The files engine reads S3 (and S3-compatible stores such as MinIO), Azure Data Lake Storage Gen2 and Google Cloud
+Storage as well as local folders: definitions `s3`, `adls`, `gcs`. Fields are inferred from CSV, TSV, JSON, JSON
+Lines and Avro (and Parquet with the `parquet` extra) with ranged reads; object tags, metadata and ACLs become tags
+and grants. The `aws_iam` (SigV4, STS AssumeRole), `azure_service_principal`, `azure_managed_identity` and
+`gcp_service_account` auth methods work in every HTTP definition too, with the standard library only. New
+definitions `bigquery` and `databricks` read the two platforms over REST, and `snowflake` reads its query history.
 
 ## Governance
 
@@ -161,7 +195,12 @@ This repository vendors a copy pinned to a tag (`scripts/spec.lock`):
 | `mysql` | sql (PyMySQL) | verified | Verified on MySQL 8.4 |
 | `oracle` | sql (python-oracledb) | verified | Verified on Oracle 23 Free |
 | `sqlite` | sql (sqlite3) | verified | Conformance case `sqlite-basic` |
-| `local_files` | files | verified | Conformance case `files-basic` |
+| `local_files` | files | verified | Conformance cases `files-basic`, `files-incremental` |
+| `s3` | files (S3 API, SigV4) | experimental | Conformance case `files-s3` (fixture server, STS AssumeRole) |
+| `adls` | files (ADLS Gen2 API) | experimental | Conformance case `files-adls` (fixture server, Entra ID token) |
+| `gcs` | files (JSON API) | experimental | Conformance case `files-gcs` (fixture server, service account JWT) |
+| `bigquery` | http | experimental | Conformance case `http-bigquery` (fixture server, incremental job history) |
+| `databricks` | http | experimental | Conformance case `http-databricks` (fixture server) |
 | `elasticsearch` | http | experimental | Conformance case `http-elasticsearch` (fixture server) |
 | `unity_catalog` | http | experimental | Conformance case `http-unity-catalog` (fixture server) |
 | `entra_id` | http | experimental | Conformance case `http-entra-id` (fixture server) |
@@ -169,15 +208,17 @@ This repository vendors a copy pinned to a tag (`scripts/spec.lock`):
 | `okta` | http | experimental | Conformance case `http-okta` (fixture server) |
 | `opensearch` | http | verified | Same engine path as Elasticsearch; not run against a server here |
 | `redshift` | sql (psycopg) | experimental | Not run against a cluster (neither is the Java edition) |
-| `snowflake` | sql (snowflake-connector-python) | experimental | Not run; connection block present |
+| `snowflake` | sql (snowflake-connector-python) | experimental | Not run; connection block present; query history is a watermark operation |
 | `sqlserver` | sql (pymssql) | experimental | Not run; the Python block supports `username_password` and `windows_integrated` only |
 
 ## Not implemented (yet)
 
 * Cedar, Presidio, Tika, Purview, Macie and Google Sensitive Data Protection adapters; consent and retention
   readers.
-* Object storage for the files engine (S3, ADLS, GCS): only `storage: local`, as in the Java edition.
-* Parquet / Avro schema inference: such files are listed as datasets but yield no fields (same as Java).
+* Live verification of Snowflake, SQL Server, Redshift, BigQuery, Databricks, S3, ADLS and GCS (they run against
+  recorded responses only).
+* `etag`, `lsn` and `change_feed` incremental modes; usage from PostgreSQL (`pg_stat_statements` has no history).
+* Parquet schemas without the `parquet` extra (such files are datasets without fields, as in the Java edition).
 * `--drivers` is a Java option (JDBC jars); the Python CLI accepts it and ignores it.
 * The ad hoc query row cap is applied while fetching; psycopg and PyMySQL client cursors still receive the whole
   result from the server.

@@ -1,0 +1,31 @@
+{"dataType":"array","dataset":"events.avro","entity":"field","folder":"sales","name":"tags","nullable":false,"ordinal":5,"source":"conf-s3"}
+{"dataType":"boolean","dataset":"orders.csv","entity":"field","folder":"sales","name":"express","nullable":false,"ordinal":5,"source":"conf-s3"}
+{"dataType":"decimal","dataset":"events.avro","entity":"field","folder":"sales","name":"amount","nullable":false,"ordinal":3,"source":"conf-s3"}
+{"dataType":"double","dataset":"orders.csv","entity":"field","folder":"sales","name":"amount","nullable":true,"ordinal":3,"source":"conf-s3"}
+{"dataType":"double","dataset":"q4 report.json","entity":"field","folder":"sales","name":"revenue","nullable":false,"ordinal":2,"source":"conf-s3"}
+{"dataType":"integer","dataset":"app.jsonl","entity":"field","folder":"logs/2026/10","name":"ms","nullable":true,"ordinal":4,"source":"conf-s3"}
+{"dataType":"integer","dataset":"orders.csv","entity":"field","folder":"sales","name":"order_id","nullable":false,"ordinal":1,"source":"conf-s3"}
+{"dataType":"long","dataset":"events.avro","entity":"field","folder":"sales","name":"event_id","nullable":false,"ordinal":1,"source":"conf-s3"}
+{"dataType":"string","dataset":"app.jsonl","entity":"field","folder":"logs/2026/10","name":"at","nullable":false,"ordinal":3,"source":"conf-s3"}
+{"dataType":"string","dataset":"app.jsonl","entity":"field","folder":"logs/2026/10","name":"level","nullable":false,"ordinal":1,"source":"conf-s3"}
+{"dataType":"string","dataset":"app.jsonl","entity":"field","folder":"logs/2026/10","name":"msg","nullable":false,"ordinal":2,"source":"conf-s3"}
+{"dataType":"string","dataset":"events.avro","entity":"field","folder":"sales","name":"user","nullable":true,"ordinal":2,"source":"conf-s3"}
+{"dataType":"string","dataset":"orders.csv","entity":"field","folder":"sales","name":"customer","nullable":false,"ordinal":2,"source":"conf-s3"}
+{"dataType":"string","dataset":"q4 report.json","entity":"field","folder":"sales","name":"notes","nullable":true,"ordinal":4,"source":"conf-s3"}
+{"dataType":"string","dataset":"q4 report.json","entity":"field","folder":"sales","name":"quarter","nullable":false,"ordinal":3,"source":"conf-s3"}
+{"dataType":"string","dataset":"q4 report.json","entity":"field","folder":"sales","name":"region","nullable":false,"ordinal":1,"source":"conf-s3"}
+{"dataType":"timestamp","dataset":"orders.csv","entity":"field","folder":"sales","name":"ordered_at","nullable":false,"ordinal":4,"source":"conf-s3"}
+{"dataType":"timestamp-millis","dataset":"events.avro","entity":"field","folder":"sales","name":"ts","nullable":false,"ordinal":4,"source":"conf-s3"}
+{"dataType":"union","dataset":"events.avro","entity":"field","folder":"sales","name":"payload","nullable":true,"ordinal":6,"source":"conf-s3"}
+{"dataset":"orders.csv","entity":"tag","folder":"sales","name":"classification","objectType":"dataset","source":"conf-s3","value":"confidential"}
+{"dataset":"orders.csv","entity":"tag","folder":"sales","name":"owner","objectType":"dataset","source":"conf-s3","value":"sales-ops"}
+{"definition":"s3","entity":"source","name":"Conformance S3","product":"Amazon S3","source":"conf-s3"}
+{"entity":"container","folder":"logs/2026/10","level":"folder","name":"logs/2026/10","properties":{"file_count":1},"source":"conf-s3"}
+{"entity":"container","folder":"sales","level":"folder","name":"sales","properties":{"file_count":3},"source":"conf-s3"}
+{"entity":"dataset","folder":"logs/2026/10","format":"jsonl","location":"s3://conf-bucket/raw/logs/2026/10/app.jsonl","name":"app.jsonl","properties":{"etag":"e4d909c290d0fb1ca068ffaddf22cbd0","storageClass":"STANDARD"},"sizeBytes":129,"source":"conf-s3","type":"file","updatedAt":"2026-10-30T10:00:06Z"}
+{"entity":"dataset","folder":"sales","format":"avro","location":"s3://conf-bucket/raw/sales/events.avro","name":"events.avro","properties":{"etag":"5d41402abc4b2a76b9719d911017c592","storageClass":"STANDARD_IA"},"sizeBytes":479,"source":"conf-s3","type":"file","updatedAt":"2026-10-29T22:10:11Z"}
+{"entity":"dataset","folder":"sales","format":"csv","location":"s3://conf-bucket/raw/sales/orders.csv","name":"orders.csv","properties":{"etag":"9e107d9d372bb6826bd81d3542a419d6","storageClass":"STANDARD"},"sizeBytes":193,"source":"conf-s3","type":"file","updatedAt":"2026-10-30T07:45:00Z"}
+{"entity":"dataset","folder":"sales","format":"json","location":"s3://conf-bucket/raw/sales/q4 report.json","name":"q4 report.json","properties":{"etag":"45c48cce2e2d7fbdea1afc51c7c6ad26","storageClass":"GLACIER_IR"},"sizeBytes":167,"source":"conf-s3","type":"file","updatedAt":"2026-10-28T12:00:00Z"}
+{"entity":"grant","objectType":"bucket","principal":"79a59df900b949e55d96a1e698fbacedfd6e09d98eacf8f8d5218e7cd47ef2be","privilege":"READ_ACP","source":"conf-s3"}
+{"entity":"grant","objectType":"bucket","principal":"AllUsers","privilege":"READ","source":"conf-s3"}
+{"entity":"grant","objectType":"bucket","principal":"conf-owner","privilege":"FULL_CONTROL","source":"conf-s3"}

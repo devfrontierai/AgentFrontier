@@ -28,9 +28,16 @@ Commands
   test <connection.json>              connect, detect the version, run the test operation
   extract <connection.json>           extract to sinks
       --aspects metadata,lineage,...  what to extract (default metadata)
-      --sink jsonl:<dir> | json:<file> | console | <sink.json>   (repeatable; default console)
+      --sink jsonl:<dir> | csv:<dir> | parquet:<dir> | json:<file> | console | <sink.json>
+                                      (repeatable; default console)
+      --partition-by tenant,source,category   folders per value for jsonl, csv and parquet sinks
       --parallelism N  --page-size N  --batch-size N
       --envelope [--tenant <id>]      write raw-stream events instead of plain records
+      --incremental <dir>             emit only changes and tombstones since the last run; checkpoints in <dir>
+                                      (turns the envelope on)  [--full] [--reconcile-every N]
+      --run-health                    end with quality_result records about the run
+      --parse-lineage                 add column lineage parsed from view SQL (pip install "agentfrontier[lineage]")
+      --tracing                       OpenTelemetry spans (pip install "agentfrontier[otel]")
       --policy <rules.json>           decide every read with these rules (deny, mask, filter ...)
       --subject <id>  --purpose <p>   who the run acts for, and why (for the policy and the audit trail)
       --classify                      label fields with the built-in classifiers (names, comments, samples)
@@ -238,11 +245,22 @@ def _sink_spec(s: str) -> dict:
 
 def _extract(af: AgentFrontier, file: str, opts: dict[str, list[str]]) -> int:
     sinks = [_sink_spec(s) for s in opts.get("sink", ["console"])]
+    if "partition-by" in opts:
+        for s in sinks:
+            if J.text(s, "type") in ("jsonl", "csv", "parquet"):
+                s["partitionBy"] = [k.strip() for k in opts["partition-by"][0].split(",") if k.strip()]
     aspects = opts["aspects"][0].split(",") if "aspects" in opts else ["metadata"]
+    incremental: dict = {}
+    if "incremental" in opts:
+        incremental = {"checkpoints": str(Path(opts["incremental"][0]).absolute()), "full": _flag(opts, "full"),
+                       "reconcileEvery": _int_opt(opts, "reconcile-every")}
     p = PipelineConfig(_connection(file), aspects, None, None, sinks, _int_opt(opts, "page-size"),
                        _int_opt(opts, "batch-size"), _int_opt(opts, "parallelism"), _int_opt(opts, "sample-rows"),
-                       envelope=_flag(opts, "envelope"), tenant_id=(opts.get("tenant") or [None])[0],
-                       governance=_governance_opts(opts))
+                       envelope=_flag(opts, "envelope") or bool(incremental),
+                       tenant_id=(opts.get("tenant") or [None])[0], governance=_governance_opts(opts),
+                       incremental=incremental, run_health=_flag(opts, "run-health"),
+                       lineage={"parse": True} if _flag(opts, "parse-lineage") else {},
+                       tracing=_flag(opts, "tracing"))
     to_console = any(J.text(s, "type") == "console" for s in sinks)
 
     def listener(event: str, data: dict) -> None:

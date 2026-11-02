@@ -1,0 +1,15 @@
+{"dataType":"boolean","dataset":"customers.jsonl","entity":"field","folder":"customers","name":"vip","nullable":false,"ordinal":4,"source":"conf-adls"}
+{"dataType":"integer","dataset":"customers.jsonl","entity":"field","folder":"customers","name":"customer_id","nullable":false,"ordinal":1,"source":"conf-adls"}
+{"dataType":"integer","dataset":"regions.csv","entity":"field","folder":"customers","name":"active","nullable":false,"ordinal":3,"source":"conf-adls"}
+{"dataType":"string","dataset":"customers.jsonl","entity":"field","folder":"customers","name":"country","nullable":false,"ordinal":3,"source":"conf-adls"}
+{"dataType":"string","dataset":"customers.jsonl","entity":"field","folder":"customers","name":"name","nullable":false,"ordinal":2,"source":"conf-adls"}
+{"dataType":"string","dataset":"regions.csv","entity":"field","folder":"customers","name":"code","nullable":false,"ordinal":1,"source":"conf-adls"}
+{"dataType":"string","dataset":"regions.csv","entity":"field","folder":"customers","name":"name","nullable":false,"ordinal":2,"source":"conf-adls"}
+{"definition":"adls","entity":"source","name":"Conformance ADLS","product":"Azure Data Lake Storage Gen2","source":"conf-adls"}
+{"entity":"container","folder":"archive","level":"folder","name":"archive","properties":{"file_count":1},"source":"conf-adls"}
+{"entity":"container","folder":"customers","level":"folder","name":"customers","properties":{"file_count":2},"source":"conf-adls"}
+{"entity":"dataset","folder":"archive","format":"json","location":"abfss://conf-fs@confaccount.dfs.core.windows.net/landing/archive/big.json","name":"big.json","properties":{"etag":"0x8DCF0000000005"},"sizeBytes":794,"source":"conf-adls","type":"file","updatedAt":"2026-10-06T09:09:09Z"}
+{"entity":"dataset","folder":"customers","format":"csv","location":"abfss://conf-fs@confaccount.dfs.core.windows.net/landing/customers/regions.csv","name":"regions.csv","properties":{"etag":"0x8DCF0000000004"},"sizeBytes":70,"source":"conf-adls","type":"file","updatedAt":"2026-10-28T12:00:00Z"}
+{"entity":"dataset","folder":"customers","format":"jsonl","location":"abfss://conf-fs@confaccount.dfs.core.windows.net/landing/customers/customers.jsonl","name":"customers.jsonl","properties":{"etag":"0x8DCF0000000003"},"sizeBytes":518,"source":"conf-adls","type":"file","updatedAt":"2026-10-30T06:30:15Z"}
+{"entity":"grant","objectType":"directory","principal":"5f1c2b9a-0000-4000-8000-000000000001","privilege":"r-x","properties":{"principalType":"user"},"source":"conf-adls"}
+{"entity":"grant","objectType":"directory","principal":"7a2d9c10-0000-4000-8000-000000000002","privilege":"r--","properties":{"principalType":"group"},"source":"conf-adls"}

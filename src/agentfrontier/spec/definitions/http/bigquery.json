@@ -1,0 +1,313 @@
+{
+  "specVersion": "1",
+  "id": "bigquery",
+  "name": "Google BigQuery",
+  "aliases": [
+    "google_bigquery",
+    "bq"
+  ],
+  "protocol": "http",
+  "category": "warehouse",
+  "status": "experimental",
+  "dialect": "bigquery",
+  "description": "Google BigQuery through the BigQuery REST API v2, read only: projects and their datasets as containers (the level is called schema, because dataset means a table in AgentFrontier), tables, views and materialized views as datasets with their columns, dataset access entries as grants (an authorized view as privilege AUTHORIZED_VIEW), and the job history of each project as usage, read incrementally by creation time. Exercised against recorded responses; not yet run against a live project.",
+  "properties": [
+    {
+      "key": "projects",
+      "label": "Projects to read",
+      "type": "list",
+      "help": "Empty or *: every project the credentials can list. Or a list of project ids; wildcards allowed."
+    },
+    {
+      "key": "apiUrl",
+      "label": "BigQuery API URL",
+      "type": "string",
+      "default": "https://bigquery.googleapis.com/bigquery/v2"
+    },
+    {
+      "key": "timeoutSeconds",
+      "label": "Request timeout (s)",
+      "type": "integer",
+      "default": "30"
+    }
+  ],
+  "auth": [
+    "gcp_service_account",
+    "oauth2_refresh_token",
+    "oauth2_access_token",
+    "token"
+  ],
+  "connection": {
+    "http": {
+      "baseUrl": "{{apiUrl}}",
+      "timeoutSeconds": "{{timeoutSeconds}}",
+      "headers": {
+        "Accept": "application/json"
+      },
+      "retry": {
+        "attempts": 3,
+        "on": [
+          429,
+          500,
+          503
+        ],
+        "backoffMs": 1000
+      },
+      "auth": {
+        "gcp_service_account": {
+          "oauth2": {
+            "scope": "https://www.googleapis.com/auth/bigquery.readonly"
+          },
+          "headers": {
+            "Authorization": "Bearer {{token.accessToken}}"
+          }
+        },
+        "oauth2_refresh_token": {
+          "oauth2": {
+            "tokenUrl": "https://oauth2.googleapis.com/token",
+            "scope": "https://www.googleapis.com/auth/bigquery.readonly"
+          },
+          "headers": {
+            "Authorization": "Bearer {{token.accessToken}}"
+          }
+        },
+        "oauth2_access_token": {
+          "headers": {
+            "Authorization": "Bearer {{auth.accessToken}}"
+          }
+        },
+        "token": {
+          "headers": {
+            "Authorization": "Bearer {{auth.token}}"
+          }
+        }
+      }
+    }
+  },
+  "hierarchy": [
+    {
+      "level": "project",
+      "label": "Project",
+      "list": "projects",
+      "select": "projects"
+    },
+    {
+      "level": "schema",
+      "label": "Dataset",
+      "list": "schemas"
+    }
+  ],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "request": {
+        "path": "/projects",
+        "query": {
+          "maxResults": "1"
+        }
+      },
+      "fields": {
+        "projects": {
+          "template": "{{totalItems}}"
+        }
+      },
+      "extras": "drop"
+    },
+    "source": {
+      "entity": "source",
+      "request": {
+        "path": "/projects",
+        "query": {
+          "maxResults": "1"
+        }
+      },
+      "fields": {
+        "product": {
+          "value": "Google BigQuery"
+        }
+      },
+      "extras": "drop"
+    },
+    "projects": {
+      "entity": "container",
+      "paging": {
+        "mode": "cursor",
+        "next": "$.nextPageToken",
+        "size": 1000
+      },
+      "request": {
+        "path": "/projects",
+        "query": {
+          "maxResults": "{{limit}}",
+          "pageToken": "{{cursor}}"
+        }
+      },
+      "records": "$.projects[*]",
+      "fields": {
+        "name": "$.projectReference.projectId",
+        "comment": "friendlyName",
+        "numericId": "numericId"
+      },
+      "extras": "drop"
+    },
+    "schemas": {
+      "entity": "container",
+      "paging": {
+        "mode": "cursor",
+        "next": "$.nextPageToken",
+        "size": 1000
+      },
+      "request": {
+        "path": "/projects/{{project|url}}/datasets",
+        "query": {
+          "maxResults": "{{limit}}",
+          "pageToken": "{{cursor}}"
+        }
+      },
+      "records": "$.datasets[*]",
+      "fields": {
+        "name": "$.datasetReference.datasetId",
+        "location": "location",
+        "labels": "labels"
+      },
+      "extras": "drop"
+    },
+    "datasets": {
+      "entity": "dataset",
+      "scope": "schema",
+      "paging": {
+        "mode": "cursor",
+        "next": "$.nextPageToken",
+        "size": 1000
+      },
+      "request": {
+        "path": "/projects/{{project|url}}/datasets/{{schema|url}}/tables",
+        "query": {
+          "maxResults": "{{limit}}",
+          "pageToken": "{{cursor}}"
+        }
+      },
+      "records": "$.tables[*]",
+      "fields": {
+        "name": "$.tableReference.tableId",
+        "type": {
+          "from": "type",
+          "values": {
+            "TABLE": "table",
+            "VIEW": "view",
+            "MATERIALIZED_VIEW": "materialized_view",
+            "EXTERNAL": "external_table",
+            "SNAPSHOT": "table"
+          },
+          "else": "other"
+        },
+        "createdAt": {
+          "template": "{{creationTime|epochMs}}"
+        },
+        "isPartition": {
+          "value": false
+        },
+        "labels": "labels",
+        "partitioning": "$.timePartitioning.type"
+      },
+      "extras": "drop"
+    },
+    "fields": {
+      "entity": "field",
+      "scope": "dataset",
+      "request": {
+        "path": "/projects/{{project|url}}/datasets/{{schema|url}}/tables/{{dataset|url}}"
+      },
+      "records": "$.schema.fields[*]",
+      "fields": {
+        "name": "name",
+        "dataType": "type",
+        "nullable": {
+          "from": "mode",
+          "values": {
+            "REQUIRED": false
+          },
+          "else": true,
+          "default": true
+        },
+        "comment": "description",
+        "mode": "mode"
+      },
+      "extras": "drop"
+    },
+    "grants": {
+      "entity": "grant",
+      "aspect": "governance",
+      "scope": "schema",
+      "onError": "warn",
+      "request": {
+        "path": "/projects/{{project|url}}/datasets/{{schema|url}}"
+      },
+      "records": "$.access[*]",
+      "fields": {
+        "principal": {
+          "template": "{{userByEmail}}{{groupByEmail}}{{specialGroup}}{{domain}}{{iamMember}}{{view.tableId}}"
+        },
+        "privilege": {
+          "from": "role",
+          "default": "AUTHORIZED_VIEW"
+        },
+        "objectType": {
+          "value": "schema"
+        },
+        "authorizedView": "$.view"
+      },
+      "extras": "drop"
+    },
+    "usage": {
+      "entity": "usage",
+      "scope": "project",
+      "onError": "warn",
+      "paging": {
+        "mode": "cursor",
+        "next": "$.nextPageToken",
+        "size": 1000
+      },
+      "request": {
+        "path": "/projects/{{project|url}}/jobs",
+        "query": {
+          "allUsers": "true",
+          "projection": "full",
+          "stateFilter": "done",
+          "minCreationTime": "{{since|toEpochMs}}",
+          "maxResults": "{{limit}}",
+          "pageToken": "{{cursor}}"
+        }
+      },
+      "records": "$.jobs[*]",
+      "fields": {
+        "queryId": "$.jobReference.jobId",
+        "queryText": "$.configuration.query.query",
+        "user": "user_email",
+        "startedAt": {
+          "template": "{{statistics.startTime|epochMs}}"
+        },
+        "durationMs": "$.statistics.finalExecutionDurationMs",
+        "status": {
+          "from": "$.status.errorResult.reason",
+          "default": "succeeded"
+        },
+        "jobType": "$.configuration.jobType",
+        "bytesProcessed": "$.statistics.totalBytesProcessed"
+      },
+      "extras": "drop",
+      "incremental": {
+        "mode": "watermark",
+        "field": "startedAt"
+      }
+    }
+  },
+  "capabilities": {
+    "apiVersion": "v2",
+    "operations": {
+      "usage": {
+        "comment": "jobs.list from minCreationTime; the job history is kept 180 days"
+      }
+    }
+  }
+}

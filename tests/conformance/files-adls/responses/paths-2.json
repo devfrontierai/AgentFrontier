@@ -1,0 +1,16 @@
+{
+  "paths": [
+    {
+      "name": "landing/customers/regions.csv",
+      "lastModified": "Wed, 28 Oct 2026 12:00:00 GMT",
+      "etag": "0x8DCF0000000004",
+      "contentLength": "70"
+    },
+    {
+      "name": "landing/archive/big.json",
+      "lastModified": "Tue, 06 Oct 2026 09:09:09 GMT",
+      "etag": "0x8DCF0000000005",
+      "contentLength": "794"
+    }
+  ]
+}

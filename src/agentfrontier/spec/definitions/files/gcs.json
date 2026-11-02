@@ -1,0 +1,162 @@
+{
+  "specVersion": "1",
+  "id": "gcs",
+  "name": "Google Cloud Storage",
+  "aliases": [
+    "google_cloud_storage"
+  ],
+  "protocol": "files",
+  "category": "object_storage",
+  "status": "experimental",
+  "description": "A Google Cloud Storage bucket through the JSON API. Folders under the prefix that hold matching files are containers, files are datasets; fields are inferred from CSV, TSV, JSON, JSON Lines, Avro and (Python, parquet extra) Parquet content; custom object metadata becomes tags and the bucket IAM policy becomes grants. Exercised against recorded responses; not yet run against a live project.",
+  "properties": [
+    {
+      "key": "bucket",
+      "label": "Bucket",
+      "type": "string",
+      "required": true
+    },
+    {
+      "key": "prefix",
+      "label": "Prefix",
+      "type": "string",
+      "help": "Only objects under this prefix, e.g. raw/sales/"
+    },
+    {
+      "key": "endpoint",
+      "label": "Endpoint",
+      "type": "string",
+      "default": "https://storage.googleapis.com"
+    },
+    {
+      "key": "include",
+      "label": "Include",
+      "type": "list",
+      "default": "**/*.csv,**/*.tsv,**/*.json,**/*.jsonl,**/*.ndjson,**/*.avro,**/*.parquet",
+      "help": "Glob patterns relative to the prefix."
+    },
+    {
+      "key": "exclude",
+      "label": "Exclude",
+      "type": "list",
+      "help": "Glob patterns relative to the prefix."
+    }
+  ],
+  "options": [
+    {
+      "key": "sampleRows",
+      "label": "Rows to sample for schema inference",
+      "type": "integer",
+      "default": "1000"
+    },
+    {
+      "key": "maxBytes",
+      "label": "Bytes read per file",
+      "type": "integer",
+      "default": "4194304",
+      "help": "Schema inference and samples read at most this much of each file."
+    }
+  ],
+  "auth": [
+    "gcp_service_account",
+    "oauth2_access_token",
+    "token",
+    "none"
+  ],
+  "connection": {
+    "files": {
+      "storage": "gcs",
+      "bucket": "{{bucket}}",
+      "prefix": "{{prefix}}",
+      "endpoint": "{{endpoint}}",
+      "maxBytes": "{{options.maxBytes}}",
+      "auth": {
+        "gcp_service_account": {
+          "oauth2": {
+            "scope": "https://www.googleapis.com/auth/devstorage.read_only"
+          },
+          "headers": {
+            "Authorization": "Bearer {{token.accessToken}}"
+          }
+        },
+        "oauth2_access_token": {
+          "headers": {
+            "Authorization": "Bearer {{auth.accessToken}}"
+          }
+        },
+        "token": {
+          "headers": {
+            "Authorization": "Bearer {{auth.token}}"
+          }
+        },
+        "none": {}
+      }
+    }
+  },
+  "hierarchy": [
+    {
+      "level": "folder",
+      "label": "Folder",
+      "list": "folders"
+    }
+  ],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "files": {
+        "op": "stat"
+      }
+    },
+    "folders": {
+      "entity": "container",
+      "files": {
+        "op": "folders",
+        "include": "{{include}}",
+        "exclude": "{{exclude}}"
+      }
+    },
+    "datasets": {
+      "entity": "dataset",
+      "scope": "folder",
+      "files": {
+        "op": "files",
+        "include": "{{include}}",
+        "exclude": "{{exclude}}"
+      }
+    },
+    "fields": {
+      "entity": "field",
+      "scope": "dataset",
+      "files": {
+        "op": "schema",
+        "sampleRows": "{{options.sampleRows}}"
+      }
+    },
+    "sample": {
+      "entity": "row",
+      "aspect": "data",
+      "scope": "dataset",
+      "files": {
+        "op": "rows",
+        "limit": "{{limit}}"
+      }
+    },
+    "tags": {
+      "entity": "tag",
+      "aspect": "governance",
+      "scope": "dataset",
+      "files": {
+        "op": "tags"
+      }
+    },
+    "grants": {
+      "entity": "grant",
+      "aspect": "governance",
+      "scope": "source",
+      "onError": "warn",
+      "files": {
+        "op": "grants"
+      }
+    }
+  }
+}

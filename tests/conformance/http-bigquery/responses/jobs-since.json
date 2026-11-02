@@ -1,0 +1,85 @@
+{
+  "kind": "bigquery#jobList",
+  "jobs": [
+    {
+      "kind": "bigquery#job",
+      "id": "conf-project:EU.job_a4",
+      "jobReference": {
+        "projectId": "conf-project",
+        "jobId": "job_a4",
+        "location": "EU"
+      },
+      "configuration": {
+        "jobType": "QUERY",
+        "query": {
+          "query": "SELECT day, revenue FROM sales.v_revenue",
+          "useLegacySql": false
+        }
+      },
+      "state": "DONE",
+      "user_email": "bob@example.com",
+      "statistics": {
+        "creationTime": "1761829199880",
+        "startTime": "1761829200000",
+        "endTime": "1761829200900",
+        "finalExecutionDurationMs": "850",
+        "totalBytesProcessed": "1048576"
+      },
+      "status": {
+        "state": "DONE"
+      }
+    },
+    {
+      "kind": "bigquery#job",
+      "id": "conf-project:EU.job_a3b",
+      "jobReference": {
+        "projectId": "conf-project",
+        "jobId": "job_a3b",
+        "location": "EU"
+      },
+      "configuration": {
+        "jobType": "QUERY",
+        "query": {
+          "query": "SELECT COUNT(*) FROM sales.customers",
+          "useLegacySql": false
+        }
+      },
+      "state": "DONE",
+      "user_email": "bob@example.com",
+      "statistics": {
+        "creationTime": "1761825599880",
+        "startTime": "1761825600000",
+        "endTime": "1761825600900",
+        "finalExecutionDurationMs": "850",
+        "totalBytesProcessed": "1048576"
+      },
+      "status": {
+        "state": "DONE"
+      }
+    },
+    {
+      "kind": "bigquery#job",
+      "id": "conf-project:EU.job_a3",
+      "jobReference": {
+        "projectId": "conf-project",
+        "jobId": "job_a3",
+        "location": "EU"
+      },
+      "configuration": {
+        "jobType": "LOAD"
+      },
+      "state": "DONE",
+      "user_email": "etl@conf-project.iam.gserviceaccount.com",
+      "statistics": {
+        "creationTime": "1761825599880",
+        "startTime": "1761825600000",
+        "endTime": "1761825600900",
+        "finalExecutionDurationMs": "850",
+        "totalBytesProcessed": "1048576"
+      },
+      "status": {
+        "state": "DONE"
+      }
+    }
+  ]
+}

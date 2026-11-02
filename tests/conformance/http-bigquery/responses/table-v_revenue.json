@@ -1,0 +1,24 @@
+{
+  "kind": "bigquery#table",
+  "id": "conf-project:sales.v_revenue",
+  "tableReference": {
+    "projectId": "conf-project",
+    "datasetId": "sales",
+    "tableId": "v_revenue"
+  },
+  "schema": {
+    "fields": [
+      {
+        "name": "day",
+        "type": "DATE"
+      },
+      {
+        "name": "revenue",
+        "type": "NUMERIC"
+      }
+    ]
+  },
+  "view": {
+    "query": "SELECT DATE(ordered_at) AS day, SUM(amount) AS revenue FROM sales.orders GROUP BY 1"
+  }
+}

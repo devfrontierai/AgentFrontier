@@ -1,0 +1,48 @@
+{
+  "require": {
+    "headers": {
+      "Authorization": "Bearer conf-dbx-token"
+    }
+  },
+  "routes": [
+    {
+      "path": "/api/2.0/preview/scim/v2/Me",
+      "body": "responses/me.json"
+    },
+    {
+      "path": "/api/2.1/jobs/list",
+      "query": {
+        "limit": "100",
+        "expand_tasks": "true",
+        "page_token": "CAEQ"
+      },
+      "body": "responses/jobs-2.json"
+    },
+    {
+      "path": "/api/2.1/jobs/list",
+      "query": {
+        "limit": "100",
+        "expand_tasks": "true",
+        "page_token": null
+      },
+      "body": "responses/jobs-1.json"
+    },
+    {
+      "path": "/api/2.0/workspace/list",
+      "query": {
+        "path": "/Shared"
+      },
+      "body": "responses/workspace.json"
+    },
+    {
+      "path": "/api/2.0/sql/history/queries",
+      "query": {
+        "max_results": "100",
+        "include_metrics": "true",
+        "page_token": null,
+        "filter_by.query_start_time_range.start_time_ms": null
+      },
+      "body": "responses/queries.json"
+    }
+  ]
+}

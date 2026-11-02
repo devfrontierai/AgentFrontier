@@ -1,0 +1,73 @@
+{
+  "require": {
+    "headers": {
+      "Authorization": "Bearer conf-adls-token",
+      "x-ms-version": "2021-08-06"
+    }
+  },
+  "routes": [
+    {
+      "method": "POST",
+      "path": "/conf-tenant/oauth2/v2.0/token",
+      "require": {},
+      "form": {
+        "grant_type": "client_credentials",
+        "client_id": "conf-client",
+        "client_secret": "conf-secret",
+        "scope": "https://storage.azure.com/.default"
+      },
+      "body": "responses/token.json"
+    },
+    {
+      "method": "HEAD",
+      "path": "/conf-fs/landing",
+      "query": {
+        "action": "getAccessControl"
+      },
+      "headers": {
+        "x-ms-owner": "$superuser",
+        "x-ms-group": "$superuser",
+        "x-ms-permissions": "rwxr-x---+",
+        "x-ms-acl": "user::rwx,user:5f1c2b9a-0000-4000-8000-000000000001:r-x,group::r-x,group:7a2d9c10-0000-4000-8000-000000000002:r--,mask::r-x,other::---,default:user:5f1c2b9a-0000-4000-8000-000000000001:r-x"
+      }
+    },
+    {
+      "path": "/conf-fs",
+      "query": {
+        "resource": "filesystem",
+        "recursive": "true",
+        "directory": "landing",
+        "continuation": "next page/2"
+      },
+      "body": "responses/paths-2.json"
+    },
+    {
+      "path": "/conf-fs",
+      "query": {
+        "resource": "filesystem",
+        "recursive": "true",
+        "directory": "landing",
+        "continuation": null
+      },
+      "headers": {
+        "x-ms-continuation": "next page/2"
+      },
+      "body": "responses/paths-1.json"
+    },
+    {
+      "path": "/conf-fs/landing/customers/customers.jsonl",
+      "contentType": "application/x-ndjson",
+      "file": "data/customers.jsonl"
+    },
+    {
+      "path": "/conf-fs/landing/customers/regions.csv",
+      "contentType": "text/csv",
+      "file": "data/regions.csv"
+    },
+    {
+      "path": "/conf-fs/landing/archive/big.json",
+      "contentType": "application/json",
+      "file": "data/big.json"
+    }
+  ]
+}

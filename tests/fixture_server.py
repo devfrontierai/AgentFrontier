@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import threading
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -57,24 +58,34 @@ class FixtureServer:
             for name, value in (r.get("headers") or {}).items():
                 for v in value if isinstance(value, list) else [value]:
                     headers.append((name, sub(v)))
-            self._send(ex, 200, sub((case_dir / r["body"]).read_text(encoding="utf-8")), headers)
+            if "file" in r:
+                data = (case_dir / r["file"]).read_bytes()
+                ctype = r.get("contentType") or "application/octet-stream"
+            elif "body" in r:
+                data = sub((case_dir / r["body"]).read_text(encoding="utf-8")).encode("utf-8")
+                ctype = r.get("contentType") or "application/json"
+            else:
+                data = b""
+                ctype = r.get("contentType") or "application/json"
+            self._send(ex, int(r.get("status", 200)), data, headers, ctype)
             return
         if not self._authorised(ex, routes.get("require")):
             return
-        self._send(ex, 404, '{"error": "no route for ' + path + '"}')
+        self._send(ex, 404, ('{"error": "no route for ' + path + '"}').encode("utf-8"))
 
     def _authorised(self, ex: BaseHTTPRequestHandler, require: Any) -> bool:
         for name, want in ((require or {}).get("headers") or {}).items():
-            if str(want) != ex.headers.get(name):
-                self._send(ex, 401, '{"error": "unauthorized"}')
+            if not _value_matches(want, ex.headers.get(name), str):
+                self._send(ex, 401, b'{"error": "unauthorized"}')
                 return False
         return True
 
     @staticmethod
-    def _send(ex: BaseHTTPRequestHandler, status: int, body: str, headers: list | None = None) -> None:
-        b = body.encode("utf-8")
+    def _send(ex: BaseHTTPRequestHandler, status: int, body: bytes | str, headers: list | None = None,
+              content_type: str = "application/json") -> None:
+        b = body.encode("utf-8") if isinstance(body, str) else body
         ex.send_response(status)
-        ex.send_header("Content-Type", "application/json")
+        ex.send_header("Content-Type", content_type)
         ex.send_header("Content-Length", str(len(b)))
         for name, value in headers or []:
             ex.send_header(name, value)
@@ -97,9 +108,18 @@ def _parse_pairs(raw: str) -> dict[str, str]:
     return out
 
 
+def _value_matches(want: Any, have: str | None, sub: Any) -> bool:
+    """``{"pattern": regex}`` matches the whole value; anything else must be equal as text."""
+    if have is None:
+        return False
+    if isinstance(want, dict) and "pattern" in want:
+        return re.fullmatch(sub(want["pattern"]), have) is not None
+    return sub(want) == have
+
+
 def _matches(want: Any, have: dict[str, str], sub: Any) -> bool:
-    """Every entry of ``want`` holds: ``null`` means absent, anything else equal as text."""
+    """Every entry of ``want`` holds: ``null`` means absent, anything else as :func:`_value_matches`."""
     for k, v in (want or {}).items():
-        if (k in have) if v is None else (sub(v) != have.get(k)):
+        if (k in have) if v is None else not _value_matches(v, have.get(k), sub):
             return False
     return True

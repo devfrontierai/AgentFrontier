@@ -1,0 +1,10 @@
+{"dataType":"date","dataset":"people.csv","entity":"field","folder":"hr","name":"joined","nullable":false,"ordinal":3,"source":"conf-files-incremental"}
+{"dataType":"double","dataset":"orders.csv","entity":"field","folder":"sales","name":"amount","nullable":false,"ordinal":2,"source":"conf-files-incremental"}
+{"dataType":"integer","dataset":"orders.csv","entity":"field","folder":"sales","name":"order_id","nullable":false,"ordinal":1,"source":"conf-files-incremental"}
+{"dataType":"integer","dataset":"people.csv","entity":"field","folder":"hr","name":"person_id","nullable":false,"ordinal":1,"source":"conf-files-incremental"}
+{"dataType":"string","dataset":"people.csv","entity":"field","folder":"hr","name":"name","nullable":false,"ordinal":2,"source":"conf-files-incremental"}
+{"definition":"local_files","entity":"source","name":"Conformance files incremental","product":"Local or mounted file system","source":"conf-files-incremental"}
+{"entity":"container","folder":"hr","level":"folder","name":"hr","properties":{"file_count":1},"source":"conf-files-incremental"}
+{"entity":"container","folder":"sales","level":"folder","name":"sales","properties":{"file_count":1},"source":"conf-files-incremental"}
+{"entity":"dataset","folder":"hr","format":"csv","location":"hr/people.csv","name":"people.csv","sizeBytes":56,"source":"conf-files-incremental","type":"file"}
+{"entity":"dataset","folder":"sales","format":"csv","location":"sales/orders.csv","name":"orders.csv","sizeBytes":28,"source":"conf-files-incremental","type":"file"}

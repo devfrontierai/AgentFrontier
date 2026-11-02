@@ -31,7 +31,12 @@ Options:
 | `--definitions <dir>` | all | extra definitions or overlays (repeatable; later ones win) |
 | `--drivers <dir>` | all | Java edition only (JDBC jars). Accepted and ignored with a note; install drivers with pip extras instead |
 | `--aspects a,b` | extract | aspects to extract (default `metadata`) |
-| `--sink <spec>` | extract | `jsonl:<dir>`, `json:<file>`, `console`, `memory`, or a sink JSON file (repeatable; default `console`) |
+| `--sink <spec>` | extract | `jsonl:<dir>`, `csv:<dir>`, `parquet:<dir>`, `json:<file>`, `console`, `memory`, or a sink JSON file (repeatable; default `console`) |
+| `--partition-by tenant,source,category` | extract | folders per value for the `jsonl`, `csv` and `parquet` sinks |
+| `--incremental <dir>` `--full` `--reconcile-every N` | extract | emit only changes, deletions and tombstones since the last run, keeping checkpoints in `<dir>` (turns the envelope on); `--full` reads everything and tombstones what is gone |
+| `--run-health` | extract | end with `quality_result` records about the run |
+| `--parse-lineage` | extract | add column lineage parsed from view SQL (`lineage` extra) |
+| `--tracing` | extract | OpenTelemetry spans (`otel` extra) |
 | `--parallelism N` `--page-size N` `--batch-size N` `--sample-rows N` | extract | pipeline settings |
 | `--envelope` `--tenant <id>` | extract | write raw-stream events (tenant `default` unless given) instead of plain records. Put `--envelope` after the connection file, or write `--envelope true`, since an option takes the next argument as its value |
 | `--policy <rules.json>` | extract, query, sample | decide every read with these rules: denies, masks, row filters (see [governance](governance.md)) |

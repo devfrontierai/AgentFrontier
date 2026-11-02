@@ -1,0 +1,38 @@
+{
+  "description": "Files engine on Google Cloud Storage: a service account JWT (RS256) exchanged at the key's token_uri, the JSON API listing paged with nextPageToken, a folder marker and a file outside the include globs skipped, object names percent-encoded in media reads, custom metadata as tags and the bucket IAM policy as grants.",
+  "server": {
+    "routes": "routes.json"
+  },
+  "connection": {
+    "id": "conf-gcs",
+    "name": "Conformance GCS",
+    "type": "gcs",
+    "properties": {
+      "bucket": "conf-bucket",
+      "prefix": "exports/",
+      "endpoint": "{{baseUrl}}"
+    },
+    "auth": {
+      "method": "gcp_service_account",
+      "serviceAccountJson": "{\"type\": \"service_account\", \"project_id\": \"conformance-project\", \"private_key_id\": \"0123456789abcdef0123456789abcdef01234567\", \"private_key\": \"-----BEGIN PRIVATE KEY-----\\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDhGVN63fhlaEFQ\\n1a4k6ghVVpsFW7zAO6Tq9i2a/JsTbXKuO6331fx/xPzBZDjQQFYo/lAAcS8w0bYz\\nqBMlYkl+EGmIK5uF0o5yzik5icEE6AStiXC/WSDQX8+jT4j09q1saM5CCF1ArwMP\\nhAxISt9yrWT60D7Hp2hz4DE0acspxS3/uri/CBWAnv56wLh6wHxRxiZmGlamfxpI\\nLYymDa0sFlWpPh9piX/y2uvj0d3Lpdmi863Qw8YxdZ+mqJ7rekds4p9IAc8ukdvt\\nsrx/yUZJiievlZYGKuV/hKezeflmku+lYeKPuFZRLDr7E4e/vV+2D4GXCVXLMcAv\\n81Ooh7GpAgMBAAECggEAGlgScxDDX2riKgm4Bc32B7bJEcl4v667UFxbXgYuSAnJ\\nICcP5y9+C54MTr3iAE1nSAjraAHXGgmRH16OTxO/sidNkog3/WN1FG6YWImMs3xL\\n/9tT/LD7rCdqb5yBVNoB1ew2J3g/IbDZ1NkJbvSETjGI3em9TzSCfv1ABPhUtKCM\\n2x8vg703UhE0n/QNUwS6q34ta0gWLtbo6gooXMIx5Vf5IhULdsN3i+yntlUP44oC\\nyHRT7iWjEQlGWVSYksfEjbpSkuS8Ng2JF4Vzhbsn5cMNT/6Yz0B9AYe/QGQCU6x2\\nLYrahXuVPlslY9Gms2dl5TdfVSYvEYoXOKLIvVGi4QKBgQD12DXRPZKCvEgulsdH\\nQR7uGKAXUX3aYubPB7jWz13A15eMnb9E8yc5G9Uksq0oR7Z/6CTUgQavOcKiFmi2\\ntg+2su4QDhrg6Xs/XCAy4UVPakIdsQuqAN3rNqAuzaLLlEDl3b+zB1OUHiCv42qZ\\nRyQ7mBH7fkT9wC3X2I/93h841QKBgQDqZbtrtrRJS5B2zXSxijNsK+c2nd+GHNdi\\nYjKLSTe+r55G8LitV+nGsYAVMabN7Veb3fM3fCTq9FmgwXt0WGI+TXOU3BHRAWid\\nEUD/If9WXa5WIA1VOrocdkKAgMzf/1pSEuWr4ix2CRxfq54qtuBBzU9HVLpS2HGx\\nHKUKn2f/hQKBgHnGuonF9R/bQeoJ9/Y8tKR+ADbsv+mAWhItIgsNtsQCRuh5bzgp\\nNcGdHsxJ0WoFc8oR5MR6kSQU+WsurHns3wXBxhif1AKaxNkSukRZv+phmRR6EWwJ\\nd+O+MEReyggLjMYQPJfixiy1a72UacY5LiJy5l1sI6KKImsrs8+tykttAoGAbc7G\\n5IktIIEj5mQN3PZvbKeMo8uF4aA1TsPOBe6BDPXc4kL3YU2kGQ8if8tI54Pe3Qg3\\nXrDr4p4iNustWK3nKGTEVuJZ/l34kkx49I0Kv30XpQVS+bCPa7IDKYwtbmqD95se\\nuU01ov5VqoQNjtkpaeoyz6njt9fqOxy+PKG86LkCgYAM5p50fxqVewfCBGKImagx\\nCT7UuilqpcSH2UNybD9Cl2qRCkDdM5Ony4vDTFiDwF+b0LD4oUMwUjydUXkUYLhP\\nbMqd1VlI4gOZlpR9EJJRBtb8XjKU6dfTLr9TqTN7s/TJgzKBRP3L8+vn/jUIa+tL\\nTnwQjzJhK+BVPVk7zbSlQA==\\n-----END PRIVATE KEY-----\\n\", \"client_email\": \"reader@conformance-project.iam.gserviceaccount.com\", \"client_id\": \"100000000000000000001\", \"token_uri\": \"{{baseUrl}}/token\"}"
+    }
+  },
+  "pipeline": {
+    "aspects": [
+      "metadata",
+      "governance"
+    ]
+  },
+  "sample": {
+    "scope": {
+      "folder": "daily"
+    },
+    "dataset": "sales.csv",
+    "limit": 5
+  },
+  "envelope": {
+    "tenantId": "conformance",
+    "expected": "expected-envelope.jsonl"
+  },
+  "expected": "expected.jsonl"
+}

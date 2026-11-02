@@ -1,0 +1,217 @@
+{
+  "description": "Test vectors for the csv sink (docs/sinks.md). For each case, write `records` (an object with envelopeVersion is an event, with its record in body) to a csv sink with `levels` as the run's levels and `partitionBy`, and compare every .csv file under the sink's path with `files`, byte for byte.",
+  "cases": [
+    {
+      "description": "Records without the envelope, levels database and schema: canonical columns in entities.json order, levels left out of the entity's own columns, extra values and properties as JSON, quoting of commas, quotes and line feeds, numbers, booleans, lists and a sampled row.",
+      "levels": [
+        "database",
+        "schema"
+      ],
+      "records": [
+        {
+          "entity": "dataset",
+          "source": "warehouse",
+          "database": "analytics",
+          "schema": "sales",
+          "name": "orders",
+          "type": "table",
+          "comment": "Orders, one per checkout",
+          "rowCount": 1234567890123,
+          "sizeBytes": 2048,
+          "isPartition": false,
+          "properties": {
+            "tablespace": "pg_default"
+          }
+        },
+        {
+          "entity": "dataset",
+          "source": "warehouse",
+          "database": "analytics",
+          "schema": "sales",
+          "name": "v \"top\"",
+          "type": "view",
+          "definition": "select *\nfrom orders\nwhere total > 100",
+          "custom": [
+            1,
+            2.5
+          ]
+        },
+        {
+          "entity": "field",
+          "source": "warehouse",
+          "database": "analytics",
+          "schema": "sales",
+          "dataset": "orders",
+          "name": "total",
+          "ordinal": 3,
+          "dataType": "numeric(10,2)",
+          "nullable": true,
+          "numericPrecision": 10,
+          "numericScale": 2
+        },
+        {
+          "entity": "constraint",
+          "source": "warehouse",
+          "database": "analytics",
+          "schema": "sales",
+          "dataset": "orders",
+          "name": "pk_orders",
+          "type": "primary_key",
+          "columns": [
+            "order_id",
+            "line"
+          ]
+        },
+        {
+          "entity": "statistic",
+          "source": "warehouse",
+          "database": "analytics",
+          "schema": "sales",
+          "dataset": "orders",
+          "field": "total",
+          "nullFraction": 0.0,
+          "distinctCount": 2.0,
+          "avgWidth": 1.5
+        },
+        {
+          "entity": "row",
+          "source": "warehouse",
+          "database": "analytics",
+          "schema": "sales",
+          "dataset": "orders",
+          "values": {
+            "order_id": 7,
+            "note": "a,b",
+            "paid": true
+          }
+        }
+      ],
+      "files": {
+        "constraint.csv": "source,database,schema,dataset,name,type,columns,refDataset,refColumns,definition,extra,properties\nwarehouse,analytics,sales,orders,pk_orders,primary_key,\"[\"\"order_id\"\",\"\"line\"\"]\",,,,,\n",
+        "dataset.csv": "source,database,schema,name,type,comment,owner,rowCount,sizeBytes,definition,isPartition,partitionOf,format,location,createdAt,updatedAt,extra,properties\nwarehouse,analytics,sales,orders,table,\"Orders, one per checkout\",,1234567890123,2048,,false,,,,,,,\"{\"\"tablespace\"\":\"\"pg_default\"\"}\"\nwarehouse,analytics,sales,\"v \"\"top\"\"\",view,,,,,\"select *\nfrom orders\nwhere total > 100\",,,,,,,\"{\"\"custom\"\":[1,2.5]}\",\n",
+        "field.csv": "source,database,schema,dataset,name,ordinal,dataType,nullable,defaultValue,comment,isGenerated,maxLength,numericPrecision,numericScale,parent,extra,properties\nwarehouse,analytics,sales,orders,total,3,\"numeric(10,2)\",true,,,,,10,2,,,\n",
+        "row.csv": "source,database,schema,dataset,values,extra,properties\nwarehouse,analytics,sales,orders,\"{\"\"note\"\":\"\"a,b\"\",\"\"order_id\"\":7,\"\"paid\"\":true}\",,\n",
+        "statistic.csv": "source,database,schema,dataset,field,rowCount,nullFraction,distinctCount,avgWidth,min,max,extra,properties\nwarehouse,analytics,sales,orders,total,,0.0,2.0,1.5,,,,\n"
+      }
+    },
+    {
+      "description": "Events with the envelope, partitioned by tenant, source and category: envelope columns first, a tombstone, a parsed lineage event with its confidence, and partition values that need percent-encoding.",
+      "levels": [
+        "schema"
+      ],
+      "partitionBy": [
+        "tenant",
+        "source",
+        "category"
+      ],
+      "records": [
+        {
+          "envelopeVersion": "1",
+          "eventId": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+          "tenantId": "acme",
+          "sourceSystemId": "warehouse",
+          "connectorId": "postgresql",
+          "runId": "warehouse-20261030-101500-123",
+          "family": "discovery_structure",
+          "category": "metadata",
+          "entity": "dataset",
+          "op": "upsert",
+          "nativeObjectId": "warehouse/sales/orders",
+          "observedAt": "2026-10-30T10:15:02.481Z",
+          "schemaVersion": "2",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "dataset",
+            "source": "warehouse",
+            "schema": "sales",
+            "name": "orders",
+            "type": "table"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "eventId": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+          "tenantId": "acme",
+          "sourceSystemId": "warehouse",
+          "connectorId": "postgresql",
+          "runId": "warehouse-20261030-101500-123",
+          "family": "discovery_structure",
+          "category": "metadata",
+          "entity": "dataset",
+          "op": "tombstone",
+          "nativeObjectId": "warehouse/sales/old",
+          "observedAt": "2026-10-30T10:15:02.481Z",
+          "schemaVersion": "2",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "dataset",
+            "source": "warehouse",
+            "schema": "sales",
+            "name": "old"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "eventId": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "tenantId": "acme",
+          "sourceSystemId": "warehouse",
+          "connectorId": "postgresql",
+          "runId": "warehouse-20261030-101500-123",
+          "family": "traceability_evidence",
+          "category": "lineage",
+          "entity": "lineage",
+          "op": "upsert",
+          "nativeObjectId": "warehouse/mart/v_rev/revenue<-warehouse/sales/orders/total",
+          "observedAt": "2026-10-30T10:15:02.481Z",
+          "schemaVersion": "2",
+          "assertion": "parsed",
+          "confidence": 0.7,
+          "body": {
+            "entity": "lineage",
+            "source": "warehouse",
+            "schema": "mart",
+            "dataset": "v_rev",
+            "field": "revenue",
+            "upstreamSchema": "sales",
+            "upstreamDataset": "orders",
+            "upstreamField": "total",
+            "kind": "view",
+            "transformation": "expression"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "eventId": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+          "tenantId": "acme corp",
+          "sourceSystemId": "lake/eu",
+          "connectorId": "postgresql",
+          "runId": "warehouse-20261030-101500-123",
+          "family": "traceability_evidence",
+          "category": "audit",
+          "entity": "usage",
+          "op": "upsert",
+          "nativeObjectId": "lake/eu/usage/q1",
+          "observedAt": "2026-10-30T10:15:02.481Z",
+          "schemaVersion": "2",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "usage",
+            "source": "lake/eu",
+            "queryId": "q1",
+            "queryText": "select 1",
+            "startedAt": "2026-10-30T10:00:00Z",
+            "durationMs": 12
+          }
+        }
+      ],
+      "files": {
+        "tenant=acme/source=warehouse/category=lineage/lineage.csv": "eventId,op,entity,nativeObjectId,tenantId,sourceSystemId,connectorId,runId,family,category,observedAt,assertion,confidence,source,schema,dataset,upstreamDataset,kind,field,upstreamField,transformation,extra,properties\nsha256:3333333333333333333333333333333333333333333333333333333333333333,upsert,lineage,warehouse/mart/v_rev/revenue<-warehouse/sales/orders/total,acme,warehouse,postgresql,warehouse-20261030-101500-123,traceability_evidence,lineage,2026-10-30T10:15:02.481Z,parsed,0.7,warehouse,mart,v_rev,orders,view,revenue,total,expression,\"{\"\"upstreamSchema\"\":\"\"sales\"\"}\",\n",
+        "tenant=acme/source=warehouse/category=metadata/dataset.csv": "eventId,op,entity,nativeObjectId,tenantId,sourceSystemId,connectorId,runId,family,category,observedAt,assertion,confidence,source,schema,name,type,comment,owner,rowCount,sizeBytes,definition,isPartition,partitionOf,format,location,createdAt,updatedAt,extra,properties\nsha256:1111111111111111111111111111111111111111111111111111111111111111,upsert,dataset,warehouse/sales/orders,acme,warehouse,postgresql,warehouse-20261030-101500-123,discovery_structure,metadata,2026-10-30T10:15:02.481Z,observed,1.0,warehouse,sales,orders,table,,,,,,,,,,,,,\nsha256:2222222222222222222222222222222222222222222222222222222222222222,tombstone,dataset,warehouse/sales/old,acme,warehouse,postgresql,warehouse-20261030-101500-123,discovery_structure,metadata,2026-10-30T10:15:02.481Z,observed,1.0,warehouse,sales,old,,,,,,,,,,,,,,\n",
+        "tenant=acme%20corp/source=lake%2Feu/category=audit/usage.csv": "eventId,op,entity,nativeObjectId,tenantId,sourceSystemId,connectorId,runId,family,category,observedAt,assertion,confidence,source,schema,queryId,queryText,user,startedAt,durationMs,rowsProduced,datasets,status,extra,properties\nsha256:4444444444444444444444444444444444444444444444444444444444444444,upsert,usage,lake/eu/usage/q1,acme corp,lake/eu,postgresql,warehouse-20261030-101500-123,traceability_evidence,audit,2026-10-30T10:15:02.481Z,observed,1.0,lake/eu,,q1,select 1,,2026-10-30T10:00:00Z,12,,,,,\n"
+      }
+    }
+  ]
+}

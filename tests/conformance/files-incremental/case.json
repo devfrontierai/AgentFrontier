@@ -1,0 +1,51 @@
+{
+  "description": "Incremental runs on a local folder (docs/incremental.md): run 2, after one file is rewritten with a new column and the only file of another folder is deleted, emits the changed dataset and the new field, and tombstones the vanished folder together with the dataset and fields inside it (their own scope was never read, but it lies inside a container that is gone).",
+  "setup": {
+    "files": {
+      "copy": {
+        "data/sales/orders.csv": "data/sales/orders.csv",
+        "data/hr/people.csv": "data/hr/people.csv"
+      }
+    }
+  },
+  "connection": {
+    "id": "conf-files-incremental",
+    "name": "Conformance files incremental",
+    "type": "local_files",
+    "properties": {
+      "root": "{{workDir}}/data"
+    }
+  },
+  "pipeline": {
+    "aspects": [
+      "metadata"
+    ]
+  },
+  "ignore": {
+    "dataset": [
+      "updatedAt"
+    ]
+  },
+  "incremental": {
+    "tenantId": "conformance",
+    "runs": [
+      {
+        "expected": "expected-1.jsonl"
+      },
+      {
+        "before": {
+          "files": {
+            "delete": [
+              "data/hr/people.csv"
+            ],
+            "copy": {
+              "data/sales/orders.csv": "data/sales/orders-v2.csv"
+            }
+          }
+        },
+        "expected": "expected-2.jsonl"
+      }
+    ]
+  },
+  "expected": "expected.jsonl"
+}
