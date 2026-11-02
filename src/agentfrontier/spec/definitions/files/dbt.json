@@ -1,0 +1,356 @@
+{
+  "specVersion": "1",
+  "id": "dbt",
+  "name": "dbt project",
+  "aliases": [
+    "dbt_manifest"
+  ],
+  "protocol": "files",
+  "category": "transformation",
+  "status": "experimental",
+  "description": "A dbt project, read from its manifest.json (dbt 1.5 and later; run dbt parse, compile or build first): models, seeds, snapshots and sources as datasets in their warehouse database and schema, column descriptions and types, model dependencies as lineage, metrics, and the entities of semantic models as business terms. Nothing is read from the warehouse itself.",
+  "properties": [
+    {
+      "key": "projectDir",
+      "label": "Project folder",
+      "type": "string",
+      "required": true,
+      "help": "The folder that holds dbt_project.yml"
+    },
+    {
+      "key": "manifest",
+      "label": "Manifest",
+      "type": "string",
+      "default": "target/manifest.json",
+      "help": "Relative to the project folder."
+    }
+  ],
+  "options": [
+    {
+      "key": "maxDocumentBytes",
+      "label": "Largest manifest to read (bytes)",
+      "type": "integer",
+      "default": "268435456"
+    }
+  ],
+  "auth": [
+    "none"
+  ],
+  "connection": {
+    "files": {
+      "storage": "local",
+      "root": "{{projectDir}}",
+      "maxDocumentBytes": "{{options.maxDocumentBytes}}",
+      "auth": {
+        "none": {}
+      }
+    }
+  },
+  "hierarchy": [
+    {
+      "level": "database",
+      "label": "Database",
+      "list": "databases"
+    },
+    {
+      "level": "schema",
+      "label": "Schema",
+      "list": "schemas"
+    }
+  ],
+  "operations": {
+    "test": {
+      "entity": "source",
+      "files": {
+        "op": "document",
+        "path": "{{manifest}}",
+        "records": "$.metadata",
+        "where": {}
+      },
+      "fields": {
+        "dbtVersion": "dbt_version",
+        "project": "project_name"
+      },
+      "extras": "drop"
+    },
+    "source": {
+      "entity": "source",
+      "files": {
+        "op": "document",
+        "path": "{{manifest}}",
+        "records": "$.metadata",
+        "where": {}
+      },
+      "fields": {
+        "product": {
+          "value": "dbt"
+        },
+        "version": "dbt_version",
+        "comment": "project_name",
+        "adapter": "adapter_type",
+        "generatedAt": "generated_at"
+      },
+      "extras": "drop"
+    },
+    "databases": {
+      "entity": "container",
+      "files": {
+        "op": "document",
+        "path": "{{manifest}}",
+        "records": [
+          "$.nodes.*",
+          "$.sources.*"
+        ],
+        "where": {
+          "resource_type": [
+            "model",
+            "seed",
+            "snapshot",
+            "source"
+          ]
+        }
+      },
+      "fields": {
+        "name": "database",
+        "schema": false
+      },
+      "extras": "drop",
+      "collect": {
+        "by": [
+          "name"
+        ]
+      }
+    },
+    "schemas": {
+      "entity": "container",
+      "scope": "database",
+      "files": {
+        "op": "document",
+        "path": "{{manifest}}",
+        "records": [
+          "$.nodes.*",
+          "$.sources.*"
+        ],
+        "where": {
+          "resource_type": [
+            "model",
+            "seed",
+            "snapshot",
+            "source"
+          ],
+          "database": "{{database}}"
+        }
+      },
+      "fields": {
+        "name": "schema"
+      },
+      "extras": "drop",
+      "collect": {
+        "by": [
+          "name"
+        ]
+      }
+    },
+    "datasets": {
+      "entity": "dataset",
+      "scope": "schema",
+      "files": {
+        "op": "document",
+        "path": "{{manifest}}",
+        "records": [
+          "$.nodes.*",
+          "$.sources.*"
+        ],
+        "where": {
+          "resource_type": [
+            "model",
+            "seed",
+            "snapshot",
+            "source"
+          ],
+          "database": "{{database}}",
+          "schema": "{{schema}}"
+        }
+      },
+      "fields": {
+        "name": {
+          "template": "{{alias}}{{identifier}}"
+        },
+        "type": {
+          "from": "config.materialized",
+          "values": {
+            "view": "view",
+            "ephemeral": "view",
+            "materialized_view": "materialized_view"
+          },
+          "else": "table",
+          "default": "table"
+        },
+        "comment": "description",
+        "owner": "meta.owner",
+        "location": "original_file_path",
+        "uniqueId": "unique_id",
+        "resourceType": "resource_type",
+        "materialized": "config.materialized",
+        "tags": "tags",
+        "sourceName": "source_name"
+      },
+      "extras": "drop"
+    },
+    "fields": {
+      "entity": "field",
+      "scope": "dataset",
+      "files": {
+        "op": "document",
+        "path": "{{manifest}}",
+        "records": [
+          "$.nodes.*",
+          "$.sources.*"
+        ],
+        "where": {
+          "resource_type": [
+            "model",
+            "seed",
+            "snapshot",
+            "source"
+          ],
+          "database": "{{database}}",
+          "schema": "{{schema}}",
+          "alias": "{{dataset}}"
+        },
+        "each": "$.columns.*"
+      },
+      "fields": {
+        "name": "name",
+        "dataType": "data_type",
+        "comment": "description",
+        "tags": "tags"
+      },
+      "extras": "drop"
+    },
+    "source_fields": {
+      "entity": "field",
+      "scope": "dataset",
+      "files": {
+        "op": "document",
+        "path": "{{manifest}}",
+        "records": "$.sources.*",
+        "where": {
+          "database": "{{database}}",
+          "schema": "{{schema}}",
+          "identifier": "{{dataset}}"
+        },
+        "each": "$.columns.*"
+      },
+      "fields": {
+        "name": "name",
+        "dataType": "data_type",
+        "comment": "description",
+        "tags": "tags"
+      },
+      "extras": "drop"
+    },
+    "schema_models": {
+      "entity": "record",
+      "aspect": "internal",
+      "scope": "schema",
+      "description": "Models, seeds and snapshots of a schema, for the lineage operation.",
+      "files": {
+        "op": "document",
+        "path": "{{manifest}}",
+        "records": "$.nodes.*",
+        "where": {
+          "resource_type": [
+            "model",
+            "seed",
+            "snapshot"
+          ],
+          "database": "{{database}}",
+          "schema": "{{schema}}"
+        }
+      }
+    },
+    "lineage": {
+      "entity": "lineage",
+      "scope": "schema",
+      "forEach": {
+        "operation": "schema_models",
+        "as": "model",
+        "copy": {
+          "dataset": "alias"
+        }
+      },
+      "files": {
+        "op": "document",
+        "path": "{{manifest}}",
+        "records": [
+          "$.nodes.*",
+          "$.sources.*"
+        ],
+        "where": {
+          "unique_id": "{{model.depends_on.nodes}}"
+        }
+      },
+      "fields": {
+        "upstreamDataset": {
+          "template": "{{alias}}{{identifier}}"
+        },
+        "upstreamDatabase": "database",
+        "upstreamSchema": "schema",
+        "kind": {
+          "value": "dbt"
+        }
+      },
+      "extras": "drop"
+    },
+    "metrics": {
+      "entity": "metric",
+      "aspect": "context",
+      "files": {
+        "op": "document",
+        "path": "{{manifest}}",
+        "records": "$.metrics.*",
+        "where": {
+          "resource_type": "metric"
+        }
+      },
+      "fields": {
+        "name": "name",
+        "definition": "description",
+        "expression": {
+          "template": "{{type_params.expr}}{{type_params.measure.name}}"
+        },
+        "grain": "time_granularity",
+        "owner": "meta.owner",
+        "label": "label",
+        "metricType": "type"
+      },
+      "extras": "drop"
+    },
+    "business_terms": {
+      "entity": "business_term",
+      "aspect": "context",
+      "files": {
+        "op": "document",
+        "path": "{{manifest}}",
+        "records": "$.semantic_models.*",
+        "where": {
+          "resource_type": "semantic_model"
+        },
+        "each": "$.entities.*"
+      },
+      "fields": {
+        "name": "name",
+        "definition": "description",
+        "entityType": "type",
+        "expression": "expr"
+      },
+      "extras": "drop",
+      "collect": {
+        "by": [
+          "name"
+        ]
+      }
+    }
+  }
+}

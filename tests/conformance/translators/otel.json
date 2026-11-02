@@ -1,0 +1,564 @@
+{
+  "description": "Vectors for the otel translator (docs/translators.md). Translate `records` (an object with envelopeVersion is an event whose record is `body`) with `context`; the result must equal `expected` (compared as canonical JSON; CSV text compared as text).",
+  "cases": [
+    {
+      "description": "quality results, an activity and audit events",
+      "context": {
+        "source": "warehouse",
+        "definition": "postgresql",
+        "levels": [
+          "database",
+          "schema"
+        ],
+        "runId": "warehouse-run-1",
+        "tenant": "acme",
+        "startedAt": "2026-10-30T10:15:00Z",
+        "finishedAt": "2026-10-30T10:15:04.200Z"
+      },
+      "records": [
+        {
+          "entity": "quality_result",
+          "source": "warehouse",
+          "check": "run.status",
+          "objectType": "source",
+          "status": "pass",
+          "value": 1.0,
+          "severity": "info",
+          "measuredAt": "2026-10-30T10:15:03.481Z"
+        },
+        {
+          "entity": "quality_result",
+          "source": "warehouse",
+          "check": "freshness.lag",
+          "objectType": "source",
+          "field": "usage",
+          "status": "warn",
+          "value": 5400.0,
+          "severity": "low",
+          "measuredAt": "2026-10-30T10:15:03.481Z",
+          "message": "query history is 90 minutes behind"
+        },
+        {
+          "entity": "activity",
+          "source": "warehouse",
+          "name": "crawl",
+          "actor": "avero",
+          "actorType": "service",
+          "tool": "crawl_source",
+          "status": "failed",
+          "startedAt": "2026-10-30T10:00:00Z",
+          "durationMs": 1234,
+          "correlationId": "task-1"
+        },
+        {
+          "entity": "audit_event",
+          "source": "warehouse",
+          "actor": "alice",
+          "actorType": "user",
+          "action": "sample",
+          "resource": "retail.sales.orders",
+          "resourceType": "dataset",
+          "purpose": "analytics",
+          "decision": "allow",
+          "policyVersion": "demo-1",
+          "outcome": "success",
+          "correlationId": "warehouse-20261030-101500-123",
+          "occurredAt": "2026-10-30T10:15:01.000Z",
+          "records": 10,
+          "sequence": 3,
+          "previousHash": "sha256:aa",
+          "hash": "sha256:bb"
+        },
+        {
+          "entity": "audit_event",
+          "source": "warehouse",
+          "actor": "bot",
+          "action": "read",
+          "resource": "retail.sales.api_keys",
+          "decision": "deny",
+          "outcome": "denied",
+          "reason": "credentials are never released",
+          "occurredAt": "2026-10-30T10:15:02.250Z",
+          "sequence": 4
+        },
+        {
+          "entity": "audit_event",
+          "source": "warehouse",
+          "actor": "alice",
+          "action": "export",
+          "resource": "retail",
+          "outcome": "failure"
+        }
+      ],
+      "expected": {
+        "resourceLogs": [
+          {
+            "resource": {
+              "attributes": [
+                {
+                  "key": "service.name",
+                  "value": {
+                    "stringValue": "agentfrontier"
+                  }
+                },
+                {
+                  "key": "agentfrontier.source",
+                  "value": {
+                    "stringValue": "warehouse"
+                  }
+                },
+                {
+                  "key": "agentfrontier.tenant",
+                  "value": {
+                    "stringValue": "acme"
+                  }
+                },
+                {
+                  "key": "agentfrontier.run_id",
+                  "value": {
+                    "stringValue": "warehouse-run-1"
+                  }
+                }
+              ]
+            },
+            "scopeLogs": [
+              {
+                "scope": {
+                  "name": "agentfrontier"
+                },
+                "logRecords": [
+                  {
+                    "timeUnixNano": "1793355303481000000",
+                    "severityNumber": 9,
+                    "severityText": "INFO",
+                    "body": {
+                      "stringValue": "run.status pass"
+                    },
+                    "attributes": [
+                      {
+                        "key": "agentfrontier.check",
+                        "value": {
+                          "stringValue": "run.status"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.entity",
+                        "value": {
+                          "stringValue": "quality_result"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.measuredAt",
+                        "value": {
+                          "stringValue": "2026-10-30T10:15:03.481Z"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.objectType",
+                        "value": {
+                          "stringValue": "source"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.severity",
+                        "value": {
+                          "stringValue": "info"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.source",
+                        "value": {
+                          "stringValue": "warehouse"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.status",
+                        "value": {
+                          "stringValue": "pass"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.value",
+                        "value": {
+                          "doubleValue": 1.0
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1793355303481000000",
+                    "severityNumber": 13,
+                    "severityText": "WARN",
+                    "body": {
+                      "stringValue": "query history is 90 minutes behind"
+                    },
+                    "attributes": [
+                      {
+                        "key": "agentfrontier.check",
+                        "value": {
+                          "stringValue": "freshness.lag"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.entity",
+                        "value": {
+                          "stringValue": "quality_result"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.field",
+                        "value": {
+                          "stringValue": "usage"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.measuredAt",
+                        "value": {
+                          "stringValue": "2026-10-30T10:15:03.481Z"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.message",
+                        "value": {
+                          "stringValue": "query history is 90 minutes behind"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.objectType",
+                        "value": {
+                          "stringValue": "source"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.severity",
+                        "value": {
+                          "stringValue": "low"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.source",
+                        "value": {
+                          "stringValue": "warehouse"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.status",
+                        "value": {
+                          "stringValue": "warn"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.value",
+                        "value": {
+                          "doubleValue": 5400.0
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1793354400000000000",
+                    "severityNumber": 17,
+                    "severityText": "ERROR",
+                    "body": {
+                      "stringValue": "crawl failed"
+                    },
+                    "attributes": [
+                      {
+                        "key": "agentfrontier.actor",
+                        "value": {
+                          "stringValue": "avero"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.actorType",
+                        "value": {
+                          "stringValue": "service"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.correlationId",
+                        "value": {
+                          "stringValue": "task-1"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.durationMs",
+                        "value": {
+                          "intValue": "1234"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.entity",
+                        "value": {
+                          "stringValue": "activity"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.name",
+                        "value": {
+                          "stringValue": "crawl"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.source",
+                        "value": {
+                          "stringValue": "warehouse"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.startedAt",
+                        "value": {
+                          "stringValue": "2026-10-30T10:00:00Z"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.status",
+                        "value": {
+                          "stringValue": "failed"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.tool",
+                        "value": {
+                          "stringValue": "crawl_source"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1793355301000000000",
+                    "severityNumber": 9,
+                    "severityText": "INFO",
+                    "body": {
+                      "stringValue": "sample success"
+                    },
+                    "attributes": [
+                      {
+                        "key": "agentfrontier.action",
+                        "value": {
+                          "stringValue": "sample"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.actor",
+                        "value": {
+                          "stringValue": "alice"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.actorType",
+                        "value": {
+                          "stringValue": "user"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.correlationId",
+                        "value": {
+                          "stringValue": "warehouse-20261030-101500-123"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.decision",
+                        "value": {
+                          "stringValue": "allow"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.entity",
+                        "value": {
+                          "stringValue": "audit_event"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.hash",
+                        "value": {
+                          "stringValue": "sha256:bb"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.occurredAt",
+                        "value": {
+                          "stringValue": "2026-10-30T10:15:01.000Z"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.outcome",
+                        "value": {
+                          "stringValue": "success"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.policyVersion",
+                        "value": {
+                          "stringValue": "demo-1"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.previousHash",
+                        "value": {
+                          "stringValue": "sha256:aa"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.purpose",
+                        "value": {
+                          "stringValue": "analytics"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.records",
+                        "value": {
+                          "intValue": "10"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.resource",
+                        "value": {
+                          "stringValue": "retail.sales.orders"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.resourceType",
+                        "value": {
+                          "stringValue": "dataset"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.sequence",
+                        "value": {
+                          "intValue": "3"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.source",
+                        "value": {
+                          "stringValue": "warehouse"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1793355302250000000",
+                    "severityNumber": 13,
+                    "severityText": "WARN",
+                    "body": {
+                      "stringValue": "read denied"
+                    },
+                    "attributes": [
+                      {
+                        "key": "agentfrontier.action",
+                        "value": {
+                          "stringValue": "read"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.actor",
+                        "value": {
+                          "stringValue": "bot"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.decision",
+                        "value": {
+                          "stringValue": "deny"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.entity",
+                        "value": {
+                          "stringValue": "audit_event"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.occurredAt",
+                        "value": {
+                          "stringValue": "2026-10-30T10:15:02.250Z"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.outcome",
+                        "value": {
+                          "stringValue": "denied"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.reason",
+                        "value": {
+                          "stringValue": "credentials are never released"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.resource",
+                        "value": {
+                          "stringValue": "retail.sales.api_keys"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.sequence",
+                        "value": {
+                          "intValue": "4"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.source",
+                        "value": {
+                          "stringValue": "warehouse"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "timeUnixNano": "1793355304200000000",
+                    "severityNumber": 17,
+                    "severityText": "ERROR",
+                    "body": {
+                      "stringValue": "export failure"
+                    },
+                    "attributes": [
+                      {
+                        "key": "agentfrontier.action",
+                        "value": {
+                          "stringValue": "export"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.actor",
+                        "value": {
+                          "stringValue": "alice"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.entity",
+                        "value": {
+                          "stringValue": "audit_event"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.outcome",
+                        "value": {
+                          "stringValue": "failure"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.resource",
+                        "value": {
+                          "stringValue": "retail"
+                        }
+                      },
+                      {
+                        "key": "agentfrontier.source",
+                        "value": {
+                          "stringValue": "warehouse"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

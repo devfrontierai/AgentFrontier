@@ -1,0 +1,23 @@
+{
+  "description": "Files engine reading one JSON document: a dbt manifest. Databases and schemas collected from models, seeds, snapshots and sources (tests left out), dataset types from the materialization (ephemeral as a view, seeds and sources as tables), source tables named by their identifier, column docs from models and sources, model dependencies as lineage through forEach over a templated where list, simple and derived metrics, and semantic-model entities as business terms with duplicates collected.",
+  "connection": {
+    "id": "conf-dbt",
+    "name": "Conformance dbt",
+    "type": "dbt",
+    "properties": {
+      "projectDir": "{{caseDir}}/project"
+    }
+  },
+  "pipeline": {
+    "aspects": [
+      "metadata",
+      "lineage",
+      "context"
+    ]
+  },
+  "envelope": {
+    "tenantId": "conformance",
+    "expected": "expected-envelope.jsonl"
+  },
+  "expected": "expected.jsonl"
+}

@@ -279,6 +279,31 @@ def test_csv_sink_vectors(tmp_path: Path):
         assert files == c["files"], c["description"]
 
 
+TRANSLATORS = sorted(p.stem for p in (ROOT / "translators").glob("*.json")) if (ROOT / "translators").exists() else []
+
+
+@pytest.mark.parametrize("name", TRANSLATORS)
+def test_translator_vectors(name: str):
+    """Each translator reproduces its vectors exactly (spec docs/translators.md)."""
+    from agentfrontier.translators import TranslationContext, translate
+    doc = json.loads((ROOT / "translators" / (name + ".json")).read_text(encoding="utf-8"))
+    assert doc["cases"]
+    for c in doc["cases"]:
+        records = []
+        for r in c["records"]:
+            if "envelopeVersion" in r:
+                body = r["body"]
+                rec = Record(body["entity"], {k: v for k, v in body.items() if k != "entity"})
+                records.append(Event(rec, {k: v for k, v in r.items() if k != "body"}))
+            else:
+                records.append(Record(r["entity"], {k: v for k, v in r.items() if k != "entity"}))
+        out = translate(name, records, TranslationContext.from_json(c["context"]))
+        if isinstance(out, str):
+            assert out == c["expected"], c["description"]
+        else:
+            assert J.canonical(out) == J.canonical(c["expected"]), c["description"]
+
+
 def test_event_id_vectors():
     """The shared eventId test vectors: every implementation computes the same ids."""
     vectors = json.loads((ROOT / "event-ids.json").read_text(encoding="utf-8"))["vectors"]

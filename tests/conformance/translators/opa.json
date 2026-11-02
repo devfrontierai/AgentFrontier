@@ -1,0 +1,167 @@
+{
+  "description": "Vectors for the opa translator (docs/translators.md). Translate `records` (an object with envelopeVersion is an event whose record is `body`) with `context`; the result must equal `expected` (compared as canonical JSON; CSV text compared as text).",
+  "cases": [
+    {
+      "description": "principals, memberships, grants and delegations",
+      "context": {
+        "source": "warehouse",
+        "definition": "postgresql",
+        "levels": [
+          "database",
+          "schema"
+        ],
+        "runId": "warehouse-run-1",
+        "tenant": "acme",
+        "startedAt": "2026-10-30T10:15:00Z",
+        "finishedAt": "2026-10-30T10:15:04.200Z"
+      },
+      "records": [
+        {
+          "entity": "principal",
+          "source": "warehouse",
+          "name": "alice",
+          "type": "user",
+          "canLogin": true,
+          "memberOf": [
+            "analysts"
+          ]
+        },
+        {
+          "entity": "principal",
+          "source": "warehouse",
+          "name": "analysts",
+          "type": "role",
+          "canLogin": false
+        },
+        {
+          "entity": "principal",
+          "source": "warehouse",
+          "name": "etl",
+          "type": "user",
+          "canLogin": true,
+          "superuser": false
+        },
+        {
+          "entity": "relationship",
+          "source": "warehouse",
+          "subject": "etl",
+          "predicate": "member_of",
+          "object": "writers",
+          "subjectType": "principal"
+        },
+        {
+          "entity": "grant",
+          "source": "warehouse",
+          "database": "retail",
+          "schema": "sales",
+          "dataset": "orders",
+          "principal": "analysts",
+          "privilege": "SELECT",
+          "objectType": "table"
+        },
+        {
+          "entity": "grant",
+          "source": "warehouse",
+          "database": "retail",
+          "schema": "sales",
+          "dataset": "customers",
+          "field": "email",
+          "principal": "alice",
+          "privilege": "SELECT",
+          "objectType": "column"
+        },
+        {
+          "entity": "grant",
+          "source": "warehouse",
+          "database": "retail",
+          "schema": "sales",
+          "principal": "etl",
+          "privilege": "USAGE",
+          "objectType": "schema"
+        },
+        {
+          "entity": "grant",
+          "source": "warehouse",
+          "database": "retail",
+          "schema": "sales",
+          "dataset": "orders",
+          "principal": "analysts",
+          "privilege": "INSERT",
+          "objectType": "table"
+        },
+        {
+          "entity": "delegation",
+          "source": "warehouse",
+          "principal": "alice",
+          "delegate": "support-bot",
+          "delegateType": "agent",
+          "scope": [
+            "read"
+          ],
+          "validTo": "2026-12-31T00:00:00Z"
+        }
+      ],
+      "expected": {
+        "principals": {
+          "alice": {
+            "type": "user",
+            "canLogin": true
+          },
+          "analysts": {
+            "type": "role",
+            "canLogin": false
+          },
+          "etl": {
+            "type": "user",
+            "canLogin": true,
+            "superuser": false
+          }
+        },
+        "memberships": {
+          "alice": [
+            "analysts"
+          ],
+          "etl": [
+            "writers"
+          ]
+        },
+        "grants": [
+          {
+            "principal": "etl",
+            "privilege": "USAGE",
+            "objectType": "schema",
+            "object": "retail.sales"
+          },
+          {
+            "principal": "alice",
+            "privilege": "SELECT",
+            "objectType": "column",
+            "object": "retail.sales.customers.email"
+          },
+          {
+            "principal": "analysts",
+            "privilege": "INSERT",
+            "objectType": "table",
+            "object": "retail.sales.orders"
+          },
+          {
+            "principal": "analysts",
+            "privilege": "SELECT",
+            "objectType": "table",
+            "object": "retail.sales.orders"
+          }
+        ],
+        "delegations": [
+          {
+            "principal": "alice",
+            "delegate": "support-bot",
+            "scope": [
+              "read"
+            ],
+            "validTo": "2026-12-31T00:00:00Z"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,418 @@
+{
+  "metadata": {
+    "dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v12.json",
+    "dbt_version": "1.9.4",
+    "generated_at": "2026-10-30T09:00:00.000000Z",
+    "project_name": "shop",
+    "adapter_type": "postgres"
+  },
+  "nodes": {
+    "model.shop.stg_orders": {
+      "resource_type": "model",
+      "name": "stg_orders",
+      "alias": "stg_orders",
+      "database": "analytics",
+      "schema": "staging",
+      "package_name": "shop",
+      "path": "staging/stg_orders.sql",
+      "original_file_path": "models/staging/stg_orders.sql",
+      "unique_id": "model.shop.stg_orders",
+      "fqn": [
+        "shop",
+        "staging",
+        "stg_orders"
+      ],
+      "description": "Orders, cleaned",
+      "columns": {
+        "order_id": {
+          "name": "order_id",
+          "description": "Primary key of an order",
+          "meta": {},
+          "data_type": "integer",
+          "constraints": [],
+          "quote": null,
+          "tags": []
+        },
+        "customer_id": {
+          "name": "customer_id",
+          "description": "",
+          "meta": {},
+          "data_type": "integer",
+          "constraints": [],
+          "quote": null,
+          "tags": []
+        },
+        "amount": {
+          "name": "amount",
+          "description": "Order total in EUR",
+          "meta": {},
+          "data_type": "numeric",
+          "constraints": [],
+          "quote": null,
+          "tags": []
+        },
+        "ordered_at": {
+          "name": "ordered_at",
+          "description": "",
+          "meta": {},
+          "data_type": "timestamp",
+          "constraints": [],
+          "quote": null,
+          "tags": []
+        }
+      },
+      "meta": {},
+      "tags": [],
+      "config": {
+        "materialized": "view",
+        "enabled": true
+      },
+      "depends_on": {
+        "macros": [],
+        "nodes": [
+          "source.shop.raw.orders"
+        ]
+      },
+      "relation_name": "\"analytics\".\"staging\".\"stg_orders\"",
+      "raw_code": "select 1"
+    },
+    "model.shop.stg_customers": {
+      "resource_type": "model",
+      "name": "stg_customers",
+      "alias": "stg_customers",
+      "database": "analytics",
+      "schema": "staging",
+      "package_name": "shop",
+      "path": "staging/stg_customers.sql",
+      "original_file_path": "models/staging/stg_customers.sql",
+      "unique_id": "model.shop.stg_customers",
+      "fqn": [
+        "shop",
+        "staging",
+        "stg_customers"
+      ],
+      "description": "",
+      "columns": {
+        "customer_id": {
+          "name": "customer_id",
+          "description": "",
+          "meta": {},
+          "data_type": "integer",
+          "constraints": [],
+          "quote": null,
+          "tags": []
+        },
+        "email": {
+          "name": "email",
+          "description": "",
+          "meta": {},
+          "data_type": "text",
+          "constraints": [],
+          "quote": null,
+          "tags": [
+            "pii"
+          ]
+        }
+      },
+      "meta": {},
+      "tags": [],
+      "config": {
+        "materialized": "view",
+        "enabled": true
+      },
+      "depends_on": {
+        "macros": [],
+        "nodes": [
+          "source.shop.raw.customers"
+        ]
+      },
+      "relation_name": "\"analytics\".\"staging\".\"stg_customers\"",
+      "raw_code": "select 1"
+    },
+    "model.shop.fct_orders": {
+      "resource_type": "model",
+      "name": "fct_orders",
+      "alias": "fct_orders",
+      "database": "analytics",
+      "schema": "marts",
+      "package_name": "shop",
+      "path": "marts/fct_orders.sql",
+      "original_file_path": "models/marts/fct_orders.sql",
+      "unique_id": "model.shop.fct_orders",
+      "fqn": [
+        "shop",
+        "marts",
+        "fct_orders"
+      ],
+      "description": "Order facts",
+      "columns": {
+        "order_id": {
+          "name": "order_id",
+          "description": "One row per order",
+          "meta": {},
+          "data_type": null,
+          "constraints": [],
+          "quote": null,
+          "tags": []
+        },
+        "customer_id": {
+          "name": "customer_id",
+          "description": "",
+          "meta": {},
+          "data_type": null,
+          "constraints": [],
+          "quote": null,
+          "tags": []
+        },
+        "amount": {
+          "name": "amount",
+          "description": "",
+          "meta": {},
+          "data_type": null,
+          "constraints": [],
+          "quote": null,
+          "tags": []
+        },
+        "country_code": {
+          "name": "country_code",
+          "description": "",
+          "meta": {},
+          "data_type": null,
+          "constraints": [],
+          "quote": null,
+          "tags": []
+        }
+      },
+      "meta": {
+        "owner": "finance@example.com"
+      },
+      "tags": [
+        "finance"
+      ],
+      "config": {
+        "materialized": "table",
+        "enabled": true
+      },
+      "depends_on": {
+        "macros": [],
+        "nodes": [
+          "model.shop.stg_orders",
+          "model.shop.stg_customers",
+          "seed.shop.countries"
+        ]
+      },
+      "relation_name": "\"analytics\".\"marts\".\"fct_orders\"",
+      "raw_code": "select 1"
+    },
+    "model.shop.int_scratch": {
+      "resource_type": "model",
+      "name": "int_scratch",
+      "alias": "int_scratch",
+      "database": "analytics",
+      "schema": "marts",
+      "package_name": "shop",
+      "path": "marts/int_scratch.sql",
+      "original_file_path": "models/marts/int_scratch.sql",
+      "unique_id": "model.shop.int_scratch",
+      "fqn": [
+        "shop",
+        "marts",
+        "int_scratch"
+      ],
+      "description": "",
+      "columns": {},
+      "meta": {},
+      "tags": [],
+      "config": {
+        "materialized": "ephemeral",
+        "enabled": true
+      },
+      "depends_on": {
+        "macros": [],
+        "nodes": [
+          "model.shop.stg_orders"
+        ]
+      },
+      "relation_name": "\"analytics\".\"marts\".\"int_scratch\"",
+      "raw_code": "select 1"
+    },
+    "seed.shop.countries": {
+      "resource_type": "seed",
+      "name": "countries",
+      "alias": "countries",
+      "database": "analytics",
+      "schema": "seeds",
+      "unique_id": "seed.shop.countries",
+      "description": "ISO countries",
+      "columns": {},
+      "config": {
+        "materialized": "seed"
+      },
+      "depends_on": {
+        "macros": [],
+        "nodes": []
+      },
+      "tags": [],
+      "meta": {},
+      "original_file_path": "seeds/countries.csv"
+    },
+    "test.shop.not_null_fct_orders_order_id.abc": {
+      "resource_type": "test",
+      "name": "not_null_fct_orders_order_id",
+      "database": "analytics",
+      "schema": "dbt_test__audit",
+      "unique_id": "test.shop.not_null_fct_orders_order_id.abc",
+      "depends_on": {
+        "nodes": [
+          "model.shop.fct_orders"
+        ]
+      },
+      "columns": {},
+      "config": {
+        "materialized": "test"
+      }
+    }
+  },
+  "sources": {
+    "source.shop.raw.orders": {
+      "resource_type": "source",
+      "name": "orders",
+      "identifier": "orders",
+      "source_name": "raw",
+      "database": "raw_db",
+      "schema": "shop_raw",
+      "unique_id": "source.shop.raw.orders",
+      "description": "Orders as loaded",
+      "columns": {
+        "id": {
+          "name": "id",
+          "description": "Order id",
+          "meta": {},
+          "data_type": "bigint",
+          "constraints": [],
+          "quote": null,
+          "tags": []
+        },
+        "total": {
+          "name": "total",
+          "description": "",
+          "meta": {},
+          "data_type": "numeric",
+          "constraints": [],
+          "quote": null,
+          "tags": []
+        }
+      },
+      "meta": {
+        "owner": "platform@example.com"
+      },
+      "tags": [],
+      "original_file_path": "models/sources.yml"
+    },
+    "source.shop.raw.customers": {
+      "resource_type": "source",
+      "name": "customers",
+      "identifier": "customers_v2",
+      "source_name": "raw",
+      "database": "raw_db",
+      "schema": "shop_raw",
+      "unique_id": "source.shop.raw.customers",
+      "description": "",
+      "columns": {},
+      "meta": {},
+      "tags": [],
+      "original_file_path": "models/sources.yml"
+    }
+  },
+  "metrics": {
+    "metric.shop.revenue": {
+      "resource_type": "metric",
+      "name": "revenue",
+      "label": "Revenue",
+      "description": "Sum of order amounts",
+      "type": "simple",
+      "type_params": {
+        "measure": {
+          "name": "order_total",
+          "filter": null
+        }
+      },
+      "time_granularity": "day",
+      "meta": {
+        "owner": "finance@example.com"
+      },
+      "unique_id": "metric.shop.revenue"
+    },
+    "metric.shop.aov": {
+      "resource_type": "metric",
+      "name": "average_order_value",
+      "label": "AOV",
+      "description": "Revenue per order",
+      "type": "derived",
+      "type_params": {
+        "expr": "revenue / orders",
+        "metrics": [
+          {
+            "name": "revenue"
+          }
+        ]
+      },
+      "meta": {},
+      "unique_id": "metric.shop.aov"
+    }
+  },
+  "semantic_models": {
+    "semantic_model.shop.orders": {
+      "resource_type": "semantic_model",
+      "name": "orders",
+      "description": "Orders semantic model",
+      "node_relation": {
+        "alias": "fct_orders",
+        "schema_name": "marts",
+        "database": "analytics"
+      },
+      "entities": [
+        {
+          "name": "order",
+          "type": "primary",
+          "expr": "order_id",
+          "description": "A customer's purchase"
+        },
+        {
+          "name": "customer",
+          "type": "foreign",
+          "expr": "customer_id",
+          "description": null
+        }
+      ],
+      "measures": [
+        {
+          "name": "order_total",
+          "agg": "sum",
+          "expr": "amount"
+        }
+      ]
+    },
+    "semantic_model.shop.customers": {
+      "resource_type": "semantic_model",
+      "name": "customers",
+      "description": "",
+      "node_relation": {
+        "alias": "stg_customers"
+      },
+      "entities": [
+        {
+          "name": "customer",
+          "type": "primary",
+          "expr": "customer_id",
+          "description": "A person or company that buys"
+        }
+      ]
+    }
+  },
+  "exposures": {},
+  "macros": {},
+  "docs": {},
+  "parent_map": {},
+  "child_map": {}
+}

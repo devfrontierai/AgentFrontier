@@ -1,0 +1,885 @@
+{
+  "description": "Vectors for the openlineage translator (docs/translators.md). Translate `records` (an object with envelopeVersion is an event whose record is `body`) with `context`; the result must equal `expected` (compared as canonical JSON; CSV text compared as text).",
+  "cases": [
+    {
+      "description": "asset and column lineage with the default namespace",
+      "context": {
+        "source": "warehouse",
+        "definition": "postgresql",
+        "levels": [
+          "database",
+          "schema"
+        ],
+        "runId": "warehouse-run-1",
+        "tenant": "acme",
+        "startedAt": "2026-10-30T10:15:00Z",
+        "finishedAt": "2026-10-30T10:15:04.200Z"
+      },
+      "records": [
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "container",
+            "source": "warehouse",
+            "database": "retail",
+            "level": "database",
+            "name": "retail"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "container",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "level": "schema",
+            "name": "sales"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "container",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "level": "schema",
+            "name": "mart"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "dataset",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "name": "orders",
+            "type": "table",
+            "comment": "One row per checkout",
+            "rowCount": 1042,
+            "owner": "sales_app",
+            "isPartition": false,
+            "properties": {
+              "tablespace": "pg_default"
+            }
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "dataset",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "name": "customers",
+            "type": "table"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "dataset",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "name": "v_revenue",
+            "type": "view",
+            "definition": "SELECT o.order_date, sum(o.total) AS revenue, c.email FROM sales.orders o JOIN sales.customers c ON c.id = o.customer_id GROUP BY 1, 3"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "tombstone",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "dataset",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "name": "legacy_orders"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "id",
+            "ordinal": 1,
+            "dataType": "integer",
+            "nullable": false
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "customer_id",
+            "ordinal": 2,
+            "dataType": "bigint",
+            "nullable": true
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "total",
+            "ordinal": 3,
+            "dataType": "numeric(10,2)",
+            "comment": "Order total, EUR"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "order_date",
+            "ordinal": 4,
+            "dataType": "timestamp(6) with time zone",
+            "nullable": false
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "tags",
+            "ordinal": 5,
+            "dataType": "text[]"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "extra",
+            "ordinal": 6,
+            "dataType": "jsonb"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "search",
+            "ordinal": 7,
+            "dataType": "tsvector"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "customers",
+            "name": "id",
+            "ordinal": 1,
+            "dataType": "integer",
+            "nullable": false
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "customers",
+            "name": "email",
+            "ordinal": 2,
+            "dataType": "character varying(120)",
+            "nullable": false
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "customers",
+            "name": "country",
+            "ordinal": 3,
+            "dataType": "char",
+            "maxLength": 2
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "customers",
+            "name": "active",
+            "ordinal": 4,
+            "dataType": "boolean"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "name": "order_date",
+            "ordinal": 1,
+            "dataType": "timestamp with time zone"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "name": "revenue",
+            "ordinal": 2,
+            "dataType": "numeric"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "name": "email",
+            "ordinal": 3,
+            "dataType": "varchar"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "constraint",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "orders_pkey",
+            "type": "primary_key",
+            "columns": [
+              "id"
+            ]
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "constraint",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "orders_customer_id_fkey",
+            "type": "foreign_key",
+            "columns": [
+              "customer_id"
+            ],
+            "refDataset": "customers",
+            "refColumns": [
+              "id"
+            ]
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "constraint",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "customers",
+            "name": "customers_pkey",
+            "type": "primary_key",
+            "columns": [
+              "id"
+            ]
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "constraint",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "customers",
+            "name": "customers_email_key",
+            "type": "unique",
+            "columns": [
+              "email"
+            ]
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "constraint",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "customers",
+            "name": "customers_ext_key",
+            "type": "unique",
+            "columns": [
+              "country",
+              "email"
+            ]
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "tag",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "domain",
+            "value": "sales",
+            "objectType": "dataset"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "tag",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "certified",
+            "objectType": "dataset"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "lineage",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "upstreamSchema": "sales",
+            "upstreamDataset": "orders",
+            "kind": "view"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "lineage",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "upstreamSchema": "sales",
+            "upstreamDataset": "customers",
+            "kind": "view"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "parsed",
+          "confidence": 0.9,
+          "body": {
+            "entity": "lineage",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "field": "order_date",
+            "upstreamSchema": "sales",
+            "upstreamDataset": "orders",
+            "upstreamField": "order_date",
+            "kind": "view",
+            "transformation": "identity"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "parsed",
+          "confidence": 0.7,
+          "body": {
+            "entity": "lineage",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "field": "revenue",
+            "upstreamSchema": "sales",
+            "upstreamDataset": "orders",
+            "upstreamField": "total",
+            "kind": "view",
+            "transformation": "expression"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "parsed",
+          "confidence": 0.9,
+          "body": {
+            "entity": "lineage",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "field": "email",
+            "upstreamSchema": "sales",
+            "upstreamDataset": "customers",
+            "upstreamField": "email",
+            "kind": "view",
+            "transformation": "identity"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "eventType": "COMPLETE",
+          "eventTime": "2026-10-30T10:15:04.200Z",
+          "producer": "https://github.com/devfrontierai/AgentFrontier",
+          "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunEvent",
+          "run": {
+            "runId": "25e202a9-cf3a-84c4-9974-a364522213e3"
+          },
+          "job": {
+            "namespace": "agentfrontier://warehouse",
+            "name": "retail.mart.v_revenue",
+            "facets": {
+              "jobType": {
+                "_producer": "https://github.com/devfrontierai/AgentFrontier",
+                "_schemaURL": "https://openlineage.io/spec/facets/2-0-3/JobTypeJobFacet.json#/$defs/JobTypeJobFacet",
+                "processingType": "BATCH",
+                "integration": "AGENTFRONTIER",
+                "jobType": "VIEW"
+              },
+              "sql": {
+                "_producer": "https://github.com/devfrontierai/AgentFrontier",
+                "_schemaURL": "https://openlineage.io/spec/facets/1-1-0/SQLJobFacet.json#/$defs/SQLJobFacet",
+                "query": "SELECT o.order_date, sum(o.total) AS revenue, c.email FROM sales.orders o JOIN sales.customers c ON c.id = o.customer_id GROUP BY 1, 3"
+              }
+            }
+          },
+          "inputs": [
+            {
+              "namespace": "agentfrontier://warehouse",
+              "name": "retail.sales.customers",
+              "facets": {
+                "schema": {
+                  "_producer": "https://github.com/devfrontierai/AgentFrontier",
+                  "_schemaURL": "https://openlineage.io/spec/facets/1-1-1/SchemaDatasetFacet.json#/$defs/SchemaDatasetFacet",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": "integer"
+                    },
+                    {
+                      "name": "email",
+                      "type": "character varying(120)"
+                    },
+                    {
+                      "name": "country",
+                      "type": "char"
+                    },
+                    {
+                      "name": "active",
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "namespace": "agentfrontier://warehouse",
+              "name": "retail.sales.orders",
+              "facets": {
+                "schema": {
+                  "_producer": "https://github.com/devfrontierai/AgentFrontier",
+                  "_schemaURL": "https://openlineage.io/spec/facets/1-1-1/SchemaDatasetFacet.json#/$defs/SchemaDatasetFacet",
+                  "fields": [
+                    {
+                      "name": "id",
+                      "type": "integer"
+                    },
+                    {
+                      "name": "customer_id",
+                      "type": "bigint"
+                    },
+                    {
+                      "name": "total",
+                      "type": "numeric(10,2)",
+                      "description": "Order total, EUR"
+                    },
+                    {
+                      "name": "order_date",
+                      "type": "timestamp(6) with time zone"
+                    },
+                    {
+                      "name": "tags",
+                      "type": "text[]"
+                    },
+                    {
+                      "name": "extra",
+                      "type": "jsonb"
+                    },
+                    {
+                      "name": "search",
+                      "type": "tsvector"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "namespace": "agentfrontier://warehouse",
+              "name": "retail.mart.v_revenue",
+              "facets": {
+                "schema": {
+                  "_producer": "https://github.com/devfrontierai/AgentFrontier",
+                  "_schemaURL": "https://openlineage.io/spec/facets/1-1-1/SchemaDatasetFacet.json#/$defs/SchemaDatasetFacet",
+                  "fields": [
+                    {
+                      "name": "order_date",
+                      "type": "timestamp with time zone"
+                    },
+                    {
+                      "name": "revenue",
+                      "type": "numeric"
+                    },
+                    {
+                      "name": "email",
+                      "type": "varchar"
+                    }
+                  ]
+                },
+                "columnLineage": {
+                  "_producer": "https://github.com/devfrontierai/AgentFrontier",
+                  "_schemaURL": "https://openlineage.io/spec/facets/1-2-0/ColumnLineageDatasetFacet.json#/$defs/ColumnLineageDatasetFacet",
+                  "fields": {
+                    "email": {
+                      "inputFields": [
+                        {
+                          "namespace": "agentfrontier://warehouse",
+                          "name": "retail.sales.customers",
+                          "field": "email",
+                          "transformations": [
+                            {
+                              "type": "DIRECT",
+                              "subtype": "IDENTITY",
+                              "description": "",
+                              "masking": false
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "order_date": {
+                      "inputFields": [
+                        {
+                          "namespace": "agentfrontier://warehouse",
+                          "name": "retail.sales.orders",
+                          "field": "order_date",
+                          "transformations": [
+                            {
+                              "type": "DIRECT",
+                              "subtype": "IDENTITY",
+                              "description": "",
+                              "masking": false
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "revenue": {
+                      "inputFields": [
+                        {
+                          "namespace": "agentfrontier://warehouse",
+                          "name": "retail.sales.orders",
+                          "field": "total",
+                          "transformations": [
+                            {
+                              "type": "DIRECT",
+                              "subtype": "TRANSFORMATION",
+                              "description": "",
+                              "masking": false
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "description": "namespace option",
+      "context": {
+        "source": "warehouse",
+        "definition": "postgresql",
+        "levels": [
+          "database",
+          "schema"
+        ],
+        "runId": "warehouse-run-1",
+        "tenant": "acme",
+        "startedAt": "2026-10-30T10:15:00Z",
+        "finishedAt": "2026-10-30T10:15:04.200Z",
+        "options": {
+          "namespace": "postgres://db.example.com:5432"
+        }
+      },
+      "records": [
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "lineage",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "upstreamSchema": "sales",
+            "upstreamDataset": "orders",
+            "kind": "view"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "lineage",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "upstreamSchema": "sales",
+            "upstreamDataset": "customers",
+            "kind": "view"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "eventType": "COMPLETE",
+          "eventTime": "2026-10-30T10:15:04.200Z",
+          "producer": "https://github.com/devfrontierai/AgentFrontier",
+          "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunEvent",
+          "run": {
+            "runId": "25e202a9-cf3a-84c4-9974-a364522213e3"
+          },
+          "job": {
+            "namespace": "postgres://db.example.com:5432",
+            "name": "retail.mart.v_revenue",
+            "facets": {
+              "jobType": {
+                "_producer": "https://github.com/devfrontierai/AgentFrontier",
+                "_schemaURL": "https://openlineage.io/spec/facets/2-0-3/JobTypeJobFacet.json#/$defs/JobTypeJobFacet",
+                "processingType": "BATCH",
+                "integration": "AGENTFRONTIER",
+                "jobType": "QUERY"
+              }
+            }
+          },
+          "inputs": [
+            {
+              "namespace": "postgres://db.example.com:5432",
+              "name": "retail.sales.customers",
+              "facets": {}
+            },
+            {
+              "namespace": "postgres://db.example.com:5432",
+              "name": "retail.sales.orders",
+              "facets": {}
+            }
+          ],
+          "outputs": [
+            {
+              "namespace": "postgres://db.example.com:5432",
+              "name": "retail.mart.v_revenue",
+              "facets": {}
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

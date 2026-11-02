@@ -1,0 +1,60 @@
+{
+  "description": "Vectors for the focus translator (docs/translators.md). Translate `records` (an object with envelopeVersion is an event whose record is `body`) with `context`; the result must equal `expected` (compared as canonical JSON; CSV text compared as text).",
+  "cases": [
+    {
+      "description": "LLM usage and a tax line across a month boundary",
+      "context": {
+        "source": "warehouse",
+        "definition": "postgresql",
+        "levels": [
+          "database",
+          "schema"
+        ],
+        "runId": "warehouse-run-1",
+        "tenant": "acme",
+        "startedAt": "2026-10-30T10:15:00Z",
+        "finishedAt": "2026-10-30T10:15:04.200Z"
+      },
+      "records": [
+        {
+          "entity": "usage_cost",
+          "source": "warehouse",
+          "provider": "Anthropic",
+          "billingAccountId": "org-1",
+          "subAccountId": "ws-research",
+          "serviceName": "Messages",
+          "model": "claude-opus-5-5",
+          "chargePeriodStart": "2026-10-30T00:00:00Z",
+          "chargePeriodEnd": "2026-10-31T00:00:00Z",
+          "chargeCategory": "usage",
+          "consumedQuantity": 1250000,
+          "consumedUnit": "tokens",
+          "inputTokens": 1000000,
+          "outputTokens": 250000,
+          "cachedInputTokens": 400000,
+          "requests": 320,
+          "billedCost": 12.75,
+          "effectiveCost": 12.75,
+          "billingCurrency": "USD",
+          "invoiceStatus": "open"
+        },
+        {
+          "entity": "usage_cost",
+          "source": "warehouse",
+          "provider": "AWS",
+          "billingAccountId": "123456789012",
+          "serviceName": "Amazon S3",
+          "regionId": "eu-west-1",
+          "resourceId": "arn:aws:s3:::conf-bucket",
+          "chargePeriodStart": "2026-12-31T23:00:00Z",
+          "chargePeriodEnd": "2027-01-01T00:00:00Z",
+          "chargeCategory": "tax",
+          "billedCost": 0.42,
+          "effectiveCost": 0.42,
+          "billingCurrency": "USD"
+        }
+      ],
+      "expected": "BilledCost,BillingAccountId,BillingCurrency,BillingPeriodEnd,BillingPeriodStart,ChargeCategory,ChargePeriodEnd,ChargePeriodStart,ConsumedQuantity,ConsumedUnit,EffectiveCost,InvoiceIssuerName,ProviderName,PublisherName,RegionId,ResourceId,ServiceName,SubAccountId,x_CachedInputTokens,x_CacheWriteTokens,x_InputTokens,x_InvoiceStatus,x_Model,x_OutputTokens,x_Requests\n12.75,org-1,USD,2026-11-01T00:00:00Z,2026-10-01T00:00:00Z,Usage,2026-10-31T00:00:00Z,2026-10-30T00:00:00Z,1250000,tokens,12.75,Anthropic,Anthropic,Anthropic,,,Messages,ws-research,400000,,1000000,open,claude-opus-5-5,250000,320\n0.42,123456789012,USD,2027-01-01T00:00:00Z,2026-12-01T00:00:00Z,Tax,2027-01-01T00:00:00Z,2026-12-31T23:00:00Z,,,0.42,AWS,AWS,AWS,eu-west-1,arn:aws:s3:::conf-bucket,Amazon S3,,,,,,,,\n"
+    }
+  ]
+}

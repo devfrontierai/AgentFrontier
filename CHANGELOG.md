@@ -3,7 +3,23 @@
 Versions follow semantic versioning. Each release names the spec tag it implements; see the spec's
 [VERSIONING.md](https://github.com/devfrontierai/agentfrontier-spec/blob/main/VERSIONING.md).
 
-## 0.3.0 (unreleased): plan phase 1
+## 0.4.0 (unreleased): plan phase 3
+
+Implements **spec-v1.5.0**.
+
+* **Graphs** (`agentfrontier.graph`): `MemoryGraphStore` and `JsonGraphStore` with `neighborhood`, `traversal`,
+  `snapshot`, `close_missing` and `as_of`; a mandatory access filter (`ALLOW_ALL`, or `policy_access(pdp, ...)` from
+  any policy decision point) that also stops traversal through hidden nodes; `GraphBuilder` for the asset, lineage,
+  authority, quality and audit graphs with provenance and validity intervals (tombstones close nodes, history kept);
+  the `graph` sink.
+* **Translators** (`agentfrontier.translators`): OpenLineage, OpenMetadata, DataHub, OPA, OTLP logs, FOCUS and OCSF,
+  pure and deterministic, with the spec's vectors.
+* **Sinks:** `openlineage` (checked against Marquez 0.50: events accepted, column lineage served back), `datahub`,
+  `openmetadata` (looks tables up by FQN for lineage), `opa`, `otlp`, `focus`, `ocsf`, and `kafka` (checked against
+  Redpanda; `kafka` extra).
+* **dbt projects:** the `dbt` definition and the files engine's `document` operation.
+
+## 0.3.0: plan phase 1
 
 Implements **spec-v1.4.0**.
 

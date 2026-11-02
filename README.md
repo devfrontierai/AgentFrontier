@@ -58,6 +58,7 @@ pip install "agentfrontier[postgres] @ git+https://github.com/devfrontierai/Agen
 | `parquet` | pyarrow: the parquet sink and Parquet schemas in the files engine |
 | `lineage` | sqlglot: column lineage parsed from view SQL |
 | `otel` | opentelemetry-api: spans for runs, scopes and operations |
+| `kafka` | kafka-python: the kafka sink |
 
 From a checkout: `pip install -e ".[dev,postgres,mysql,oracle,neo4j]"`. Once the package is on PyPI this becomes
 `pip install "agentfrontier[postgres]"`. [docs/integration.md](docs/integration.md) covers pinning, connection
@@ -173,6 +174,23 @@ agentfrontier authority out/acl --principal alice
 Without a policy nothing changes. See [docs/governance.md](docs/governance.md); the contracts are in the spec's
 `docs/policy.md`, `classification.md`, `authority.md` and `audit.md`.
 
+## Graphs and standard formats
+
+A run can build a graph (assets, lineage, authority, quality, audit) in memory or in a JSON file, and every
+traversal goes through an access filter, so a node the caller may not see hides what lies behind it too. The same
+run can be published in the formats other tools read: OpenLineage (Marquez), OpenMetadata, DataHub, OPA data, OTLP
+logs, FOCUS and OCSF, or streamed to Kafka.
+
+```bash
+agentfrontier extract shop.json --aspects metadata,lineage --parse-lineage --envelope \
+    --sink openlineage.json --sink graph.json
+```
+
+with `openlineage.json` `{"type": "openlineage", "url": "http://marquez:5000"}` and `graph.json`
+`{"type": "graph", "store": "json", "path": "out/graph.json"}`. The `dbt` definition reads a dbt project's
+`manifest.json`: models and sources, column docs, the model DAG as lineage, metrics and business terms. The rules are
+in the spec's `docs/graph.md` and `docs/translators.md`.
+
 ## The spec
 
 The definitions, the canonical entity model (`entities.json`), the raw-stream catalog (`streams.json`), the JSON
@@ -201,6 +219,7 @@ This repository vendors a copy pinned to a tag (`scripts/spec.lock`):
 | `gcs` | files (JSON API) | experimental | Conformance case `files-gcs` (fixture server, service account JWT) |
 | `bigquery` | http | experimental | Conformance case `http-bigquery` (fixture server, incremental job history) |
 | `databricks` | http | experimental | Conformance case `http-databricks` (fixture server) |
+| `dbt` | files (one JSON document) | experimental | Conformance case `files-dbt` (a dbt 1.9 manifest) |
 | `elasticsearch` | http | experimental | Conformance case `http-elasticsearch` (fixture server) |
 | `unity_catalog` | http | experimental | Conformance case `http-unity-catalog` (fixture server) |
 | `entra_id` | http | experimental | Conformance case `http-entra-id` (fixture server) |
@@ -218,6 +237,9 @@ This repository vendors a copy pinned to a tag (`scripts/spec.lock`):
 * Live verification of Snowflake, SQL Server, Redshift, BigQuery, Databricks, S3, ADLS and GCS (they run against
   recorded responses only).
 * `etag`, `lsn` and `change_feed` incremental modes; usage from PostgreSQL (`pg_stat_statements` has no history).
+* Graph queries answered by Neo4j (the neo4j sink writes the same model), Neptune and Cosmos stores; the object
+  storage writer and the Snowflake, Databricks and BigQuery table loaders; live checks of the OpenMetadata and
+  DataHub sinks (they run against fixtures; OpenLineage and Kafka were checked against Marquez and Redpanda).
 * Parquet schemas without the `parquet` extra (such files are datasets without fields, as in the Java edition).
 * `--drivers` is a Java option (JDBC jars); the Python CLI accepts it and ignores it.
 * The ad hoc query row cap is applied while fetching; psycopg and PyMySQL client cursors still receive the whole

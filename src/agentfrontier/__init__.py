@@ -17,7 +17,7 @@ from .sinks import MemorySink, RunContext, Sink, SinkProvider
 
 SourceSession = EngineSession
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = [
     "AgentFrontier", "AgentFrontierError", "AuthConfig", "Category", "CheckpointStore", "Column", "ConnectionConfig",

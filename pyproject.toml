@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentfrontier"
-version = "0.3.0"
+version = "0.4.0"
 description = "Configuration-driven data source SDK: one engine per protocol, one JSON definition per source (Python edition)."
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -30,6 +30,7 @@ yaml = ["pyyaml>=6.0"]
 parquet = ["pyarrow>=14"]
 lineage = ["sqlglot>=25"]
 otel = ["opentelemetry-api>=1.20"]
+kafka = ["kafka-python>=2.1"]
 dev = ["pytest>=8", "jsonschema>=4.18", "pyarrow>=14", "sqlglot>=25"]
 
 [project.scripts]

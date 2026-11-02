@@ -3,6 +3,10 @@
 * ``jsonl``: one ``<entity>.jsonl`` file per entity plus ``run.json`` in ``path``;
 * ``csv``: one ``<entity>.csv`` file per entity plus ``run.json`` (spec docs/sinks.md);
 * ``parquet``: the same as Parquet files (``pip install "agentfrontier[parquet]"``);
+* ``graph``: nodes and edges in a JSON or in-memory graph store (spec docs/graph.md);
+* ``openlineage``, ``openmetadata``, ``datahub``, ``opa``, ``otlp``, ``focus``, ``ocsf``: the run translated into
+  another system's format, sent to its ``url`` or written to ``path`` (``sinks/translated.py``);
+* ``kafka``: every record or event to a Kafka topic (``pip install "agentfrontier[kafka]"``);
 * ``json``: one document ``{"run": ..., "records": {"dataset": [...], ...}}`` at ``path``;
 * ``console``: JSON Lines on standard output;
 * ``memory``: kept in the process, read back with ``MemorySink.get(name)``;
@@ -326,11 +330,26 @@ def _jsonl(c: dict, sdk: Any) -> Sink:
     return JsonlSink(require(c, "path"), partition_by(c), sdk.entity_model)
 
 
+def _graph(c: dict, sdk: Any) -> Sink:
+    from ..graph import GraphSink
+    return GraphSink(c)
+
+
+def _translated(type_: str) -> Callable[[dict, Any], Sink]:
+    def make(c: dict, sdk: Any) -> Sink:
+        from .translated import SINKS
+        return SINKS[type_](c, sdk)
+    return make
+
+
 def built_in() -> list[SinkProvider]:
     return [
         _Provider("jsonl", _jsonl),
         _Provider("csv", _csv),
         _Provider("parquet", _parquet),
+        _Provider("graph", _graph),
+        *[_Provider(t, _translated(t)) for t in ("openlineage", "openmetadata", "datahub", "opa", "otlp", "focus",
+                                                  "ocsf", "kafka")],
         _Provider("json", lambda c, sdk: JsonSink(require(c, "path"))),
         _Provider("console", lambda c, sdk: ConsoleSink()),
         _Provider("memory", lambda c, sdk: MemorySink.named(J.text(c, "name", "default"))),

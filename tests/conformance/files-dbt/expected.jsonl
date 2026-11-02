@@ -1,0 +1,36 @@
+{"comment":"ISO countries","database":"analytics","entity":"dataset","location":"seeds/countries.csv","name":"countries","properties":{"materialized":"seed","resourceType":"seed","tags":[],"uniqueId":"seed.shop.countries"},"schema":"seeds","source":"conf-dbt","type":"table"}
+{"comment":"One row per order","database":"analytics","dataset":"fct_orders","entity":"field","name":"order_id","properties":{"tags":[]},"schema":"marts","source":"conf-dbt"}
+{"comment":"Order facts","database":"analytics","entity":"dataset","location":"models/marts/fct_orders.sql","name":"fct_orders","owner":"finance@example.com","properties":{"materialized":"table","resourceType":"model","tags":["finance"],"uniqueId":"model.shop.fct_orders"},"schema":"marts","source":"conf-dbt","type":"table"}
+{"comment":"Order id","dataType":"bigint","database":"raw_db","dataset":"orders","entity":"field","name":"id","properties":{"tags":[]},"schema":"shop_raw","source":"conf-dbt"}
+{"comment":"Order total in EUR","dataType":"numeric","database":"analytics","dataset":"stg_orders","entity":"field","name":"amount","properties":{"tags":[]},"schema":"staging","source":"conf-dbt"}
+{"comment":"Orders as loaded","database":"raw_db","entity":"dataset","location":"models/sources.yml","name":"orders","owner":"platform@example.com","properties":{"resourceType":"source","sourceName":"raw","tags":[],"uniqueId":"source.shop.raw.orders"},"schema":"shop_raw","source":"conf-dbt","type":"table"}
+{"comment":"Orders, cleaned","database":"analytics","entity":"dataset","location":"models/staging/stg_orders.sql","name":"stg_orders","properties":{"materialized":"view","resourceType":"model","tags":[],"uniqueId":"model.shop.stg_orders"},"schema":"staging","source":"conf-dbt","type":"view"}
+{"comment":"Primary key of an order","dataType":"integer","database":"analytics","dataset":"stg_orders","entity":"field","name":"order_id","properties":{"tags":[]},"schema":"staging","source":"conf-dbt"}
+{"comment":"shop","definition":"dbt","entity":"source","name":"Conformance dbt","product":"dbt","properties":{"adapter":"postgres","generatedAt":"2026-10-30T09:00:00.000000Z"},"source":"conf-dbt","version":"1.9.4"}
+{"dataType":"integer","database":"analytics","dataset":"stg_customers","entity":"field","name":"customer_id","properties":{"tags":[]},"schema":"staging","source":"conf-dbt"}
+{"dataType":"integer","database":"analytics","dataset":"stg_orders","entity":"field","name":"customer_id","properties":{"tags":[]},"schema":"staging","source":"conf-dbt"}
+{"dataType":"numeric","database":"raw_db","dataset":"orders","entity":"field","name":"total","properties":{"tags":[]},"schema":"shop_raw","source":"conf-dbt"}
+{"dataType":"text","database":"analytics","dataset":"stg_customers","entity":"field","name":"email","properties":{"tags":["pii"]},"schema":"staging","source":"conf-dbt"}
+{"dataType":"timestamp","database":"analytics","dataset":"stg_orders","entity":"field","name":"ordered_at","properties":{"tags":[]},"schema":"staging","source":"conf-dbt"}
+{"database":"analytics","dataset":"fct_orders","entity":"field","name":"amount","properties":{"tags":[]},"schema":"marts","source":"conf-dbt"}
+{"database":"analytics","dataset":"fct_orders","entity":"field","name":"country_code","properties":{"tags":[]},"schema":"marts","source":"conf-dbt"}
+{"database":"analytics","dataset":"fct_orders","entity":"field","name":"customer_id","properties":{"tags":[]},"schema":"marts","source":"conf-dbt"}
+{"database":"analytics","dataset":"fct_orders","entity":"lineage","kind":"dbt","schema":"marts","source":"conf-dbt","upstreamDatabase":"analytics","upstreamDataset":"countries","upstreamSchema":"seeds"}
+{"database":"analytics","dataset":"fct_orders","entity":"lineage","kind":"dbt","schema":"marts","source":"conf-dbt","upstreamDatabase":"analytics","upstreamDataset":"stg_customers","upstreamSchema":"staging"}
+{"database":"analytics","dataset":"fct_orders","entity":"lineage","kind":"dbt","schema":"marts","source":"conf-dbt","upstreamDatabase":"analytics","upstreamDataset":"stg_orders","upstreamSchema":"staging"}
+{"database":"analytics","dataset":"int_scratch","entity":"lineage","kind":"dbt","schema":"marts","source":"conf-dbt","upstreamDatabase":"analytics","upstreamDataset":"stg_orders","upstreamSchema":"staging"}
+{"database":"analytics","dataset":"stg_customers","entity":"lineage","kind":"dbt","schema":"staging","source":"conf-dbt","upstreamDatabase":"raw_db","upstreamDataset":"customers_v2","upstreamSchema":"shop_raw"}
+{"database":"analytics","dataset":"stg_orders","entity":"lineage","kind":"dbt","schema":"staging","source":"conf-dbt","upstreamDatabase":"raw_db","upstreamDataset":"orders","upstreamSchema":"shop_raw"}
+{"database":"analytics","entity":"container","level":"database","name":"analytics","source":"conf-dbt"}
+{"database":"analytics","entity":"container","level":"schema","name":"marts","schema":"marts","source":"conf-dbt"}
+{"database":"analytics","entity":"container","level":"schema","name":"seeds","schema":"seeds","source":"conf-dbt"}
+{"database":"analytics","entity":"container","level":"schema","name":"staging","schema":"staging","source":"conf-dbt"}
+{"database":"analytics","entity":"dataset","location":"models/marts/int_scratch.sql","name":"int_scratch","properties":{"materialized":"ephemeral","resourceType":"model","tags":[],"uniqueId":"model.shop.int_scratch"},"schema":"marts","source":"conf-dbt","type":"view"}
+{"database":"analytics","entity":"dataset","location":"models/staging/stg_customers.sql","name":"stg_customers","properties":{"materialized":"view","resourceType":"model","tags":[],"uniqueId":"model.shop.stg_customers"},"schema":"staging","source":"conf-dbt","type":"view"}
+{"database":"raw_db","entity":"container","level":"database","name":"raw_db","source":"conf-dbt"}
+{"database":"raw_db","entity":"container","level":"schema","name":"shop_raw","schema":"shop_raw","source":"conf-dbt"}
+{"database":"raw_db","entity":"dataset","location":"models/sources.yml","name":"customers_v2","properties":{"resourceType":"source","sourceName":"raw","tags":[],"uniqueId":"source.shop.raw.customers"},"schema":"shop_raw","source":"conf-dbt","type":"table"}
+{"definition":"A customer's purchase","entity":"business_term","name":"order","properties":{"entityType":"primary","expression":"order_id"},"source":"conf-dbt"}
+{"definition":"Revenue per order","entity":"metric","expression":"revenue / orders","name":"average_order_value","properties":{"label":"AOV","metricType":"derived"},"source":"conf-dbt"}
+{"definition":"Sum of order amounts","entity":"metric","expression":"order_total","grain":"day","name":"revenue","owner":"finance@example.com","properties":{"label":"Revenue","metricType":"simple"},"source":"conf-dbt"}
+{"entity":"business_term","name":"customer","properties":{"entityType":"foreign","expression":"customer_id"},"source":"conf-dbt"}

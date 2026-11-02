@@ -1,0 +1,1219 @@
+{
+  "description": "Vectors for the datahub translator (docs/translators.md). Translate `records` (an object with envelopeVersion is an event whose record is `body`) with `context`; the result must equal `expected` (compared as canonical JSON; CSV text compared as text).",
+  "cases": [
+    {
+      "description": "datasets, schema, keys, tags, lineage with confidences, a tombstone",
+      "context": {
+        "source": "warehouse",
+        "definition": "postgresql",
+        "levels": [
+          "database",
+          "schema"
+        ],
+        "runId": "warehouse-run-1",
+        "tenant": "acme",
+        "startedAt": "2026-10-30T10:15:00Z",
+        "finishedAt": "2026-10-30T10:15:04.200Z"
+      },
+      "records": [
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "container",
+            "source": "warehouse",
+            "database": "retail",
+            "level": "database",
+            "name": "retail"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "container",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "level": "schema",
+            "name": "sales"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "container",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "level": "schema",
+            "name": "mart"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "dataset",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "name": "orders",
+            "type": "table",
+            "comment": "One row per checkout",
+            "rowCount": 1042,
+            "owner": "sales_app",
+            "isPartition": false,
+            "properties": {
+              "tablespace": "pg_default"
+            }
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "dataset",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "name": "customers",
+            "type": "table"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "dataset",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "name": "v_revenue",
+            "type": "view",
+            "definition": "SELECT o.order_date, sum(o.total) AS revenue, c.email FROM sales.orders o JOIN sales.customers c ON c.id = o.customer_id GROUP BY 1, 3"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "tombstone",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "dataset",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "name": "legacy_orders"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "id",
+            "ordinal": 1,
+            "dataType": "integer",
+            "nullable": false
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "customer_id",
+            "ordinal": 2,
+            "dataType": "bigint",
+            "nullable": true
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "total",
+            "ordinal": 3,
+            "dataType": "numeric(10,2)",
+            "comment": "Order total, EUR"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "order_date",
+            "ordinal": 4,
+            "dataType": "timestamp(6) with time zone",
+            "nullable": false
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "tags",
+            "ordinal": 5,
+            "dataType": "text[]"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "extra",
+            "ordinal": 6,
+            "dataType": "jsonb"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "search",
+            "ordinal": 7,
+            "dataType": "tsvector"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "customers",
+            "name": "id",
+            "ordinal": 1,
+            "dataType": "integer",
+            "nullable": false
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "customers",
+            "name": "email",
+            "ordinal": 2,
+            "dataType": "character varying(120)",
+            "nullable": false
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "customers",
+            "name": "country",
+            "ordinal": 3,
+            "dataType": "char",
+            "maxLength": 2
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "customers",
+            "name": "active",
+            "ordinal": 4,
+            "dataType": "boolean"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "name": "order_date",
+            "ordinal": 1,
+            "dataType": "timestamp with time zone"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "name": "revenue",
+            "ordinal": 2,
+            "dataType": "numeric"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "field",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "name": "email",
+            "ordinal": 3,
+            "dataType": "varchar"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "constraint",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "orders_pkey",
+            "type": "primary_key",
+            "columns": [
+              "id"
+            ]
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "constraint",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "orders_customer_id_fkey",
+            "type": "foreign_key",
+            "columns": [
+              "customer_id"
+            ],
+            "refDataset": "customers",
+            "refColumns": [
+              "id"
+            ]
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "constraint",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "customers",
+            "name": "customers_pkey",
+            "type": "primary_key",
+            "columns": [
+              "id"
+            ]
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "constraint",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "customers",
+            "name": "customers_email_key",
+            "type": "unique",
+            "columns": [
+              "email"
+            ]
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "constraint",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "customers",
+            "name": "customers_ext_key",
+            "type": "unique",
+            "columns": [
+              "country",
+              "email"
+            ]
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "tag",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "domain",
+            "value": "sales",
+            "objectType": "dataset"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "tag",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "sales",
+            "dataset": "orders",
+            "name": "certified",
+            "objectType": "dataset"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "lineage",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "upstreamSchema": "sales",
+            "upstreamDataset": "orders",
+            "kind": "view"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "observed",
+          "confidence": 1.0,
+          "body": {
+            "entity": "lineage",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "upstreamSchema": "sales",
+            "upstreamDataset": "customers",
+            "kind": "view"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "parsed",
+          "confidence": 0.9,
+          "body": {
+            "entity": "lineage",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "field": "order_date",
+            "upstreamSchema": "sales",
+            "upstreamDataset": "orders",
+            "upstreamField": "order_date",
+            "kind": "view",
+            "transformation": "identity"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "parsed",
+          "confidence": 0.7,
+          "body": {
+            "entity": "lineage",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "field": "revenue",
+            "upstreamSchema": "sales",
+            "upstreamDataset": "orders",
+            "upstreamField": "total",
+            "kind": "view",
+            "transformation": "expression"
+          }
+        },
+        {
+          "envelopeVersion": "1",
+          "tenantId": "acme",
+          "op": "upsert",
+          "assertion": "parsed",
+          "confidence": 0.9,
+          "body": {
+            "entity": "lineage",
+            "source": "warehouse",
+            "database": "retail",
+            "schema": "mart",
+            "dataset": "v_revenue",
+            "field": "email",
+            "upstreamSchema": "sales",
+            "upstreamDataset": "customers",
+            "upstreamField": "email",
+            "kind": "view",
+            "transformation": "identity"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.mart.v_revenue,PROD)",
+          "changeType": "UPSERT",
+          "aspectName": "datasetProperties",
+          "aspect": {
+            "name": "v_revenue",
+            "qualifiedName": "retail.mart.v_revenue",
+            "customProperties": {
+              "type": "view"
+            }
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.mart.v_revenue,PROD)",
+          "changeType": "UPSERT",
+          "aspectName": "subTypes",
+          "aspect": {
+            "typeNames": [
+              "View"
+            ]
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.mart.v_revenue,PROD)",
+          "changeType": "UPSERT",
+          "aspectName": "schemaMetadata",
+          "aspect": {
+            "schemaName": "retail.mart.v_revenue",
+            "platform": "urn:li:dataPlatform:postgres",
+            "version": 0,
+            "hash": "",
+            "platformSchema": {
+              "com.linkedin.schema.OtherSchema": {
+                "rawSchema": ""
+              }
+            },
+            "fields": [
+              {
+                "fieldPath": "order_date",
+                "nativeDataType": "timestamp with time zone",
+                "type": {
+                  "type": {
+                    "com.linkedin.schema.TimeType": {}
+                  }
+                },
+                "nullable": true,
+                "isPartOfKey": false
+              },
+              {
+                "fieldPath": "revenue",
+                "nativeDataType": "numeric",
+                "type": {
+                  "type": {
+                    "com.linkedin.schema.NumberType": {}
+                  }
+                },
+                "nullable": true,
+                "isPartOfKey": false
+              },
+              {
+                "fieldPath": "email",
+                "nativeDataType": "varchar",
+                "type": {
+                  "type": {
+                    "com.linkedin.schema.StringType": {}
+                  }
+                },
+                "nullable": true,
+                "isPartOfKey": false
+              }
+            ]
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.mart.v_revenue,PROD)",
+          "changeType": "UPSERT",
+          "aspectName": "upstreamLineage",
+          "aspect": {
+            "upstreams": [
+              {
+                "dataset": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.customers,PROD)",
+                "type": "VIEW"
+              },
+              {
+                "dataset": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.orders,PROD)",
+                "type": "VIEW"
+              }
+            ],
+            "fineGrainedLineages": [
+              {
+                "upstreamType": "FIELD_SET",
+                "upstreams": [
+                  "urn:li:schemaField:(urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.customers,PROD),email)"
+                ],
+                "downstreamType": "FIELD",
+                "downstreams": [
+                  "urn:li:schemaField:(urn:li:dataset:(urn:li:dataPlatform:postgres,retail.mart.v_revenue,PROD),email)"
+                ],
+                "transformOperation": "IDENTITY",
+                "confidenceScore": 0.9
+              },
+              {
+                "upstreamType": "FIELD_SET",
+                "upstreams": [
+                  "urn:li:schemaField:(urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.orders,PROD),order_date)"
+                ],
+                "downstreamType": "FIELD",
+                "downstreams": [
+                  "urn:li:schemaField:(urn:li:dataset:(urn:li:dataPlatform:postgres,retail.mart.v_revenue,PROD),order_date)"
+                ],
+                "transformOperation": "IDENTITY",
+                "confidenceScore": 0.9
+              },
+              {
+                "upstreamType": "FIELD_SET",
+                "upstreams": [
+                  "urn:li:schemaField:(urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.orders,PROD),total)"
+                ],
+                "downstreamType": "FIELD",
+                "downstreams": [
+                  "urn:li:schemaField:(urn:li:dataset:(urn:li:dataPlatform:postgres,retail.mart.v_revenue,PROD),revenue)"
+                ],
+                "transformOperation": "TRANSFORMATION",
+                "confidenceScore": 0.7
+              }
+            ]
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.mart.v_revenue,PROD)",
+          "changeType": "UPSERT",
+          "aspectName": "status",
+          "aspect": {
+            "removed": false
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.customers,PROD)",
+          "changeType": "UPSERT",
+          "aspectName": "datasetProperties",
+          "aspect": {
+            "name": "customers",
+            "qualifiedName": "retail.sales.customers",
+            "customProperties": {
+              "type": "table"
+            }
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.customers,PROD)",
+          "changeType": "UPSERT",
+          "aspectName": "subTypes",
+          "aspect": {
+            "typeNames": [
+              "Table"
+            ]
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.customers,PROD)",
+          "changeType": "UPSERT",
+          "aspectName": "schemaMetadata",
+          "aspect": {
+            "schemaName": "retail.sales.customers",
+            "platform": "urn:li:dataPlatform:postgres",
+            "version": 0,
+            "hash": "",
+            "platformSchema": {
+              "com.linkedin.schema.OtherSchema": {
+                "rawSchema": ""
+              }
+            },
+            "fields": [
+              {
+                "fieldPath": "id",
+                "nativeDataType": "integer",
+                "type": {
+                  "type": {
+                    "com.linkedin.schema.NumberType": {}
+                  }
+                },
+                "nullable": false,
+                "isPartOfKey": true
+              },
+              {
+                "fieldPath": "email",
+                "nativeDataType": "character varying(120)",
+                "type": {
+                  "type": {
+                    "com.linkedin.schema.StringType": {}
+                  }
+                },
+                "nullable": false,
+                "isPartOfKey": false
+              },
+              {
+                "fieldPath": "country",
+                "nativeDataType": "char",
+                "type": {
+                  "type": {
+                    "com.linkedin.schema.StringType": {}
+                  }
+                },
+                "nullable": true,
+                "isPartOfKey": false
+              },
+              {
+                "fieldPath": "active",
+                "nativeDataType": "boolean",
+                "type": {
+                  "type": {
+                    "com.linkedin.schema.BooleanType": {}
+                  }
+                },
+                "nullable": true,
+                "isPartOfKey": false
+              }
+            ],
+            "primaryKeys": [
+              "id"
+            ]
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.customers,PROD)",
+          "changeType": "UPSERT",
+          "aspectName": "status",
+          "aspect": {
+            "removed": false
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.legacy_orders,PROD)",
+          "changeType": "UPSERT",
+          "aspectName": "status",
+          "aspect": {
+            "removed": true
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.orders,PROD)",
+          "changeType": "UPSERT",
+          "aspectName": "datasetProperties",
+          "aspect": {
+            "name": "orders",
+            "qualifiedName": "retail.sales.orders",
+            "description": "One row per checkout",
+            "customProperties": {
+              "isPartition": "false",
+              "owner": "sales_app",
+              "rowCount": "1042",
+              "tablespace": "pg_default",
+              "type": "table"
+            }
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.orders,PROD)",
+          "changeType": "UPSERT",
+          "aspectName": "subTypes",
+          "aspect": {
+            "typeNames": [
+              "Table"
+            ]
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.orders,PROD)",
+          "changeType": "UPSERT",
+          "aspectName": "schemaMetadata",
+          "aspect": {
+            "schemaName": "retail.sales.orders",
+            "platform": "urn:li:dataPlatform:postgres",
+            "version": 0,
+            "hash": "",
+            "platformSchema": {
+              "com.linkedin.schema.OtherSchema": {
+                "rawSchema": ""
+              }
+            },
+            "fields": [
+              {
+                "fieldPath": "id",
+                "nativeDataType": "integer",
+                "type": {
+                  "type": {
+                    "com.linkedin.schema.NumberType": {}
+                  }
+                },
+                "nullable": false,
+                "isPartOfKey": true
+              },
+              {
+                "fieldPath": "customer_id",
+                "nativeDataType": "bigint",
+                "type": {
+                  "type": {
+                    "com.linkedin.schema.NumberType": {}
+                  }
+                },
+                "nullable": true,
+                "isPartOfKey": false
+              },
+              {
+                "fieldPath": "total",
+                "nativeDataType": "numeric(10,2)",
+                "type": {
+                  "type": {
+                    "com.linkedin.schema.NumberType": {}
+                  }
+                },
+                "nullable": true,
+                "description": "Order total, EUR",
+                "isPartOfKey": false
+              },
+              {
+                "fieldPath": "order_date",
+                "nativeDataType": "timestamp(6) with time zone",
+                "type": {
+                  "type": {
+                    "com.linkedin.schema.TimeType": {}
+                  }
+                },
+                "nullable": false,
+                "isPartOfKey": false
+              },
+              {
+                "fieldPath": "tags",
+                "nativeDataType": "text[]",
+                "type": {
+                  "type": {
+                    "com.linkedin.schema.ArrayType": {}
+                  }
+                },
+                "nullable": true,
+                "isPartOfKey": false
+              },
+              {
+                "fieldPath": "extra",
+                "nativeDataType": "jsonb",
+                "type": {
+                  "type": {
+                    "com.linkedin.schema.RecordType": {}
+                  }
+                },
+                "nullable": true,
+                "isPartOfKey": false
+              },
+              {
+                "fieldPath": "search",
+                "nativeDataType": "tsvector",
+                "type": {
+                  "type": {
+                    "com.linkedin.schema.NullType": {}
+                  }
+                },
+                "nullable": true,
+                "isPartOfKey": false
+              }
+            ],
+            "primaryKeys": [
+              "id"
+            ],
+            "foreignKeys": [
+              {
+                "name": "orders_customer_id_fkey",
+                "foreignDataset": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.customers,PROD)",
+                "sourceFields": [
+                  "urn:li:schemaField:(urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.orders,PROD),customer_id)"
+                ],
+                "foreignFields": [
+                  "urn:li:schemaField:(urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.customers,PROD),id)"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.orders,PROD)",
+          "changeType": "UPSERT",
+          "aspectName": "globalTags",
+          "aspect": {
+            "tags": [
+              {
+                "tag": "urn:li:tag:certified"
+              },
+              {
+                "tag": "urn:li:tag:domain=sales"
+              }
+            ]
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres,retail.sales.orders,PROD)",
+          "changeType": "UPSERT",
+          "aspectName": "status",
+          "aspect": {
+            "removed": false
+          }
+        }
+      ]
+    },
+    {
+      "description": "env and platform options, plain records",
+      "context": {
+        "source": "warehouse",
+        "definition": "postgresql",
+        "levels": [
+          "database",
+          "schema"
+        ],
+        "runId": "warehouse-run-1",
+        "tenant": "acme",
+        "startedAt": "2026-10-30T10:15:00Z",
+        "finishedAt": "2026-10-30T10:15:04.200Z",
+        "options": {
+          "env": "DEV",
+          "platform": "postgres-prod"
+        }
+      },
+      "records": [
+        {
+          "entity": "dataset",
+          "source": "warehouse",
+          "database": "retail",
+          "schema": "sales",
+          "name": "orders",
+          "type": "table",
+          "comment": "One row per checkout",
+          "rowCount": 1042,
+          "owner": "sales_app",
+          "isPartition": false,
+          "properties": {
+            "tablespace": "pg_default"
+          }
+        },
+        {
+          "entity": "dataset",
+          "source": "warehouse",
+          "database": "retail",
+          "schema": "sales",
+          "name": "customers",
+          "type": "table"
+        },
+        {
+          "entity": "dataset",
+          "source": "warehouse",
+          "database": "retail",
+          "schema": "mart",
+          "name": "v_revenue",
+          "type": "view",
+          "definition": "SELECT o.order_date, sum(o.total) AS revenue, c.email FROM sales.orders o JOIN sales.customers c ON c.id = o.customer_id GROUP BY 1, 3"
+        },
+        {
+          "entity": "lineage",
+          "source": "warehouse",
+          "database": "retail",
+          "schema": "mart",
+          "dataset": "v_revenue",
+          "upstreamSchema": "sales",
+          "upstreamDataset": "orders",
+          "kind": "view"
+        },
+        {
+          "entity": "lineage",
+          "source": "warehouse",
+          "database": "retail",
+          "schema": "mart",
+          "dataset": "v_revenue",
+          "upstreamSchema": "sales",
+          "upstreamDataset": "customers",
+          "kind": "view"
+        }
+      ],
+      "expected": [
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres-prod,retail.mart.v_revenue,DEV)",
+          "changeType": "UPSERT",
+          "aspectName": "datasetProperties",
+          "aspect": {
+            "name": "v_revenue",
+            "qualifiedName": "retail.mart.v_revenue",
+            "customProperties": {
+              "type": "view"
+            }
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres-prod,retail.mart.v_revenue,DEV)",
+          "changeType": "UPSERT",
+          "aspectName": "subTypes",
+          "aspect": {
+            "typeNames": [
+              "View"
+            ]
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres-prod,retail.mart.v_revenue,DEV)",
+          "changeType": "UPSERT",
+          "aspectName": "upstreamLineage",
+          "aspect": {
+            "upstreams": [
+              {
+                "dataset": "urn:li:dataset:(urn:li:dataPlatform:postgres-prod,retail.sales.customers,DEV)",
+                "type": "VIEW"
+              },
+              {
+                "dataset": "urn:li:dataset:(urn:li:dataPlatform:postgres-prod,retail.sales.orders,DEV)",
+                "type": "VIEW"
+              }
+            ]
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres-prod,retail.mart.v_revenue,DEV)",
+          "changeType": "UPSERT",
+          "aspectName": "status",
+          "aspect": {
+            "removed": false
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres-prod,retail.sales.customers,DEV)",
+          "changeType": "UPSERT",
+          "aspectName": "datasetProperties",
+          "aspect": {
+            "name": "customers",
+            "qualifiedName": "retail.sales.customers",
+            "customProperties": {
+              "type": "table"
+            }
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres-prod,retail.sales.customers,DEV)",
+          "changeType": "UPSERT",
+          "aspectName": "subTypes",
+          "aspect": {
+            "typeNames": [
+              "Table"
+            ]
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres-prod,retail.sales.customers,DEV)",
+          "changeType": "UPSERT",
+          "aspectName": "status",
+          "aspect": {
+            "removed": false
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres-prod,retail.sales.orders,DEV)",
+          "changeType": "UPSERT",
+          "aspectName": "datasetProperties",
+          "aspect": {
+            "name": "orders",
+            "qualifiedName": "retail.sales.orders",
+            "description": "One row per checkout",
+            "customProperties": {
+              "isPartition": "false",
+              "owner": "sales_app",
+              "rowCount": "1042",
+              "tablespace": "pg_default",
+              "type": "table"
+            }
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres-prod,retail.sales.orders,DEV)",
+          "changeType": "UPSERT",
+          "aspectName": "subTypes",
+          "aspect": {
+            "typeNames": [
+              "Table"
+            ]
+          }
+        },
+        {
+          "entityType": "dataset",
+          "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:postgres-prod,retail.sales.orders,DEV)",
+          "changeType": "UPSERT",
+          "aspectName": "status",
+          "aspect": {
+            "removed": false
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -2,7 +2,8 @@
 
 Built-in operations (``files.op``): ``stat`` (connection test), ``folders`` (folders holding matching files, root is
 ``.``), ``files`` (matching files directly in a folder), ``schema`` (inferred fields of one file), ``rows`` (first
-rows of one file), ``tags`` (tags of one file) and ``grants`` (who may read the bucket or directory). Storage
+rows of one file), ``tags`` (tags of one file), ``grants`` (who may read the bucket or directory) and ``document``
+(records selected from one JSON file, such as a dbt manifest). Storage
 ``local`` covers local disks, network shares and synced cloud folders; ``s3``, ``adls`` and ``gcs`` read object
 storage (spec docs/storage.md).
 """
@@ -14,6 +15,7 @@ import time
 from typing import Any
 
 from .. import json_util as J
+from .. import mapping as M
 from .. import template as T
 from ..errors import AgentFrontierError
 from ..model import Scope
@@ -32,8 +34,10 @@ class FilesSession(ProtocolSession):
         self.max_bytes = _int_var(files.get("maxBytes"), ctx.connect_vars({}), DEFAULT_MAX_BYTES)
         if self.max_bytes <= 0:
             self.max_bytes = DEFAULT_MAX_BYTES
+        self.max_document_bytes = _int_var(files.get("maxDocumentBytes"), ctx.connect_vars({}), 256 * 1024 * 1024)
         h = ctx.hierarchy
         self.folder_level = h[0].level if h else None
+        self._documents: dict[str, Any] = {}
 
     @property
     def root(self) -> str:
@@ -61,6 +65,8 @@ class FilesSession(ProtocolSession):
                 rows.extend(self.storage.tags(self._path(scope, vars)))
             elif kind == "grants":
                 rows.extend(self.storage.grants())
+            elif kind == "document":
+                rows.extend(self._document(spec, vars))
             else:
                 raise AgentFrontierError.invalid_definition("unknown files op '" + kind + "'")
             return RawResult.of_rows(rows)
@@ -69,6 +75,42 @@ class FilesSession(ProtocolSession):
         finally:
             if isinstance(self.storage, LocalStorage):
                 self.ctx.stats.record_statement(len(rows), time.perf_counter_ns() - start)
+
+    def _document(self, spec: dict, vars: T.Vars) -> list[dict]:
+        """Records selected from one JSON file (spec docs/storage.md, "Documents")."""
+        path = T.render_text(J.text(spec, "path", ""), vars, T.STRICT, None)
+        if not path:
+            raise AgentFrontierError.invalid_config("document op needs a path")
+        rel = "/".join(p for p in path.replace("\\", "/").split("/") if p not in ("", "."))
+        if ".." in rel.split("/"):
+            raise AgentFrontierError.invalid_config("path escapes the root folder: " + path)
+        doc = self._documents.get(rel)
+        if doc is None:
+            data, whole = self.storage.read(rel, self.max_document_bytes)
+            if not whole:
+                raise AgentFrontierError.query("document " + rel + " is larger than maxDocumentBytes")
+            try:
+                doc = J.loads_first(data.decode("utf-8", errors="replace"))
+            except ValueError as e:
+                raise AgentFrontierError.query("document " + rel + " is not JSON: " + str(e), e) from e
+            self._documents[rel] = doc
+        paths = spec.get("records", "$")
+        selected: list = []
+        for p in (paths if isinstance(paths, list) else [paths]):
+            selected.extend(M.json_path_read(doc, J.jstr(p)))
+        where = spec.get("where") if isinstance(spec.get("where"), dict) else {}
+        wanted = {k: T.render(v, vars, T.LENIENT) if isinstance(v, str) else J.deep_copy(v)
+                  for k, v in where.items()}
+        out: list[dict] = []
+        each = J.text(spec, "each")
+        for o in selected:
+            if not isinstance(o, dict) or not all(_holds(T.lookup(o, k), w) for k, w in wanted.items()):
+                continue
+            if each is None:
+                out.append(o)
+            else:
+                out.extend(x if isinstance(x, dict) else {"value": x} for x in M.json_path_read(o, each))
+        return out
 
     def _globs(self, spec: dict, vars: T.Vars) -> PathGlob:
         return PathGlob(_list(spec.get("include"), vars), _list(spec.get("exclude"), vars))
@@ -182,6 +224,15 @@ class FilesSession(ProtocolSession):
 
     def close(self) -> None:
         pass
+
+
+def _holds(have: Any, want: Any) -> bool:
+    """A ``where`` entry: equal as text, or equal to any item of a list."""
+    if have is None:
+        return False
+    if isinstance(want, (list, tuple)):
+        return any(J.jstr(have) == J.jstr(w) for w in want if w is not None)
+    return want is not None and J.jstr(have) == J.jstr(want)
 
 
 def _list(n: Any, vars: T.Vars) -> list[str]:

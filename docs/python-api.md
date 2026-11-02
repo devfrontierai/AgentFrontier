@@ -173,6 +173,10 @@ Sink configurations are JSON objects with a `type`:
 | `jsonl` | `path`: a folder; one `<entity>.jsonl` per entity plus `run.json` (old `.jsonl` files are removed first); `partitionBy` |
 | `csv` | `path`, `partitionBy`: one `<entity>.csv` per entity plus `run.json`, columns as the spec's `docs/sinks.md` |
 | `parquet` | `path`, `partitionBy`: the same columns as Parquet, typed from the entity model (`parquet` extra) |
+| `graph` | `store` (`json` with `path`, or `memory` with `name`), `graphs`: nodes and edges (`agentfrontier.graph`) |
+| `openlineage`, `openmetadata`, `datahub`, `opa`, `otlp`, `ocsf` | `url` (and `token` or `headers`) to send, or `path` to write; `options` for the translator |
+| `focus` | `path`: FOCUS-aligned CSV of `usage_cost` records |
+| `kafka` | `bootstrapServers`, `topic`, `topicPerCategory`, `producer` (kafka-python settings) |
 | `json` | `path`: one document `{"run": ..., "records": {"<entity>": [...]}}` |
 | `console` | JSON Lines on standard output |
 | `memory` | `name` (default `default`); read back with `MemorySink.get(name).records(entity=None)` |
@@ -205,5 +209,12 @@ JSON output) are importable for tooling and tests; their behaviour is part of th
 * `TestResult.details` keeps the order the test operation returned (Java's `Map.copyOf` has no defined order).
 * Definition origins read `package:definitions/...` instead of `classpath:definitions/...`.
 * The query row cap is applied while fetching (see the README).
-* Python only: the parquet sink and Parquet schemas, parsed column lineage, OpenTelemetry spans and the capability
-  registry.
+* Python only: the parquet sink and Parquet schemas, parsed column lineage, OpenTelemetry spans, the capability
+  registry, graphs, and the sinks that deliver translated runs (the translators themselves exist in both editions).
+
+## Graphs and translators
+
+`agentfrontier.graph`: `MemoryGraphStore`, `JsonGraphStore`, `GraphBuilder(store, graphs, levels)`, `ALLOW_ALL`,
+`policy_access(pdp, subject, levels, purpose=None)`. `agentfrontier.translators`: `translate(name, records,
+TranslationContext(...))` with `name` one of `openlineage`, `openmetadata`, `datahub`, `opa`, `otel`, `focus`,
+`ocsf`. Both follow the spec's `docs/graph.md` and `docs/translators.md`.
