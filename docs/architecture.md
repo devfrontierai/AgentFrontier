@@ -54,7 +54,7 @@ flowchart LR
 
     subgraph out["Sinks"]
         files["jsonl · csv · parquet · json"]
-        graph["graph (memory, JSON)<br/>neo4j"]
+        graphs["graph (memory, JSON)<br/>neo4j"]
         tr["Translators: openlineage, openmetadata,<br/>datahub, opa, otlp, focus, ocsf"]
         stream["kafka · http · console · memory"]
     end
