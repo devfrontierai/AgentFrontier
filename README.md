@@ -247,6 +247,8 @@ This repository vendors a copy pinned to a tag (`scripts/spec.lock`):
 
 ## Documentation
 
+* [docs/architecture.md](docs/architecture.md): how the SDK is built, the editions and the extension points
+* [docs/features.md](docs/features.md): the full feature set, per edition, with verification status
 * [examples/README.md](examples/README.md): three runnable use cases
 * [docs/integration.md](docs/integration.md): add AgentFrontier to your project, integration patterns, production checklist
 * [docs/getting-started.md](docs/getting-started.md): install, first connection, first extract
