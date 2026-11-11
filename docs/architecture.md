@@ -59,12 +59,30 @@ flowchart LR
         stream["kafka · http · console · memory"]
     end
 
+    subgraph contracts["Core contracts (Python)"]
+        cache["agentfrontier.cache<br/>keys, revalidation, invalidation"]
+        prov["agentfrontier.provenance<br/>artifact manifests"]
+    end
+
+    subgraph ext["Extensions (own distributions, Python)"]
+        caps["agentfrontier-capabilities<br/>LLM clients, validate_sql, NL-to-SQL,<br/>DQ rules, dbt, terms, notebooks"]
+        synth["agentfrontier-synth<br/>synthetic data, masking, checks"]
+    end
+
     spec --> reg --> eng
     eng --> proto --> stor
     auth --> proto
     eng -- pull API --> caller(["Your code"])
     eng --> pipe --> gov --> inc --> env --> extra --> out
+    caller --> cache
+    caller --> caps
+    caller --> synth
+    caps --> prov
+    synth --> prov
 ```
+
+The cache and provenance contracts sit beside the engine: products build the cache store, and the extensions write
+a provenance manifest for every artifact they generate.
 
 The caller uses the SDK in one of two ways:
 
@@ -79,7 +97,7 @@ The caller uses the SDK in one of two ways:
 | Repository | Role |
 |---|---|
 | `agentfrontier-spec` | The master copy of the contract: definitions, entity model, raw-stream catalog, auth catalog, JSON Schemas, classification rules, sink mappings, the rules documents (`docs/*.md`) and the conformance cases. Released as tags `spec-vX.Y.Z`. |
-| `AgentFrontier` (this repository) | The Python edition. It vendors the spec under `src/agentfrontier/spec/` and `tests/conformance/`. Two extension distributions live in `extensions/`: `agentfrontier-capabilities` (LLM provider protocol, SQL validation, NL-to-SQL, data-quality rules, dbt generation, term proposals, capability profiles; needs `sqlglot`) and `agentfrontier-synth` (synthetic data, masking operators, privacy checks; standard library only). The core stays dependency-free (decision D7). |
+| `AgentFrontier` (this repository) | The Python edition. It vendors the spec under `src/agentfrontier/spec/` and `tests/conformance/`. Two extension distributions live in `extensions/`: `agentfrontier-capabilities` (LLM provider protocol, SQL validation, NL-to-SQL, data-quality rules, dbt generation, term proposals, notebooks, capability profiles; needs `sqlglot`) and `agentfrontier-synth` (synthetic data, masking operators, privacy checks; standard library only). The core stays dependency-free (decision D7). |
 | `ai-data-studio/agentfrontier-java` | The Java edition (modules `agentfrontier-core`, `agentfrontier-cli`, `agentfrontier-neo4j`). It vendors the spec under `spec/`. |
 
 Each edition copies the spec with `scripts/sync_spec.py <spec checkout> --ref spec-vX.Y.Z`, and the tag and commit
@@ -91,8 +109,8 @@ prove it: each case runs a definition against a fixture (a SQLite file, a folder
 compares the output to `expected.jsonl` and `expected-envelope.jsonl`. These expected files are the contract. They
 are regenerated only from an implementation that was checked by hand. The translators also exist in both editions and
 are pinned by shared vectors. Capabilities above the raw-stream layer are Python only (decision D1): governance,
-graphs, parsed lineage, Parquet, OpenTelemetry, the capability registry and the sinks that deliver translated
-documents. §11 has the full table.
+graphs, parsed lineage, Parquet, OpenTelemetry, the capability registry, the sinks that deliver translated
+documents, the cache and provenance contracts and the two extensions. §11 has the full table.
 
 ## 4. The spec as runtime resources
 
@@ -297,6 +315,13 @@ gone.
 | Parquet schemas and sink, parsed column lineage, OpenTelemetry spans, capability registry | yes | no |
 | Governance (policy, masking, classification, authority, audit) | yes | no |
 | Graph stores and builders, the `graph` sink, translated-delivery sinks, `kafka` | yes | no |
+| Cache contract (`agentfrontier.cache`) and provenance manifests (`agentfrontier.provenance`) | yes | no |
+| `agentfrontier-capabilities` and `agentfrontier-synth` | yes | no |
+| CLI `definitions`, `describe`, `validate`, `test`, `extract`, `run`, `query`, `sample`; `extract` options `--aspects`, `--sink`, `--envelope`, `--tenant` and the tuning options | yes | yes |
+| CLI `capabilities`, `policy-decide`, `audit-verify`, `authority`; `extract` options `--incremental`, `--full`, `--reconcile-every`, `--partition-by`, `--run-health`, `--parse-lineage`, `--tracing`; governance options (`--policy`, `--subject`, `--purpose`, `--classify`, `--audit`) | yes | no |
+
+The Java CLI's `run` still reads `incremental`, `runHealth` and `partitionBy` from a pipeline file; only the
+command-line options are missing.
 
 ## 12. Extension points
 
@@ -304,12 +329,16 @@ gone.
 |---|---|
 | A new source | Write a definition JSON, then add its directory with `AgentFrontier(definitions=[...])` or `--definitions`. Overlay files fix one version or variant. |
 | A new access protocol | Subclass `Protocol` / `ProtocolSession`, then register it with `AgentFrontier(protocols=[...])` or the `agentfrontier.protocols` entry point. |
-| A new sink | Write a `SinkProvider` whose `type` is the sink name, then register it with `AgentFrontier(sinks=[...])`. |
+| A new sink | Write a `SinkProvider` whose `type` is the sink name, then register it with `AgentFrontier(sinks=[...])` or the `agentfrontier.sinks` entry point. |
 | Secrets | Write a `SecretResolver` for a new `${scheme:...}`, such as a vault or a cloud secret manager. |
 | Checkpoints | Implement `CheckpointStore`, for example on a database or object storage. |
 | Policy | Any `PolicyDecisionPoint`: the built-in rules, OPA, or your own. |
 | Graph storage | Implement `GraphStore`. |
 | Classification | Add rules documents to `RuleClassifier`. |
+| Cache storage | Implement `CacheStore` (`get`, `put`, `delete`, `entries`) and pass it to `SemanticCache`. |
+| LLM provider | Implement the `Client` protocol of `agentfrontier_capabilities.llm` (`provider`, `model`, `chat`). |
+| Code execution | Implement the `Executor` protocol of `agentfrontier_capabilities.codegen` (`run(kind, code, limits)`) in the product's sandbox. |
+| Token vault | Implement the `TokenVault` protocol of `agentfrontier_synth.operators` (`put`, `get`) to keep tokens reversible in a real vault; `MemoryTokenVault` is the in-memory reference. |
 
 ## 13. Safety model
 
@@ -344,8 +373,9 @@ gone.
 | `translators/` | The seven translators |
 | `sinks/` | Built-in sinks, file sinks, translated sinks, Neo4j and uids |
 | `cache.py`, `provenance.py` | The semantic cache contract (keys, revalidation, invalidation, in-memory store) and artifact provenance manifests |
+| `errors.py` | `AgentFrontierError` and the stable error codes |
 | `cli.py` | The `agentfrontier` command |
-| `extensions/capabilities/` | `agentfrontier_capabilities`: `llm`, `sqlcheck`, `nl2sql`, `dq`, `codegen`, `terms`, `profiles` |
+| `extensions/capabilities/` | `agentfrontier_capabilities`: `llm`, `sqlcheck`, `nl2sql`, `dq`, `codegen`, `terms`, `notebook`, `profiles` |
 | `extensions/synth/` | `agentfrontier_synth`: `spec`, `generate`, `operators`, `checks`, `export` |
 
 ## 15. Testing

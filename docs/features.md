@@ -1,7 +1,10 @@
 # AgentFrontier feature set
 
-What AgentFrontier can do as of SDK 0.4.0 and spec `spec-v1.5.0` (plan phases 0 to 3). [architecture.md](architecture.md)
-describes how it is built, and the rules behind each feature are in the spec's `docs/`.
+What AgentFrontier can do as of SDK 0.4.0 and spec `spec-v1.5.0` (plan phases 0 to 3), plus the unreleased work in
+[CHANGELOG.md](../CHANGELOG.md): the plan's phase 5 slice (the cache contract and provenance manifests in the core,
+and `agentfrontier-capabilities` 0.1.0) and phase 6 synthetic data (`agentfrontier-synth` 0.1.0).
+[architecture.md](architecture.md) describes how it is built, and the rules behind each feature are in the spec's
+`docs/`.
 
 **Editions.** "Both" means the Python and Java editions produce identical output. "Python" means Python only, by the
 parity decision.
@@ -140,7 +143,7 @@ Both editions:
 * **Catalog lineage:** view dependencies from database catalogs (PostgreSQL, MySQL, Oracle, SQL Server, Snowflake),
   and Unity Catalog table lineage.
 * **Parsed column lineage** (Python, `lineage` extra): column lineage parsed with sqlglot from view SQL, with the
-  transformation, a confidence and the assertion `inferred`.
+  transformation, a confidence and the assertion `parsed`.
 * **dbt lineage:** the model DAG as lineage from the dbt manifest.
 * **Query history as `usage`:** Snowflake, BigQuery and Databricks, read incrementally.
 
@@ -250,13 +253,15 @@ Options of `extract`:
 
 ## 14. Library and extension
 
-* **Entry points:** `AgentFrontier(definitions=..., protocols=..., sinks=..., secret_resolvers=...)`, or
+* **Entry points:** `AgentFrontier(definitions=..., protocols=..., sinks=..., secret_resolvers=..., governance=...)`, or
   `AgentFrontier.from_environment()`.
 * **Configuration:** `ConnectionConfig` and `PipelineConfig` take JSON or builders.
-* **Extension:** your own definitions and overlays, protocols (also through the `agentfrontier.protocols` entry point
-  group), sinks, secret resolvers, checkpoint stores, graph stores, policy decision points and classification rules.
+* **Extension:** your own definitions and overlays, protocols and sinks (also through the `agentfrontier.protocols`
+  and `agentfrontier.sinks` entry point groups), secret resolvers, checkpoint stores, graph stores, cache stores
+  (`CacheStore`), policy decision points and classification rules. The extensions add the LLM `Client` protocol
+  and the code-generation `Executor` (`agentfrontier-capabilities`) and the `TokenVault` (`agentfrontier-synth`).
 * **Packaging:** standard library only at the core. The extras are `postgres`, `mysql`, `oracle`, `snowflake`,
-  `sqlserver`, `neo4j`, `parquet`, `lineage`, `otel` and `kafka`.
+  `sqlserver`, `neo4j`, `yaml`, `parquet`, `lineage`, `otel` and `kafka`.
 
 [python-api.md](python-api.md) has the reference, and [integration.md](integration.md) has integration patterns and
 a production checklist.
@@ -280,15 +285,16 @@ sits behind a provider protocol.
 * **NL-to-SQL:** grounded context (relevant tables, foreign-key neighbours, join conditions and business terms,
   with tables and columns the policy hides left out), one read-only query from the model, validation, one repair
   from the validation errors, and execution only through the caller's guarded callback, with a provenance manifest.
-  `evaluate` scores a generator against reference queries; a labelled set of 15 questions for the retail demo
-  database ships with the tests.
+  `evaluate` scores a generator against reference queries with `compare_results`, which ignores row and column
+  order and by default allows extra columns in the generated result; a labelled set of 15 questions for the retail
+  demo database ships with the tests.
 * **Data-quality rules:** one rule model (completeness, uniqueness, validity, referential, contract, business),
   recommended from keys, nullability, foreign keys, check constraints, known values and profiles. Translated to SQL
   checks (a query counting the rows that break the rule), dbt `schema.yml`, Great Expectations suites and SodaCL.
 * **Code generation:** dbt model files with `ref()` and `source()`, dbt SQL turned back into plain SQL for
   validation, and Python compile checks. Execution is an `Executor` interface that products implement.
-* **Business Context Graph v2:** terms a model proposes from the schema, tied to columns that exist, marked
-  `inferred` with a confidence and `pending` review.
+* **Business Context Graph v2:** `propose_terms` asks a model for terms from the schema, keeps those tied to
+  columns that exist, and marks them `inferred` with a confidence and `pending` review.
 * **Notebooks:** typed cells (markdown, SQL, chart, Python) rendered to plain Python, written to `.ipynb` with
   each cell's kind, author and hash, read back (a cell edited since it was written becomes user code), with a
   `query()` prelude that sends SQL through the product's guarded API and a Markdown report of an executed
@@ -306,19 +312,27 @@ A separate distribution in `extensions/synth`; standard library only.
 * **Generation:** deterministic from the seed; parents before children; unique keys; foreign keys that always
   resolve (composite keys and self references too); invented values (emails on the reserved `example.test` domain,
   phones in the fictional 555-01xx range).
-* **Masking operators:** redaction, salted hashing, keyed tokenization (reversible through a `TokenVault`),
-  format-preserving pseudonymisation (keyed, not NIST FPE) and generalisation.
+* **Masking operators:** redaction, salted hashing, keyed tokenization (reversible with `detokenize` through a
+  `TokenVault`; `MemoryTokenVault` is the in-memory reference), format-preserving pseudonymisation (keyed, not NIST
+  FPE) and generalisation; `mask_rows` applies a plan of operators per column.
 * **Checks:** keys, not-null, unique, accepted values, ranges and foreign keys on any dataset; k-anonymity;
   exact-match leakage against a real sample; Kolmogorov-Smirnov and total-variation distances.
 * **Export:** CSV, JSON Lines, or SQL INSERTs in dependency order, with a fixture manifest.
 
 ## 17. Cache contract and provenance (core)
 
-* **`agentfrontier.cache`:** cache keys over the kind, the scope (tenant, principal, purpose, source, and the
-  schema, policy, model and embedding versions) and the normalised request. Every hit is revalidated (versions,
-  expiry, a caller check such as a fresh policy decision). Change and policy events invalidate entries. Also the
-  `CacheStore` protocol and an in-memory store.
-* **`agentfrontier.provenance`:** manifests for generated artifacts (hashed inputs with versions, outputs, tools,
+* **`agentfrontier.cache`:** the semantic cache contract.
+  * `cache_key`: SHA-256 over the kind (`result`, `context` or `artifact`), the `CacheScope` (tenant, principal,
+    purpose, source, and the schema, policy, model and embedding versions) and the normalised request.
+  * `SemanticCache.get` serves a hit only after mandatory revalidation: same versions, not past its TTL, and the
+    caller's check (such as a fresh policy decision) passes. A stale entry is dropped. `put` stores a value with the
+    resources it depends on and an optional TTL.
+  * `SemanticCache.on_event` invalidates: change events drop entries that depend on a resource (`*` for a prefix),
+    policy events drop entries made under another policy version.
+  * `CacheStats` counts hits, misses, stale entries, puts and invalidations per kind; `summary()` adds the entries.
+  * `CacheStore` is the store protocol; `MemoryCacheStore` keeps entries in memory and evicts the least recently
+    used beyond `max_entries`.
+* **`agentfrontier.provenance`:** `Manifest` for generated artifacts (hashed inputs with versions, outputs, tools,
   model, validation, approvals, limitations), with a digest that approvals do not change.
 
 ## 18. Not implemented yet
@@ -332,8 +346,15 @@ A separate distribution in `extensions/synth`; standard library only.
 * Business terms from Snowflake semantic views, Unity Catalog tags and the OpenMetadata glossary.
 * The `etag`, `lsn` and `change_feed` incremental modes; usage from PostgreSQL.
 * Cedar, Presidio, Tika, Purview, Macie and Google Sensitive Data Protection adapters; consent and retention readers.
-* In the Java edition: governance, graphs, parsed lineage, Parquet, OpenTelemetry, the capability registry, and the
-  sinks that deliver translated documents.
+* Lineage parsed from query history (only view SQL is parsed).
+* Phase 5 remainders: DS transforms (pandas, scikit-learn); PySpark, script and OpenAPI-client generation (code
+  generation covers dbt only); the live NL-to-SQL accuracy run on the labelled retail set.
+* Phase 6: cloud cost sources and LLM usage sources normalised to FOCUS, agent registry and permission sources, and
+  the actions (write) aspect.
+* In the Java edition: governance, graphs, parsed lineage, Parquet, OpenTelemetry, the capability registry, the
+  sinks that deliver translated documents, the cache and provenance contracts and the extensions. The Java CLI has
+  no `capabilities`, `policy-decide`, `audit-verify` or `authority` command, and `extract` has no `--incremental`,
+  `--partition-by`, `--run-health`, `--parse-lineage`, `--tracing` or governance options.
 
 ## 19. Roadmap
 
@@ -342,6 +363,6 @@ From `common-docs/AGENTFRONTIER-PLAN.md`:
 | Phase | Scope |
 |---|---|
 | 4 | SaaS, collaboration and content sources:<ul><li>GitHub, Jira, Confluence, ServiceNow, then Salesforce, SharePoint/OneDrive, Google Drive, Slack and Teams;</li><li>OAuth authorization-code and device flows;</li><li>`agentfrontier-content` for PDF/Office/web content with `content` and `chunk` citations.</li></ul> |
-| 5 | Generative capabilities (`agentfrontier-capabilities`). **Done in this slice (§15, §17):** NL-to-SQL with static validation and policy checks, data-quality rules, dbt code generation, notebook templates, Business Context Graph v2 proposals, the semantic cache contract and provenance manifests. **Remaining:** DS transforms (pandas, scikit-learn), PySpark, script and OpenAPI-client generation. |
+| 5 | Generative capabilities (`agentfrontier-capabilities`). **Done in this slice (§15, §17):** NL-to-SQL with static validation and policy checks, data-quality rules, dbt code generation, notebook templates, Business Context Graph v2 proposals, the semantic cache contract and provenance manifests. **Remaining:** DS transforms (pandas, scikit-learn), PySpark, script and OpenAPI-client generation, and the live NL-to-SQL accuracy run. |
 | 6 | Cloud and LLM cost sources normalised to FOCUS; agent registry and permission sources; an opt-in actions (write) aspect. **Done, pulled forward (§16):** `agentfrontier-synth` for synthetic data. |
 | 7 | `agentfrontier-gateway` (REST and MCP over the SDK); a hybrid worker; domain packs (banking, insurance first). |

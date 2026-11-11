@@ -10,11 +10,11 @@ Versions follow semantic versioning. Each release names the spec tag it implemen
   (artifact manifests).
 * **`agentfrontier-capabilities` 0.1.0** (new distribution, `extensions/capabilities`): the LLM provider protocol
   and clients (Anthropic, OpenAI, Azure OpenAI, Gemini, OpenAI-compatible; moved from Avero), `validate_sql`,
-  NL-to-SQL with context assembly, one repair and guarded execution, `evaluate` with a labelled retail set,
-  data-quality rules with SQL, dbt, Great Expectations and Soda output, dbt generation, Business Context Graph v2
-  proposals, capability profiles.
+  NL-to-SQL with context assembly, one repair and guarded execution, `evaluate` with a labelled retail set (results
+  compared allowing extra columns), data-quality rules with SQL, dbt, Great Expectations and Soda output, dbt
+  generation, Business Context Graph v2 proposals, capability profiles.
 * **Notebooks** (`agentfrontier_capabilities.notebook`): typed cells, `.ipynb` round trip with authorship and
-  hashes, the guarded `query()` prelude, Markdown reports. Evaluation compares results allowing extra columns.
+  hashes, the guarded `query()` prelude, Markdown reports.
 * **`agentfrontier-synth` 0.1.0** (new distribution, `extensions/synth`): schema-driven synthetic data with
   foreign-key integrity, scenarios and rules; masking and tokenization operators; validation, k-anonymity,
   leakage and distribution checks; CSV, JSON Lines and SQL export with a manifest.

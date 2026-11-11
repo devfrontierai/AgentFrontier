@@ -8,9 +8,10 @@ optional and sits behind a provider protocol.
 |---|---|
 | `llm` | Provider protocol and clients: Anthropic, OpenAI, Azure OpenAI, Gemini, OpenAI-compatible. Structured (JSON) output with one retry, a token estimate, a call budget per day and per task, a scripted client for tests |
 | `sqlcheck` | `validate_sql`: parse in the dialect, one read-only statement, tables and columns against the catalog (with "did you mean"), lint, transpile, policy per table, `EXPLAIN` cost through a callback. Never executes |
-| `nl2sql` | `assemble_context` (relevant tables, join conditions, business terms, policy applied), `generate_sql` (one query, validated, repaired once, run only through the caller's guarded callback, with a provenance manifest), `evaluate` (accuracy against reference queries) |
+| `nl2sql` | `assemble_context` (relevant tables, join conditions, business terms, policy applied), `generate_sql` (one query, validated, repaired once, run only through the caller's guarded callback, with a provenance manifest), `evaluate` (accuracy against reference queries, compared with `compare_results`: row and column order ignored, extra columns allowed) |
 | `dq` | Data-quality rules recommended from constraints, values and profiles; SQL checks, dbt `schema.yml`, Great Expectations suites, SodaCL |
-| `codegen` | dbt model files with `ref()` / `source()`, dbt SQL back to plain SQL for validation, Python compile checks |
+| `codegen` | dbt model files with `ref()` / `source()`, dbt SQL back to plain SQL for validation, Python compile checks; the `Executor` protocol a product implements to run generated code |
+| `terms` | `propose_terms` (Business Context Graph v2): business terms a model proposes from the catalog, kept only when tied to columns that exist, marked `inferred` with a confidence and `pending` review |
 | `notebook` | Notebooks from typed cells (markdown, SQL, chart, Python): rendering to plain Python, `.ipynb` (nbformat 4) with kind, author and hash per cell, reading back (edited cells become user code), a `query()` prelude that runs SQL through the product's guarded API, and a Markdown report from an executed notebook |
 | `profiles` | Capability profiles (`capability.json` and `instructions.md`): `nl_to_sql`, `validate_sql`, `dq_rules`, `dbt_model` |
 

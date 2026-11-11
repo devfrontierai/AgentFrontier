@@ -5,9 +5,20 @@ agentfrontier <command> [arguments] [options]
 python -m agentfrontier <command> [arguments] [options]
 ```
 
-The commands and options are the same as the Java CLI's. Results go to standard output as JSON (pretty printed the
-way Jackson prints them, so the two CLIs produce the same text), logs and progress to standard error. Exit code 0 on
-success, 1 on failure, 2 on bad usage.
+Results go to standard output as JSON (pretty printed the way Jackson prints them, so the two CLIs produce the same
+text), logs and progress to standard error. Exit code 0 on success, 1 on failure, 2 on bad usage.
+
+The Java CLI has the same `definitions`, `describe`, `validate`, `test`, `extract`, `run`, `query` and `sample`
+commands with the options `--definitions`, `--drivers`, `--aspects`, `--sink`, `--envelope`, `--tenant`,
+`--parallelism`, `--page-size`, `--batch-size`, `--sample-rows`, `--scope`, `--max-rows` and `--limit`. The rest is
+Python only:
+
+* the commands `capabilities`, `policy-decide`, `audit-verify` and `authority`;
+* on `extract`: `--partition-by`, `--incremental`, `--full`, `--reconcile-every`, `--run-health`, `--parse-lineage`,
+  `--tracing`, `--audit` and `--audit-key-env`;
+* on `extract`, `query` and `sample`: `--policy`, `--subject`, `--purpose` and `--classify`.
+
+A Java `run` still reads `incremental`, `runHealth` and `partitionBy` from a pipeline file.
 
 | Command | What it does |
 |---|---|

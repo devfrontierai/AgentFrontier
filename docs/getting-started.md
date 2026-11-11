@@ -10,8 +10,14 @@ python -m venv .venv
 (Not on PyPI yet; once it is, `pip install "agentfrontier[postgres]"` is enough.)
 
 The core package has no dependencies. Each database driver is an extra: `postgres` (psycopg 3), `mysql` (PyMySQL),
-`oracle` (python-oracledb, thin mode), `snowflake`, `sqlserver` (pymssql), plus `neo4j` for the graph sink. SQLite,
-the HTTP sources (Elasticsearch, OpenSearch, Unity Catalog) and local files need nothing extra.
+`oracle` (python-oracledb, thin mode), `snowflake`, `sqlserver` (pymssql). Other extras turn on optional features:
+`neo4j` (the Neo4j sink), `yaml` (governance rules in YAML), `parquet` (pyarrow: the parquet sink and Parquet
+schemas), `lineage` (sqlglot: column lineage parsed from view SQL), `otel` (OpenTelemetry spans) and `kafka` (the
+kafka sink).
+
+These need nothing extra: SQLite; the HTTP sources `bigquery`, `databricks`, `unity_catalog`, `elasticsearch`,
+`opensearch`, `entra_id`, `okta` and `google_directory`; and the files sources `local_files`, `s3`, `adls`, `gcs` and
+`dbt`. Cloud credentials (SigV4, Entra ID, managed identity, Google service accounts) use the standard library.
 
 If a driver is missing, opening a connection fails with `UNSUPPORTED` and names the package to install.
 
@@ -64,7 +70,8 @@ agentfrontier extract shop.json --aspects metadata,lineage,governance --sink jso
 
 `out/shop` then holds one `<entity>.jsonl` file per entity (`source`, `container`, `dataset`, `field`,
 `constraint`, `index`, `lineage`, `grant`, ...) and `run.json` with the run report. Aspects are `metadata`,
-`lineage`, `governance`, `statistics`, `usage` and `data` (sample rows).
+`lineage`, `governance`, `statistics`, `usage`, `context`, `quality`, `activity`, `agents`, `cost` and `data` (sample
+rows). A definition emits only the aspects it has operations for (`agentfrontier capabilities <type>` lists them).
 
 For repeatable jobs write a pipeline file and run it with `agentfrontier run job.json`:
 
@@ -93,6 +100,16 @@ with af.open(conn) as s:
 ```
 
 Continue with [python-api.md](python-api.md).
+
+## Next steps
+
+* **Raw-stream events:** `--envelope --tenant <id>` (or `envelope=True, tenant_id=...`) wraps each record in an
+  event with a deterministic `eventId`; see [Raw-stream events](../README.md#raw-stream-events) and the spec's
+  `docs/envelope.md`.
+* **Incremental runs:** `--incremental <dir>` keeps checkpoints and emits only upserts, deletions and tombstones
+  since the last run; see [Incremental runs](../README.md#incremental-runs) and the spec's `docs/incremental.md`.
+* **Governance:** `--policy`, `--classify` and `--audit` decide, mask, label and audit every read; see
+  [governance.md](governance.md).
 
 ## Adding your own definitions
 

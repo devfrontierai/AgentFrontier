@@ -1,13 +1,17 @@
 # Python API
 
-Everything is importable from `agentfrontier`. Names follow Python conventions (snake_case methods, properties
+The SDK, connections, sessions, values, pipelines, events, checkpoint stores and sinks are importable from
+`agentfrontier`. Five areas are submodules that you import on their own: `agentfrontier.governance`,
+`agentfrontier.graph`, `agentfrontier.translators`, `agentfrontier.cache` and `agentfrontier.provenance` (for example
+`from agentfrontier.cache import SemanticCache`). Names follow Python conventions (snake_case methods, properties
 instead of no-argument getters); the JSON the SDK writes (records, reports, CLI output) is identical to the Java
 edition's.
 
 ## `AgentFrontier`
 
 ```python
-AgentFrontier(definitions=(), protocols=(), sinks=(), secret_resolvers=(), environment=None, detection_ttl=600.0)
+AgentFrontier(definitions=(), protocols=(), sinks=(), secret_resolvers=(), environment=None, detection_ttl=600.0,
+              governance=None)
 AgentFrontier.from_environment()      # extra definition dirs from AGENTFRONTIER_DEFINITIONS
 ```
 
@@ -158,9 +162,17 @@ sinks work unchanged. Its `envelope` dict holds `envelopeVersion`, `eventId`, `t
 
 ## Governance
 
-`agentfrontier.governance`: `Governance` (the enforcement point), `RulePDP`, `OpaPDP`, `CombinedPDP`,
-`FailClosedPDP`, `Decision`, `PolicyDenied`, `ApprovalRequired`, `RuleClassifier`, `reconcile`, `LabelIndex`,
-`AuthorityGraph`, `AuditLog`, `verify`, `verify_directory`. `AgentFrontier(governance=...)` or
+`agentfrontier.governance`:
+
+* enforcement: `Governance` (the enforcement point), `GovernedSession`, `PolicyDenied`, `ApprovalRequired`,
+  `apply_to_row`, `mask_value`;
+* decisions: `PolicyDecisionPoint`, `RulePDP`, `OpaPDP`, `CombinedPDP`, `FailClosedPDP`, `Decision`,
+  `pdp_from_config`, `matches`;
+* classification: `RuleClassifier`, `FieldClassifier`, `Hit`, `reconcile`, `Reconciled`, `LabelIndex`;
+* authority and audit: `AuthorityGraph`, `EffectiveGrant`, `AuditLog`, `Verification`, `chain_hash`, `verify`,
+  `verify_directory`.
+
+`AgentFrontier(governance=...)` or
 `af.open(conn, governance=...)` returns a `GovernedSession`: the same methods, decided before they run and
 released through the policy. See [governance.md](governance.md).
 
@@ -210,7 +222,48 @@ JSON output) are importable for tooling and tests; their behaviour is part of th
 * Definition origins read `package:definitions/...` instead of `classpath:definitions/...`.
 * The query row cap is applied while fetching (see the README).
 * Python only: the parquet sink and Parquet schemas, parsed column lineage, OpenTelemetry spans, the capability
-  registry, graphs, and the sinks that deliver translated runs (the translators themselves exist in both editions).
+  registry, governance, graphs, the sinks that deliver translated runs (the translators themselves exist in both
+  editions), the cache and provenance contracts, and the CLI commands and options listed in [cli.md](cli.md).
+
+## Cache and provenance
+
+`agentfrontier.cache` is the semantic cache contract; products supply the store and the metrics around it.
+
+* `CacheScope(tenant, principal, purpose, source, schema_version, policy_version, model_version,
+  embedding_version)`: who asks, why, about which source, and the versions an answer depends on.
+* `cache_key(kind, scope, request)`: SHA-256 over the kind (`result`, `context` or `artifact`), the scope and the
+  request in canonical JSON; a string request is normalised (case, whitespace, trailing punctuation).
+* `SemanticCache(store=None, default_ttl_s=None)`: `get(kind, scope, request, revalidate=None)` returns a
+  `CacheEntry` only when the versions match, the TTL has not passed and `revalidate(entry)` is true, and drops it
+  otherwise; `put(kind, scope, request, value, depends_on=(), ttl_s=None)`; `on_event(event)` invalidates and
+  returns how many entries it dropped; `summary()` gives the `CacheStats` counts and the entries per kind.
+* `CacheStore` is the store protocol (`get`, `put`, `delete`, `entries`). `MemoryCacheStore(max_entries=1000)`
+  evicts the least recently used entry.
+
+`agentfrontier.provenance.Manifest(kind, title)` describes a generated artifact: `add_input`, `add_output`,
+`add_tool`, `set_model`, `set_validation` (`passed`, `failed`, `warnings`, `static` or `not_run`), `approve`,
+`digest()`, `to_json()` and `Manifest.from_json`. Contents are hashed, never stored, and the digest leaves out the
+approvals.
+
+```python
+from agentfrontier.cache import CacheScope, MemoryCacheStore, SemanticCache
+from agentfrontier.provenance import Manifest
+
+cache = SemanticCache(MemoryCacheStore(max_entries=500), default_ttl_s=3600)
+scope = CacheScope(tenant="acme", principal="alice", purpose="analytics", source="retail",
+                   schema_version="s42", policy_version="p7")
+hit = cache.get("result", scope, "Revenue by month?", revalidate=lambda e: True)  # e.g. a fresh policy decision
+if hit is None:
+    cache.put("result", scope, "revenue by month", {"rows": []}, depends_on=["retail:sales.orders"])
+cache.on_event({"type": "change", "resources": ["retail:sales.orders"]})        # drops the entry
+cache.on_event({"type": "policy", "version": "p8"})                              # drops entries made under p7
+
+m = (Manifest("sql", "Revenue by month")
+     .add_input("question", "q1", content="Revenue by month?")
+     .add_output("revenue.sql", "select ...")
+     .set_validation("static", [{"check": "parse", "ok": True}]))
+m.approve("alice")                                                                # the digest does not change
+```
 
 ## Graphs and translators
 

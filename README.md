@@ -9,8 +9,10 @@ mappings); a small engine per **protocol** (`sql`, `http`, `files`) runs it. Add
 file.
 
 This is the **Python edition**. It is a faithful port of the Java reference implementation and shares the same
-language-neutral spec, so both produce the same records for the same source: the four conformance cases pass
-unchanged, and on the test databases the Python and Java CLIs write byte-identical JSON Lines files.
+language-neutral spec, so up to the raw-stream layer both produce the same records for the same source: the 16
+conformance cases (2 SQLite, 6 files, 8 HTTP) and the shared `eventId`, signing, CSV and translator vectors pass
+unchanged in both, and on the test databases the Python and Java CLIs write byte-identical JSON Lines files.
+Governance, graphs, the cache and provenance contracts and the two extensions are Python only.
 
 * Python 3.10 or newer, **no required runtime dependencies** (standard library only).
 * Database drivers are optional extras (DB-API 2.0 drivers: psycopg, PyMySQL, python-oracledb, ...).
@@ -59,6 +61,7 @@ pip install "agentfrontier[postgres] @ git+https://github.com/devfrontierai/Agen
 | `lineage` | sqlglot: column lineage parsed from view SQL |
 | `otel` | opentelemetry-api: spans for runs, scopes and operations |
 | `kafka` | kafka-python: the kafka sink |
+| `yaml` | PyYAML: governance rules files written in YAML |
 
 From a checkout: `pip install -e ".[dev,postgres,mysql,oracle,neo4j]"`. Once the package is on PyPI this becomes
 `pip install "agentfrontier[postgres]"`. [docs/integration.md](docs/integration.md) covers pinning, connection
@@ -191,6 +194,21 @@ with `openlineage.json` `{"type": "openlineage", "url": "http://marquez:5000"}` 
 `manifest.json`: models and sources, column docs, the model DAG as lineage, metrics and business terms. The rules are
 in the spec's `docs/graph.md` and `docs/translators.md`.
 
+## Cache, provenance and extensions
+
+* **Semantic cache contract** (`agentfrontier.cache`): cache keys over the kind (`result`, `context`, `artifact`),
+  the scope (tenant, principal, purpose, source, and the schema, policy, model and embedding versions) and the
+  normalised request; every hit is revalidated before it is served; change and policy events invalidate entries.
+  `SemanticCache` works over any `CacheStore`; `MemoryCacheStore` is the in-memory reference store.
+* **Provenance manifests** (`agentfrontier.provenance`): `Manifest` records a generated artifact's hashed inputs,
+  outputs, tools, model, validation, approvals and limitations, with a digest that approvals do not change.
+* **[agentfrontier-capabilities](extensions/capabilities/README.md)** (`extensions/capabilities`, own
+  distribution): LLM provider clients, SQL validation, NL-to-SQL, data-quality rules, dbt generation, business term
+  proposals, notebooks and capability profiles.
+* **[agentfrontier-synth](extensions/synth/README.md)** (`extensions/synth`, own distribution, standard library
+  only): synthetic data from a schema with valid foreign keys, masking and tokenization operators, privacy and
+  utility checks, and fixture export.
+
 ## The spec
 
 The definitions, the canonical entity model (`entities.json`), the raw-stream catalog (`streams.json`), the JSON
@@ -241,6 +259,12 @@ This repository vendors a copy pinned to a tag (`scripts/spec.lock`):
   storage writer and the Snowflake, Databricks and BigQuery table loaders; live checks of the OpenMetadata and
   DataHub sinks (they run against fixtures; OpenLineage and Kafka were checked against Marquez and Redpanda).
 * Parquet schemas without the `parquet` extra (such files are datasets without fields, as in the Java edition).
+* Lineage parsed from query history (only view SQL is parsed); business terms from Snowflake semantic views, Unity
+  Catalog tags and the OpenMetadata glossary (the `dbt` definition reads dbt's).
+* Phase 5 remainders: DS transforms (pandas, scikit-learn); PySpark, script and OpenAPI-client generation (code
+  generation covers dbt only); the live NL-to-SQL accuracy run on the labelled retail set.
+* Phase 6: cloud cost sources and LLM usage sources normalised to FOCUS, agent registry and permission sources, and
+  the actions (write) aspect. Only `agentfrontier-synth` is built.
 * `--drivers` is a Java option (JDBC jars); the Python CLI accepts it and ignores it.
 * The ad hoc query row cap is applied while fetching; psycopg and PyMySQL client cursors still receive the whole
   result from the server.

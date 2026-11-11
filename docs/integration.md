@@ -41,13 +41,18 @@ Once the package is published, this becomes `pip install "agentfrontier[postgres
 
 | Extra | Adds | For |
 |---|---|---|
-| (none) | nothing | SQLite, Elasticsearch, OpenSearch, Unity Catalog, local files |
+| (none) | nothing | SQLite; HTTP sources `bigquery`, `databricks`, `unity_catalog`, `elasticsearch`, `opensearch`, `entra_id`, `okta`, `google_directory`; files sources `local_files`, `s3`, `adls`, `gcs`, `dbt` |
 | `postgres` | psycopg 3 | PostgreSQL, Redshift |
 | `mysql` | PyMySQL | MySQL |
 | `oracle` | python-oracledb (thin mode, no Oracle client) | Oracle |
 | `snowflake` | snowflake-connector-python | Snowflake |
 | `sqlserver` | pymssql | SQL Server |
 | `neo4j` | neo4j driver | the Neo4j graph sink |
+| `yaml` | PyYAML | governance rules files in YAML |
+| `parquet` | pyarrow | the parquet sink and Parquet schemas in the files engine |
+| `lineage` | sqlglot | column lineage parsed from view SQL |
+| `otel` | opentelemetry-api | spans for runs, scopes and operations |
+| `kafka` | kafka-python | the kafka sink |
 
 When a driver is missing, opening a connection fails with error code `UNSUPPORTED` and names the package to install.
 
@@ -133,8 +138,16 @@ report = af.run(PipelineConfig(
 print(report.status, report.counts)                   # SUCCEEDED / PARTIAL / FAILED
 ```
 
-Built-in sinks: `jsonl`, `json`, `console`, `memory` (read back in-process), `http` (POSTs batches to your
-service), `neo4j`. To write to your own store, subclass `Sink`:
+Built-in sinks:
+
+* files: `jsonl`, `json`, `csv`, `parquet` (`parquet` extra);
+* in-process and HTTP: `console`, `memory` (read back in-process), `http` (POSTs batches to your service);
+* graphs: `graph` (memory or JSON store), `neo4j` (`neo4j` extra);
+* standard formats, sent to a `url` or written to a `path`: `openlineage`, `openmetadata`, `datahub`, `opa`, `otlp`,
+  `focus`, `ocsf`;
+* streaming: `kafka` (`kafka` extra).
+
+[python-api.md](python-api.md#sinks) has their settings. To write to your own store, subclass `Sink`:
 
 ```python
 from agentfrontier import AgentFrontier, Sink, SinkProvider
@@ -194,13 +207,24 @@ tools with the Claude API.
   Values are resolved when a session opens and never appear in `str(connection)`, logs or error messages. Custom
   resolvers (a vault, a cloud secret manager) plug in via `AgentFrontier(secret_resolvers=[...])`.
 * **Handle errors by code.** Every failure is an `AgentFrontierError` with a stable `code`: `INVALID_CONFIG`,
-  `CONNECTION_FAILED`, `AUTH_FAILED`, `QUERY_FAILED`, `QUERY_REJECTED`, `UNSUPPORTED`, `SINK_FAILED`, ... Retry
+  `INVALID_DEFINITION`, `CONNECTION_FAILED`, `AUTH_FAILED`, `QUERY_FAILED`, `QUERY_REJECTED`, `UNSUPPORTED`,
+  `SINK_FAILED`, `POLICY_DENIED`. Retry
   `CONNECTION_FAILED` with backoff (but note that a wrong password can also surface as `CONNECTION_FAILED`, so cap the
   retries); fix the configuration for the others. `af.test(conn)` never raises, so use it for health checks.
 * **Check the run report.** `PARTIAL` means some scopes failed and the rest were written; `report.errors` and
   `report.warnings` say which. Alert on it instead of treating it as success.
 * **Ad hoc queries** have a statement timeout and a row cap (`QueryRequest(timeout_seconds=..., max_rows=...)`), and
   their `?` parameters are bound, never concatenated.
+* **Govern what is read.** Give pipelines a `governance` block (or `af.open(conn, governance=...)`) with a policy,
+  so every read is decided before it runs and every record before it is released (deny, masking, row filters,
+  approvals). Turn on classification to label personal and sensitive fields, and auditing for a hash-chained,
+  verifiable `audit_event` trail (`agentfrontier audit-verify`). See [governance.md](governance.md).
+* **Emit events, not just records.** With the envelope on (`envelope=True, tenant_id=...`), every record carries
+  its tenant, source, run, category and a deterministic `eventId`, so consumers can deduplicate and replay.
+* **Run incrementally.** `incremental={"checkpoints": <folder or CheckpointStore>}` (needs the envelope) emits only
+  upserts, deletions and tombstones since the last run. Keep the checkpoints on durable storage (a custom
+  `CheckpointStore` for a database or object storage), and schedule a reconciliation run (`reconcileEvery` or
+  `--full`). A checkpoint is committed only after a run that did not fail.
 
 ## 6. Extend it
 

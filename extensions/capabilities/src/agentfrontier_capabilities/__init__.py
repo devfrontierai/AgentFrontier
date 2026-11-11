@@ -7,6 +7,8 @@ any agent framework. The LLM is optional and sits behind a provider protocol; de
 * :mod:`.nl2sql`: grounded context assembly, generation with one repair, guarded execution, evaluation;
 * :mod:`.dq`: data-quality rules and their SQL, dbt, Great Expectations and Soda forms;
 * :mod:`.codegen`: dbt model files and static checks;
+* :mod:`.terms`: business term proposals (Business Context Graph v2, ``propose_terms``);
+* :mod:`.notebook`: notebooks from typed cells, the ``.ipynb`` round trip, the guarded ``query()`` prelude, reports;
 * :mod:`.profiles`: capability profiles (manifests, schemas, instructions).
 """
 
