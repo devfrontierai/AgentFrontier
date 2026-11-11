@@ -11,6 +11,7 @@ optional and sits behind a provider protocol.
 | `nl2sql` | `assemble_context` (relevant tables, join conditions, business terms, policy applied), `generate_sql` (one query, validated, repaired once, run only through the caller's guarded callback, with a provenance manifest), `evaluate` (accuracy against reference queries) |
 | `dq` | Data-quality rules recommended from constraints, values and profiles; SQL checks, dbt `schema.yml`, Great Expectations suites, SodaCL |
 | `codegen` | dbt model files with `ref()` / `source()`, dbt SQL back to plain SQL for validation, Python compile checks |
+| `notebook` | Notebooks from typed cells (markdown, SQL, chart, Python): rendering to plain Python, `.ipynb` (nbformat 4) with kind, author and hash per cell, reading back (edited cells become user code), a `query()` prelude that runs SQL through the product's guarded API, and a Markdown report from an executed notebook |
 | `profiles` | Capability profiles (`capability.json` and `instructions.md`): `nl_to_sql`, `validate_sql`, `dq_rules`, `dbt_model` |
 
 The cache contract and provenance manifests these use are in the core SDK (`agentfrontier.cache`,

@@ -289,6 +289,10 @@ sits behind a provider protocol.
   validation, and Python compile checks. Execution is an `Executor` interface that products implement.
 * **Business Context Graph v2:** terms a model proposes from the schema, tied to columns that exist, marked
   `inferred` with a confidence and `pending` review.
+* **Notebooks:** typed cells (markdown, SQL, chart, Python) rendered to plain Python, written to `.ipynb` with
+  each cell's kind, author and hash, read back (a cell edited since it was written becomes user code), with a
+  `query()` prelude that sends SQL through the product's guarded API and a Markdown report of an executed
+  notebook. Execution is the product's (Avero runs it in a sandbox).
 * **Capability profiles:** `nl_to_sql`, `validate_sql`, `dq_rules` and `dbt_model`, each with a manifest (input and
   output schemas, version) and instructions; inputs are checked before a call.
 
@@ -338,6 +342,6 @@ From `common-docs/AGENTFRONTIER-PLAN.md`:
 | Phase | Scope |
 |---|---|
 | 4 | SaaS, collaboration and content sources:<ul><li>GitHub, Jira, Confluence, ServiceNow, then Salesforce, SharePoint/OneDrive, Google Drive, Slack and Teams;</li><li>OAuth authorization-code and device flows;</li><li>`agentfrontier-content` for PDF/Office/web content with `content` and `chunk` citations.</li></ul> |
-| 5 | Generative capabilities (`agentfrontier-capabilities`). **Done in this slice (§15, §17):** NL-to-SQL with static validation and policy checks, data-quality rules, dbt code generation, Business Context Graph v2 proposals, the semantic cache contract and provenance manifests. **Remaining:** DS transforms (pandas, scikit-learn), PySpark, script and OpenAPI-client generation. |
+| 5 | Generative capabilities (`agentfrontier-capabilities`). **Done in this slice (§15, §17):** NL-to-SQL with static validation and policy checks, data-quality rules, dbt code generation, notebook templates, Business Context Graph v2 proposals, the semantic cache contract and provenance manifests. **Remaining:** DS transforms (pandas, scikit-learn), PySpark, script and OpenAPI-client generation. |
 | 6 | Cloud and LLM cost sources normalised to FOCUS; agent registry and permission sources; an opt-in actions (write) aspect. **Done, pulled forward (§16):** `agentfrontier-synth` for synthetic data. |
 | 7 | `agentfrontier-gateway` (REST and MCP over the SDK); a hybrid worker; domain packs (banking, insurance first). |
