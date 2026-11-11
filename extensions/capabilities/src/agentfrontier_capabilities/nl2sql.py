@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import datetime as dt
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterable
 
@@ -211,14 +212,29 @@ def _norm(v: Any) -> str:
         return str(v).strip().lower()
 
 
-def compare_results(expected: list, got: list) -> tuple[bool, str]:
-    """Same rows regardless of row and column order, numbers to two decimals."""
-    a = sorted(tuple(sorted(_norm(v) for v in r)) for r in expected)
-    b = sorted(tuple(sorted(_norm(v) for v in r)) for r in got)
-    if a == b:
-        return True, "same result"
-    return False, "expected " + str(len(a)) + " rows, got " + str(len(b)) + (" (values differ)" if len(a) == len(b)
-                                                                            else "")
+def _contains(row: Counter, want: Counter) -> bool:
+    return all(row[k] >= n for k, n in want.items())
+
+
+def compare_results(expected: list, got: list, extra_columns: bool = True) -> tuple[bool, str]:
+    """Same rows regardless of row and column order, numbers to two decimals. With ``extra_columns`` (the
+    default), a generated row may carry more columns than the reference (an id, a count next to a sum) as long as
+    every expected value is in it; the number of rows must match either way."""
+    a = [Counter(_norm(v) for v in r) for r in expected]
+    b = [Counter(_norm(v) for v in r) for r in got]
+    if len(a) != len(b):
+        return False, "expected " + str(len(a)) + " rows, got " + str(len(b))
+    if not extra_columns:
+        same = sorted(sorted(x.elements()) for x in a) == sorted(sorted(x.elements()) for x in b)
+        return (True, "same result") if same else (False, "values differ")
+    free = list(range(len(b)))
+    for want in sorted(a, key=lambda c: -sum(c.values())):
+        hit = next((i for i in free if _contains(b[i], want)), None)
+        if hit is None:
+            return False, "values differ (no generated row has " + ", ".join(sorted(want.elements())[:4]) + ")"
+        free.remove(hit)
+    wider = bool(got) and len(got[0]) > len(expected[0])
+    return True, "same result" + (" (with extra columns)" if wider else "")
 
 
 def evaluate(cases: Iterable[Case], generate: Callable[[str], str | None],

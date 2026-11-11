@@ -146,6 +146,9 @@ def test_evaluate(tmp_path: Path) -> None:
     res = evaluate(cases, answers.get, lambda s: db.execute(s).fetchall())
     assert (res["passed"], res["total"], res["accuracy"]) == (1, 2, 0.5)
     assert compare_results([(1, "a")], [("a", 1.0)])[0]
+    assert compare_results([("x", 5)], [(9, "x", 5.0, 3)]) == (True, "same result (with extra columns)")
+    assert not compare_results([("x", 5)], [(9, "x", 5)], extra_columns=False)[0]
+    assert not compare_results([("x", 5)], [("x", 6)])[0] and not compare_results([("x", 5)], [])[0]
 
 
 def test_retail_fixture_set_is_well_formed() -> None:
