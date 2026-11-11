@@ -1,0 +1,16 @@
+{
+  "name": "nl_to_sql",
+  "version": "1.0.0",
+  "description": "One read-only SQL query for a question, grounded in the catalog, statically validated and repaired once.",
+  "needsLlm": true,
+  "deterministic": false,
+  "inputSchema": {"type": "object", "required": ["question"], "properties": {
+    "question": {"type": "string", "minLength": 3},
+    "dialect": {"type": "string"},
+    "tables": {"type": "array", "items": {"type": "string"}},
+    "execute": {"type": "boolean"}}},
+  "outputSchema": {"type": "object", "required": ["sql", "ok", "validation"], "properties": {
+    "sql": {"type": ["string", "null"]}, "ok": {"type": "boolean"}, "validation": {"type": ["object", "null"]},
+    "assumptions": {"type": "array"}, "manifest": {"type": "object"}}},
+  "examples": [{"input": {"question": "Number of orders per month in 2025"}}]
+}

@@ -79,7 +79,7 @@ The caller uses the SDK in one of two ways:
 | Repository | Role |
 |---|---|
 | `agentfrontier-spec` | The master copy of the contract: definitions, entity model, raw-stream catalog, auth catalog, JSON Schemas, classification rules, sink mappings, the rules documents (`docs/*.md`) and the conformance cases. Released as tags `spec-vX.Y.Z`. |
-| `AgentFrontier` (this repository) | The Python edition. It vendors the spec under `src/agentfrontier/spec/` and `tests/conformance/`. |
+| `AgentFrontier` (this repository) | The Python edition. It vendors the spec under `src/agentfrontier/spec/` and `tests/conformance/`. Two extension distributions live in `extensions/`: `agentfrontier-capabilities` (LLM provider protocol, SQL validation, NL-to-SQL, data-quality rules, dbt generation, term proposals, capability profiles; needs `sqlglot`) and `agentfrontier-synth` (synthetic data, masking operators, privacy checks; standard library only). The core stays dependency-free (decision D7). |
 | `ai-data-studio/agentfrontier-java` | The Java edition (modules `agentfrontier-core`, `agentfrontier-cli`, `agentfrontier-neo4j`). It vendors the spec under `spec/`. |
 
 Each edition copies the spec with `scripts/sync_spec.py <spec checkout> --ref spec-vX.Y.Z`, and the tag and commit
@@ -343,7 +343,10 @@ gone.
 | `graph.py` | Graph stores, the access filter, builders and the graph sink |
 | `translators/` | The seven translators |
 | `sinks/` | Built-in sinks, file sinks, translated sinks, Neo4j and uids |
+| `cache.py`, `provenance.py` | The semantic cache contract (keys, revalidation, invalidation, in-memory store) and artifact provenance manifests |
 | `cli.py` | The `agentfrontier` command |
+| `extensions/capabilities/` | `agentfrontier_capabilities`: `llm`, `sqlcheck`, `nl2sql`, `dq`, `codegen`, `terms`, `profiles` |
+| `extensions/synth/` | `agentfrontier_synth`: `spec`, `generate`, `operators`, `checks`, `export` |
 
 ## 15. Testing
 
@@ -351,7 +354,8 @@ gone.
   output is compared with the expected records and events. This covers incremental cases run several times, the
   `eventId` vectors, the SigV4 and RS256 vectors, the CSV sink vectors, the translator vectors and the governance
   vectors.
-* **Unit and feature tests** cover each module (`tests/test_*.py`).
+* **Unit and feature tests** cover each module (`tests/test_*.py`), and each extension has its own suite
+  (`extensions/*/tests`), run by the same `pytest` command from the repository root.
 * **Integration tests** run against real PostgreSQL, MySQL and Oracle when they are reachable, and are skipped
   otherwise. [testing.md](testing.md) explains how to run them.
 * **The Java edition** runs the same conformance cases from its own vendored copy

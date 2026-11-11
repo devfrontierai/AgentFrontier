@@ -1,0 +1,14 @@
+{
+  "name": "validate_sql",
+  "version": "1.0.0",
+  "description": "Static validation: parse, one read-only statement, tables and columns in the catalog, transpile, policy, EXPLAIN cost.",
+  "needsLlm": false,
+  "deterministic": true,
+  "inputSchema": {"type": "object", "required": ["sql"], "properties": {
+    "sql": {"type": "string", "minLength": 1}, "dialect": {"type": "string"}, "targetDialect": {"type": "string"},
+    "explain": {"type": "boolean"}}},
+  "outputSchema": {"type": "object", "required": ["status", "ok", "checks"], "properties": {
+    "status": {"enum": ["passed", "warnings", "failed"]}, "ok": {"type": "boolean"}, "ran": {"type": "boolean"},
+    "checks": {"type": "array"}}},
+  "examples": [{"input": {"sql": "select status, count(*) from sales.orders group by status"}}]
+}

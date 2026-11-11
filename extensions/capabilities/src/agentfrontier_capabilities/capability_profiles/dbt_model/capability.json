@@ -1,0 +1,12 @@
+{
+  "name": "dbt_model",
+  "version": "1.0.0",
+  "description": "A dbt model and its schema.yml from validated SQL, with references rewritten to ref() and source().",
+  "needsLlm": false,
+  "deterministic": true,
+  "inputSchema": {"type": "object", "required": ["name", "sql"], "properties": {
+    "name": {"type": "string", "minLength": 1}, "sql": {"type": "string"}, "folder": {"type": "string"},
+    "materialized": {"enum": ["view", "table", "incremental", "ephemeral"]}}},
+  "outputSchema": {"type": "object", "required": ["files"], "properties": {"files": {"type": "object"}}},
+  "examples": [{"input": {"name": "fct_monthly_customer_revenue", "sql": "select ...", "folder": "models/marts"}}]
+}

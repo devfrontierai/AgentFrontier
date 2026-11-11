@@ -261,7 +261,63 @@ Options of `extract`:
 [python-api.md](python-api.md) has the reference, and [integration.md](integration.md) has integration patterns and
 a production checklist.
 
-## 15. Not implemented yet
+## 15. Generative capabilities (`agentfrontier-capabilities`)
+
+A separate distribution in `extensions/capabilities`, independent of any agent framework. The LLM is optional and
+sits behind a provider protocol.
+
+* **LLM providers:** one provider-neutral chat model with tool calling, and clients for Anthropic, OpenAI, Azure
+  OpenAI, Gemini and OpenAI-compatible endpoints. Also structured (JSON) output with one retry, a token estimate,
+  a budget (calls per day and per task, token totals) and a scripted client for tests.
+* **SQL validation** (`validate_sql`), never executing:
+  * parse in the source's dialect, with the line and column of a parse error;
+  * one statement, read-only (writes, DDL and `SELECT INTO` refused);
+  * every table and column checked against the catalog, with "did you mean" suggestions;
+  * lint (`SELECT *`, joins without a condition);
+  * transpile to another dialect;
+  * a policy decision per table read (deny, or masking obligations);
+  * the database's `EXPLAIN` cost through a callback.
+* **NL-to-SQL:** grounded context (relevant tables, foreign-key neighbours, join conditions and business terms,
+  with tables and columns the policy hides left out), one read-only query from the model, validation, one repair
+  from the validation errors, and execution only through the caller's guarded callback, with a provenance manifest.
+  `evaluate` scores a generator against reference queries; a labelled set of 15 questions for the retail demo
+  database ships with the tests.
+* **Data-quality rules:** one rule model (completeness, uniqueness, validity, referential, contract, business),
+  recommended from keys, nullability, foreign keys, check constraints, known values and profiles. Translated to SQL
+  checks (a query counting the rows that break the rule), dbt `schema.yml`, Great Expectations suites and SodaCL.
+* **Code generation:** dbt model files with `ref()` and `source()`, dbt SQL turned back into plain SQL for
+  validation, and Python compile checks. Execution is an `Executor` interface that products implement.
+* **Business Context Graph v2:** terms a model proposes from the schema, tied to columns that exist, marked
+  `inferred` with a confidence and `pending` review.
+* **Capability profiles:** `nl_to_sql`, `validate_sql`, `dq_rules` and `dbt_model`, each with a manifest (input and
+  output schemas, version) and instructions; inputs are checked before a call.
+
+## 16. Synthetic data (`agentfrontier-synth`)
+
+A separate distribution in `extensions/synth`; standard library only.
+
+* **Specs:** tables, columns (type, nullability, uniqueness, accepted values with weights, ranges, null share,
+  labels), rows, scenarios (rows with set values, or duplicates of other rows) and rules (keep one date after
+  another; total child rows into a parent column).
+* **Generation:** deterministic from the seed; parents before children; unique keys; foreign keys that always
+  resolve (composite keys and self references too); invented values (emails on the reserved `example.test` domain,
+  phones in the fictional 555-01xx range).
+* **Masking operators:** redaction, salted hashing, keyed tokenization (reversible through a `TokenVault`),
+  format-preserving pseudonymisation (keyed, not NIST FPE) and generalisation.
+* **Checks:** keys, not-null, unique, accepted values, ranges and foreign keys on any dataset; k-anonymity;
+  exact-match leakage against a real sample; Kolmogorov-Smirnov and total-variation distances.
+* **Export:** CSV, JSON Lines, or SQL INSERTs in dependency order, with a fixture manifest.
+
+## 17. Cache contract and provenance (core)
+
+* **`agentfrontier.cache`:** cache keys over the kind, the scope (tenant, principal, purpose, source, and the
+  schema, policy, model and embedding versions) and the normalised request. Every hit is revalidated (versions,
+  expiry, a caller check such as a fresh policy decision). Change and policy events invalidate entries. Also the
+  `CacheStore` protocol and an in-memory store.
+* **`agentfrontier.provenance`:** manifests for generated artifacts (hashed inputs with versions, outputs, tools,
+  model, validation, approvals, limitations), with a digest that approvals do not change.
+
+## 18. Not implemented yet
 
 * Live runs of Snowflake, SQL Server, Redshift, BigQuery, Databricks, S3, ADLS and GCS: they are checked against
   recorded responses only.
@@ -275,13 +331,13 @@ a production checklist.
 * In the Java edition: governance, graphs, parsed lineage, Parquet, OpenTelemetry, the capability registry, and the
   sinks that deliver translated documents.
 
-## 16. Roadmap
+## 19. Roadmap
 
 From `common-docs/AGENTFRONTIER-PLAN.md`:
 
 | Phase | Scope |
 |---|---|
 | 4 | SaaS, collaboration and content sources:<ul><li>GitHub, Jira, Confluence, ServiceNow, then Salesforce, SharePoint/OneDrive, Google Drive, Slack and Teams;</li><li>OAuth authorization-code and device flows;</li><li>`agentfrontier-content` for PDF/Office/web content with `content` and `chunk` citations.</li></ul> |
-| 5 | Generative capabilities (`agentfrontier-capabilities`, LLM behind a provider protocol):<ul><li>NL-to-SQL with static validation and policy checks;</li><li>data-quality rules;</li><li>code generation;</li><li>Business Context Graph v2;</li><li>a semantic cache contract.</li></ul> |
-| 6 | Cloud and LLM cost sources normalised to FOCUS; agent registry and permission sources; `agentfrontier-synth` for synthetic data; an opt-in actions (write) aspect. |
+| 5 | Generative capabilities (`agentfrontier-capabilities`). **Done in this slice (§15, §17):** NL-to-SQL with static validation and policy checks, data-quality rules, dbt code generation, Business Context Graph v2 proposals, the semantic cache contract and provenance manifests. **Remaining:** DS transforms (pandas, scikit-learn), PySpark, script and OpenAPI-client generation. |
+| 6 | Cloud and LLM cost sources normalised to FOCUS; agent registry and permission sources; an opt-in actions (write) aspect. **Done, pulled forward (§16):** `agentfrontier-synth` for synthetic data. |
 | 7 | `agentfrontier-gateway` (REST and MCP over the SDK); a hybrid worker; domain packs (banking, insurance first). |

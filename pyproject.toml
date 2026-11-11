@@ -48,7 +48,8 @@ agentfrontier = ["spec/*.json", "spec/definitions/*/*.json", "spec/sinks/*.json"
                  "spec/classification/*.json"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "extensions/capabilities/tests", "extensions/synth/tests"]
+pythonpath = ["extensions/capabilities/src", "extensions/synth/src"]
 markers = [
     "database: integration tests against the docker databases (skipped when not reachable)",
     "neo4j: integration test against a Neo4j server (skipped when not reachable)",

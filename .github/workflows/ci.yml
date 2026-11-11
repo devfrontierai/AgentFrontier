@@ -38,6 +38,17 @@ jobs:
           ref=$(sed -n 's/^ref=//p' scripts/spec.lock)
           python scripts/sync_spec.py https://github.com/devfrontierai/agentfrontier-spec.git --ref "$ref" --check
 
+  extensions:
+    # agentfrontier-capabilities and agentfrontier-synth install as their own distributions and pass their tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install . ./extensions/capabilities ./extensions/synth pytest
+      - run: python -m pytest -q -p no:cacheprovider -o pythonpath= extensions/capabilities/tests extensions/synth/tests
+
   no-runtime-dependencies:
     runs-on: ubuntu-latest
     steps:

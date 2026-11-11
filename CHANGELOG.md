@@ -3,6 +3,20 @@
 Versions follow semantic versioning. Each release names the spec tag it implements; see the spec's
 [VERSIONING.md](https://github.com/devfrontierai/agentfrontier-spec/blob/main/VERSIONING.md).
 
+## Unreleased: plan phase 5 slice and phase 6 synth
+
+* **Core:** `agentfrontier.cache` (the semantic cache contract: keys over scope and versions, mandatory
+  revalidation, invalidation by change and policy events, `MemoryCacheStore`) and `agentfrontier.provenance`
+  (artifact manifests).
+* **`agentfrontier-capabilities` 0.1.0** (new distribution, `extensions/capabilities`): the LLM provider protocol
+  and clients (Anthropic, OpenAI, Azure OpenAI, Gemini, OpenAI-compatible; moved from Avero), `validate_sql`,
+  NL-to-SQL with context assembly, one repair and guarded execution, `evaluate` with a labelled retail set,
+  data-quality rules with SQL, dbt, Great Expectations and Soda output, dbt generation, Business Context Graph v2
+  proposals, capability profiles.
+* **`agentfrontier-synth` 0.1.0** (new distribution, `extensions/synth`): schema-driven synthetic data with
+  foreign-key integrity, scenarios and rules; masking and tokenization operators; validation, k-anonymity,
+  leakage and distribution checks; CSV, JSON Lines and SQL export with a manifest.
+
 ## 0.4.0 (unreleased): plan phase 3
 
 Implements **spec-v1.5.0**.

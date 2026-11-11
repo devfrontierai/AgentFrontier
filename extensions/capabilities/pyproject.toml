@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentfrontier-capabilities"
+version = "0.1.0"
+description = "AgentFrontier capabilities: LLM provider protocol, SQL validation, NL-to-SQL, data-quality rules and dbt generation."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+authors = [{ name = "Pankaj Sharma" }]
+dependencies = ["agentfrontier>=0.4.0", "sqlglot>=25"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+agentfrontier_capabilities = ["capability_profiles/*/*.json", "capability_profiles/*/*.md"]

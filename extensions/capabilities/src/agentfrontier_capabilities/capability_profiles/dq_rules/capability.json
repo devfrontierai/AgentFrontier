@@ -1,0 +1,11 @@
+{
+  "name": "dq_rules",
+  "version": "1.0.0",
+  "description": "Data-quality rules recommended from constraints, values and profiles, as SQL checks, dbt tests, Great Expectations or SodaCL.",
+  "needsLlm": false,
+  "deterministic": true,
+  "inputSchema": {"type": "object", "required": ["table"], "properties": {
+    "table": {"type": "string"}, "format": {"enum": ["rules", "sql", "dbt", "great_expectations", "soda"]}}},
+  "outputSchema": {"type": "object", "required": ["rules"], "properties": {"rules": {"type": "array"}}},
+  "examples": [{"input": {"table": "sales.orders", "format": "dbt"}}]
+}
