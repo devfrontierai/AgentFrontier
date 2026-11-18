@@ -23,6 +23,22 @@ def _cap(s: str) -> str:
     return s[:1].upper() + s[1:]
 
 
+def _column_name(text: str) -> str:
+    """The bare column name in a lineage leaf's name, which sqlglot writes as SQL and so quotes a quoted identifier
+    ("o"."customer_id", O."CUSTOMER_ID"): read it back as a column and keep its name."""
+    import sqlglot
+    from sqlglot import exp
+
+    try:
+        col = sqlglot.parse_one(text, into=exp.Column)
+        if isinstance(col, exp.Column) and col.name:
+            return col.name
+    except Exception:  # noqa: BLE001 - not a plain column reference: fall back to the last part, unquoted
+        pass
+    last = text.rsplit(".", 1)[-1].strip()
+    return last[1:-1] if len(last) >= 2 and last[0] + last[-1] in ('""', "``", "[]") else last
+
+
 class LineageParser:
     """Parses one view at a time. ``schema`` maps a table's level values plus its name (a tuple) to its columns and
     types; it lets ``select *`` and unqualified columns resolve."""
@@ -90,7 +106,7 @@ class LineageParser:
                 table = leaf.source if isinstance(leaf.source, exp.Table) else None
                 if table is None or not table.name:
                     continue
-                column = leaf.name.rsplit(".", 1)[-1]
+                column = _column_name(leaf.name)
                 if not column or column == "*":
                     continue
                 up = self._levels_of(table, own)

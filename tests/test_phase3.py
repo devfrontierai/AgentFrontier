@@ -181,3 +181,29 @@ def test_dbt_project_graph(tmp_path: Path):
     assert {n["props"]["name"] for n in g.nodes("Metric")} == {"revenue", "average_order_value"}
     paths = g.traversal(["dbt/analytics/marts/fct_orders"], ["DERIVED_FROM"], "out", 5, ALLOW_ALL)
     assert ["dbt/analytics/marts/fct_orders", "dbt/analytics/staging/stg_orders", "dbt/raw_db/shop_raw/orders"] in paths
+
+
+_ORDER_TOTALS = {("id", "orders", "id"), ("customer_id", "orders", "customer_id"), ("total", "products", "price"),
+                 ("total", "order_items", "qty")}
+
+
+@pytest.mark.parametrize("dialect, sql, expected", [
+    # MySQL keeps view text with every name in backticks
+    ("mysql", "select `o`.`id` AS `id`,`o`.`customer_id` AS `customer_id`,sum((`p`.`price` * `i`.`qty`)) AS `total` "
+              "from ((`shop`.`orders` `o` join `shop`.`order_items` `i` on((`i`.`order_id` = `o`.`id`))) "
+              "join `shop`.`products` `p` on((`p`.`sku` = `i`.`sku`))) group by `o`.`id`,`o`.`customer_id`",
+     _ORDER_TOTALS),
+    # Oracle tools write quoted upper-case names
+    ("oracle", 'SELECT "O"."ID" AS "ID", "O"."CUSTOMER_ID" AS "CUSTOMER_ID", SUM("P"."PRICE" * "I"."QTY") AS "TOTAL" '
+               'FROM "SHOP"."ORDERS" "O" JOIN "SHOP"."ORDER_ITEMS" "I" ON "I"."ORDER_ID" = "O"."ID" '
+               'JOIN "SHOP"."PRODUCTS" "P" ON "P"."SKU" = "I"."SKU" GROUP BY "O"."ID", "O"."CUSTOMER_ID"',
+     {(f.upper(), t.upper(), c.upper()) for f, t, c in _ORDER_TOTALS}),
+])
+def test_parsed_column_lineage_names_columns_without_their_quotes(dialect: str, sql: str, expected: set) -> None:
+    pytest.importorskip("sqlglot")
+    from agentfrontier.lineage_parse import LineageParser
+    from agentfrontier.model import Record
+    view = Record("dataset", {"source": "s", "schema": "shop", "name": "order_totals", "definition": sql})
+    got = {(r.values["field"], r.values["upstreamDataset"], r.values["upstreamField"])
+           for r, _ in LineageParser(dialect, ["schema"]).view_lineage(view)}
+    assert got == expected
