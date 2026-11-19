@@ -1,0 +1,24 @@
+{
+  "description": "Built-in sensitivity labels (classification/sensitivity.json, docs/sensitivity.md): for a field's effective classification labels and, optionally, a declared sensitivity label, the effective sensitivity label and where it came from.",
+  "version": "1.0.0",
+  "cases": [
+    {"name": "no classifications", "classifications": [], "declared": null,
+     "expected": {"label": "internal", "origin": "default"}},
+    {"name": "one personal classification", "classifications": ["pii.email"], "declared": null,
+     "expected": {"label": "confidential", "origin": "classification"}},
+    {"name": "the highest rank wins", "classifications": ["pii.person_name", "pii.national_id", "pii.ip_address"],
+     "declared": null, "expected": {"label": "restricted", "origin": "classification"}},
+    {"name": "a glob maps a family", "classifications": ["pci.cvv"], "declared": null,
+     "expected": {"label": "restricted", "origin": "classification"}},
+    {"name": "an internal classification", "classifications": ["pii.ip_address"], "declared": null,
+     "expected": {"label": "internal", "origin": "classification"}},
+    {"name": "unknown labels are ignored", "classifications": ["security.prompt_injection", "custom.thing"],
+     "declared": null, "expected": {"label": "internal", "origin": "default"}},
+    {"name": "a declared label raises", "classifications": [], "declared": "confidential",
+     "expected": {"label": "confidential", "origin": "declared"}},
+    {"name": "a declared label lowers", "classifications": ["pii.national_id"], "declared": "internal",
+     "expected": {"label": "internal", "origin": "declared"}},
+    {"name": "an unknown declared label is ignored", "classifications": ["pii.email"], "declared": "top_secret",
+     "expected": {"label": "confidential", "origin": "classification"}}
+  ]
+}

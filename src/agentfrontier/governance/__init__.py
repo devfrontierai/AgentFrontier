@@ -8,9 +8,11 @@ from .classify import FieldClassifier, Hit, LabelIndex, Reconciled, RuleClassifi
 from .enforce import (ApprovalRequired, GovernedSession, Governance, PolicyDenied, apply_to_row, mask_value)
 from .policy import (CombinedPDP, Decision, FailClosedPDP, OpaPDP, PolicyDecisionPoint, RulePDP, matches,
                      pdp_from_config)
+from .sensitivity import SensitivityLabel, SensitivityTaxonomy
 
 __all__ = ["ApprovalRequired", "AuditLog", "AuthorityGraph", "CombinedPDP", "Decision", "EffectiveGrant",
            "FailClosedPDP", "FieldClassifier", "GovernedSession", "Governance", "Hit", "LabelIndex", "OpaPDP",
-           "PolicyDecisionPoint", "PolicyDenied", "Reconciled", "RuleClassifier", "RulePDP", "Verification",
+           "PolicyDecisionPoint", "PolicyDenied", "Reconciled", "RuleClassifier", "RulePDP", "SensitivityLabel",
+           "SensitivityTaxonomy", "Verification",
            "apply_to_row", "chain_hash", "mask_value", "matches", "pdp_from_config", "reconcile", "verify",
            "verify_directory"]

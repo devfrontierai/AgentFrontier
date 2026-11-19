@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "description": "Built-in sensitivity labels: an ordered taxonomy that classifications map to, so policies can be written on a few labels instead of every classification. A field's effective label is the one declared for it (by its source or by a person), else the highest-ranked label its classifications map to, else the default. See docs/sensitivity.md.",
+  "default": "internal",
+  "labels": [
+    {"id": "public", "name": "Public", "rank": 0,
+     "description": "Approved for anyone, inside or outside the organisation."},
+    {"id": "internal", "name": "Internal", "rank": 1,
+     "description": "For people in the organisation; little harm if it leaks. The default for data nothing marks as sensitive."},
+    {"id": "confidential", "name": "Confidential", "rank": 2,
+     "description": "Personal or business data that would harm people or the organisation if it leaked: names, contact details, dates of birth, addresses."},
+    {"id": "restricted", "name": "Restricted", "rank": 3,
+     "description": "The most sensitive data: government ids, payment and bank details, health data, secrets and credentials."}
+  ],
+  "classifications": {
+    "pii.ip_address": "internal",
+    "pii.email": "confidential",
+    "pii.phone": "confidential",
+    "pii.person_name": "confidential",
+    "pii.date_of_birth": "confidential",
+    "pii.address": "confidential",
+    "pii.national_id": "restricted",
+    "pii.passport": "restricted",
+    "pii.driver_license": "restricted",
+    "pci.*": "restricted",
+    "finance.*": "restricted",
+    "phi.*": "restricted",
+    "secret.*": "restricted"
+  }
+}

@@ -60,6 +60,25 @@ def test_classification_rule_version_matches_vectors() -> None:
     assert RuleClassifier.builtin().versions["pii.email"] == _vectors("classification.json")["ruleVersion"]
 
 
+@pytest.mark.parametrize("case", _vectors("sensitivity.json")["cases"], ids=lambda c: c["name"])
+def test_sensitivity_vectors(case: dict) -> None:
+    from agentfrontier.governance import SensitivityTaxonomy
+    label, origin = SensitivityTaxonomy.builtin().effective(case["classifications"], case["declared"])
+    assert {"label": label, "origin": origin} == case["expected"]
+
+
+def test_sensitivity_taxonomy_maps_every_builtin_classification() -> None:
+    from agentfrontier.governance import SensitivityTaxonomy
+    tx = SensitivityTaxonomy.builtin()
+    assert tx.version == _vectors("sensitivity.json")["version"]
+    assert [x.id for x in tx.labels] == ["public", "internal", "confidential", "restricted"]
+    assert tx.default == "internal" and tx.at_least("confidential") == ["confidential", "restricted"]
+    assert tx.policy_label("restricted") == "sensitivity.restricted" and tx.rank("nope") == -1
+    for label in RuleClassifier.builtin().versions:
+        assert tx.for_classification(label) is not None, label
+    assert tx.for_classification("pci.cvv") == "restricted" and tx.for_classification("other.x") is None
+
+
 def test_audit_chain_vector() -> None:
     v = _vectors("audit-chain.json")
     for e in v["events"]:

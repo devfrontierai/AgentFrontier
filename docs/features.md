@@ -177,6 +177,9 @@ Both editions:
 * **Classification:** 16 built-in rules (PII, payment cards with the Luhn check, IBANs, health data, credentials)
   over names, comments and sample values. They produce `label` records with provenance and confidence, and there are
   four modes for reconciling source-declared and inferred labels.
+* **Sensitivity labels:** `SensitivityTaxonomy` maps every classification to one of four ordered labels (Public,
+  Internal, Confidential, Restricted). A field's effective label is the declared one, else the highest its
+  classifications map to, else Internal; policies and masks name it as `sensitivity.<id>`.
 * **Authority graph:** effective grants through groups, roles, `PUBLIC` and delegations, with the path that
   explains each one, plus `who_can` (`agentfrontier authority`).
 * **Audit trail:** hash-chained `audit_event` records per run, a manifest with an optional HMAC signature, and
