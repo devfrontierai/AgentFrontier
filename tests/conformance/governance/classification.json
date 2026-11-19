@@ -1,6 +1,6 @@
 {
   "description": "Built-in classification rules (classification/rules.json, docs/classification.md): for a field name, comment and sample values, the labels in rule order with value, confidence and evidence.",
-  "ruleVersion": "1.0.0",
+  "ruleVersion": "1.1.0",
   "cases": [
     {
       "name": "customer_email",
@@ -246,6 +246,126 @@
           "evidence": "name"
         }
       ]
+    },
+    {
+      "name": "ncbi_taxid",
+      "comment": null,
+      "values": [
+        "9606",
+        "10090"
+      ],
+      "expected": []
+    },
+    {
+      "name": "tax_id",
+      "comment": null,
+      "values": null,
+      "expected": [
+        {
+          "label": "pii.national_id",
+          "labelType": "classification",
+          "value": "restricted",
+          "confidence": 0.8,
+          "evidence": "name"
+        }
+      ]
+    },
+    {
+      "name": "taxpayer_id",
+      "comment": null,
+      "values": null,
+      "expected": [
+        {
+          "label": "pii.national_id",
+          "labelType": "classification",
+          "value": "restricted",
+          "confidence": 0.8,
+          "evidence": "name"
+        }
+      ]
+    },
+    {
+      "name": "aadhaar_no",
+      "comment": null,
+      "values": null,
+      "expected": [
+        {
+          "label": "pii.national_id",
+          "labelType": "classification",
+          "value": "restricted",
+          "confidence": 0.8,
+          "evidence": "name"
+        }
+      ]
+    },
+    {
+      "name": "kyc_document",
+      "comment": "Aadhaar of the applicant",
+      "values": null,
+      "expected": [
+        {
+          "label": "pii.national_id",
+          "labelType": "classification",
+          "value": "restricted",
+          "confidence": 0.6,
+          "evidence": "comment"
+        }
+      ]
+    },
+    {
+      "name": "pan_number",
+      "comment": null,
+      "values": [
+        "ABCPE1234F",
+        "AAACB5678K"
+      ],
+      "expected": [
+        {
+          "label": "pii.national_id",
+          "labelType": "classification",
+          "value": "restricted",
+          "confidence": 0.85,
+          "evidence": "name,values:2/2"
+        }
+      ]
+    },
+    {
+      "name": "holder_ref",
+      "comment": null,
+      "values": [
+        "ABCPE1234F",
+        "BBBPT9876Z",
+        null
+      ],
+      "expected": [
+        {
+          "label": "pii.national_id",
+          "labelType": "classification",
+          "value": "restricted",
+          "confidence": 0.85,
+          "evidence": "values:2/2"
+        }
+      ]
+    },
+    {
+      "name": "pan",
+      "comment": null,
+      "values": null,
+      "expected": [
+        {
+          "label": "pci.card_number",
+          "labelType": "classification",
+          "value": "restricted",
+          "confidence": 0.8,
+          "evidence": "name"
+        }
+      ]
+    },
+    {
+      "name": "span_no",
+      "comment": null,
+      "values": null,
+      "expected": []
     }
   ]
 }
