@@ -9,7 +9,7 @@ python -m venv .venv
 From the repository root, `pytest` runs the core suites under `tests/` and both extension suites
 (`extensions/capabilities/tests`, `extensions/synth/tests`); `pyproject.toml` puts the extensions' sources on the
 path. Each extension's suite also runs on its own from its folder (`../../.venv/bin/python -m pytest -q`). Measured
-on 11 Nov 2026: 240 passed and 8 skipped from the root (209 passed and 8 skipped under `tests/`, 25 in
+on 20 Nov 2026: 262 passed and 8 skipped from the root (231 passed and 8 skipped under `tests/`, 25 in
 `agentfrontier-capabilities`, 6 in `agentfrontier-synth`); the skipped tests are the database and Neo4j suites
 without their servers.
 

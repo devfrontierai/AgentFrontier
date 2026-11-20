@@ -95,7 +95,9 @@ def _body(o: dict) -> dict:
 
 class AuthorityGraph:
     def __init__(self) -> None:
-        self._principals: dict[str, dict] = {}  # name -> {type, superuser, memberOf, source}
+        # name -> {type, source, superuserOn}; one name can come from several sources, and a superuser is one on
+        # the sources that said so only
+        self._principals: dict[str, dict] = {}
         self._members: dict[str, set[str]] = {}  # principal -> direct groups
         self._grants: list[_Grant] = []
         self._delegations: list[_Delegation] = []
@@ -156,8 +158,11 @@ class AuthorityGraph:
             return
         groups = v.get("memberOf")
         groups = J.strings(groups) if groups is not None else []
-        self._principals[name] = {"type": J.text(v, "type"), "superuser": v.get("superuser") is True,
-                                  "source": J.text(v, "source")}
+        src = J.text(v, "source")
+        info = self._principals.setdefault(name, {"type": J.text(v, "type"), "source": src, "superuserOn": []})
+        info["type"] = info["type"] or J.text(v, "type")
+        if v.get("superuser") is True and src not in info["superuserOn"]:
+            info["superuserOn"].append(src)
         self._members.setdefault(name, set()).update(g for g in groups if g)
 
     @staticmethod
@@ -229,8 +234,8 @@ class AuthorityGraph:
         out: list[EffectiveGrant] = []
         info = self._principals.get(name) or {}
         known = name in self._principals or name in self._members  # PUBLIC covers the source's own principals
-        if info.get("superuser"):
-            out.append(EffectiveGrant(name, "ALL", info.get("source"), (), None, None, None, (name,), "superuser"))
+        for src in info.get("superuserOn", ()):
+            out.append(EffectiveGrant(name, "ALL", src, (), None, None, None, (name,), "superuser"))
         for g in self._grants:
             if g.grantee == name:
                 out.append(self._eff(name, g, (name,), "direct"))
@@ -268,9 +273,11 @@ class AuthorityGraph:
         container-level grant on a scope that contains it. Column grants do not count."""
         wanted = {p.upper() for p in privileges}
         for e in self.effective(principal):
+            if source is not None and e.source is not None and e.source != source:
+                continue  # a grant, or superuser status, on another source says nothing about this one
             if e.via == "superuser":
                 return True
-            if e.privilege not in wanted or (source is not None and e.source is not None and e.source != source):
+            if e.privilege not in wanted:
                 continue
             if e.field_name is not None:
                 continue

@@ -263,6 +263,24 @@ def test_rule_pdp_with_native_grants() -> None:
     assert d.evidence[0]["source"] == "native-grants"
 
 
+def test_superuser_status_holds_only_on_its_own_source() -> None:
+    """A superuser of one source is nobody special on another, even when a principal of the same name exists there,
+    whichever order the sources' records arrive in."""
+    a_su = {"entity": "principal", "source": "shop", "name": "admin", "type": "user", "superuser": True}
+    b_plain = {"entity": "principal", "source": "warehouse", "name": "admin", "type": "user"}
+    for records in ([a_su, b_plain], [b_plain, a_su], [a_su]):
+        g = AuthorityGraph.from_records(records)
+        assert g.holds("admin", ["SELECT"], "shop", {"schema": "sales"}, "orders")
+        assert not g.holds("admin", ["SELECT"], "warehouse", {"schema": "sales"}, "orders")
+        pdp = RulePDP(None, g)
+        def ask(source: str) -> str:
+            return pdp.decide({"subject": "admin", "action": "sample", "resource": {
+                "type": "dataset", "source": source, "path": {"schema": "sales"}, "dataset": "orders"}}).decision
+        assert ask("shop") == "allow" and ask("warehouse") == "deny"
+    both = AuthorityGraph.from_records([a_su, dict(b_plain, superuser=True)])
+    assert {e.source for e in both.effective("admin") if e.via == "superuser"} == {"shop", "warehouse"}
+
+
 # ------------------------------------------------------------------------------------------------ reconciliation
 
 

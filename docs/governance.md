@@ -136,6 +136,12 @@ g.relationships()                             # member_of / delegated_to / may_a
 
 The graph explains access; it does not grant it. The source system stays the enforcer of its own grants.
 
+Grants and superuser status belong to the source that reported them. A principal that source `shop` reports as a
+superuser holds every privilege on `shop` only, and `holds` (the rule PDP's native-grant check) ignores grants from
+other sources. When two sources report a principal of the same name, each source's superuser status is kept.
+Memberships are still matched by principal name across sources: a user in `admins` on one source picks up grants
+made to an `admins` group on another. Source-qualified principals are not designed yet.
+
 ## Verifying an audit trail
 
 ```bash

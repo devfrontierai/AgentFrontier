@@ -5,6 +5,10 @@ Versions follow semantic versioning. Each release names the spec tag it implemen
 
 ## Unreleased: plan phase 5 slice and phase 6 synth
 
+* **Fix (governance):** superuser status now holds only on the source that reported it. Before, a superuser of one
+  source passed the native-grant check on every source, and a later principal record of the same name from another
+  source replaced the first one's superuser flag.
+
 * **Core:** `agentfrontier.cache` (the semantic cache contract: keys over scope and versions, mandatory
   revalidation, invalidation by change and policy events, `MemoryCacheStore`) and `agentfrontier.provenance`
   (artifact manifests).
