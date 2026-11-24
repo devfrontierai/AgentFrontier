@@ -9,6 +9,10 @@ Versions follow semantic versioning. Each release names the spec tag it implemen
   source passed the native-grant check on every source, and a later principal record of the same name from another
   source replaced the first one's superuser flag.
 
+* **Fix (`agentfrontier-capabilities`):** `dq.to_sql(rule, dialect)` quotes names and strings the way the source does
+  (backticks for MySQL and its kin, BigQuery, Databricks, Spark and Hive). Before, it always used ANSI double quotes,
+  so every check on a mixed-case MySQL schema failed with error 1064. Reserved words are quoted everywhere.
+
 * **Core:** `agentfrontier.cache` (the semantic cache contract: keys over scope and versions, mandatory
   revalidation, invalidation by change and policy events, `MemoryCacheStore`) and `agentfrontier.provenance`
   (artifact manifests).

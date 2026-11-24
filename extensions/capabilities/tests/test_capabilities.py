@@ -201,6 +201,28 @@ def test_rules_run_on_sqlite(tmp_path: Path) -> None:
     assert [db.execute(to_sql(r)).fetchone()[0] for r in (ok, bad, bad2)] == [0, 0, 1]
 
 
+def test_rule_sql_is_quoted_the_way_the_source_quotes() -> None:
+    uniq = Rule("unique", "Rfam.family", ["rfam_acc"])
+    fk = Rule("relationship", "Rfam.family", ["auto_wiki"], {"to": "Rfam.wikitext", "field": "auto_wiki"})
+    # MySQL reads "Rfam" as a string, so "Rfam".family was a syntax error (1064) there
+    for d in ("mysql", "mariadb", "aurora-mysql", "bigquery", "databricks", "MySQL"):
+        assert '"' not in to_sql(uniq, d) + to_sql(fk, d)
+        assert "from `Rfam`.`family` where `rfam_acc` is not null" in to_sql(uniq, d)
+        assert "from `Rfam`.`wikitext` p where p.`auto_wiki` = c.`auto_wiki`" in to_sql(fk, d)
+    # everywhere else, as before: ANSI quotes, and only where needed
+    for d in (None, "postgresql", "snowflake", "oracle", "sqlite"):
+        assert 'from "Rfam".family where rfam_acc is not null' in to_sql(uniq, d)
+    assert '"ORDERS"' in to_sql(Rule("not_null", "SALES.ORDERS", ["ID"]), "oracle")
+    # reserved words and quotes inside a name
+    assert to_sql(Rule("not_null", "app.order", ["group"]), "postgresql").endswith('from app."order" where "group" is null')
+    assert to_sql(Rule("not_null", "app.t", ["a`b"]), "mysql").endswith("where `a``b` is null")
+    # strings: a backslash escapes in MySQL and its kin, and BigQuery and Spark have no doubled quote
+    val = Rule("accepted_values", "a.t", ["c"], {"values": ["O'Hara", "a\\b"]})
+    assert to_sql(val, "postgresql").endswith("('O''Hara', 'a\\b')")
+    assert to_sql(val, "mysql").endswith("('O''Hara', 'a\\\\b')")
+    assert to_sql(val, "bigquery").endswith("('O\\'Hara', 'a\\\\b')")
+
+
 # ------------------------------------------------------------------------------------------------ codegen, llm, profiles
 
 

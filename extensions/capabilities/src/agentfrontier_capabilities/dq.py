@@ -132,45 +132,75 @@ def recommend(t: TableShape, include_profile: bool = True) -> list[Rule]:
     return out
 
 
-def _q(ident: str) -> str:
-    return ident if re.fullmatch(r"[a-z_][a-z0-9_]*", ident) else '"' + ident.replace('"', '""') + '"'
+# Dialects (AgentFrontier source types and sqlglot names) that quote names with backticks. In them a double-quoted name
+# is a string literal, so "Rfam".family is a syntax error. Their names match the same way quoted or bare, so every name
+# is quoted there, reserved words included.
+_MYSQL = frozenset({"mysql", "mariadb", "aurora-mysql", "tidb", "singlestore"})
+_BACKTICK = _MYSQL | {"bigquery", "databricks", "spark", "spark2", "hive"}
+
+# Words no dialect takes as a bare name; elsewhere a plain lower-case name stays bare.
+_SQL_WORDS = frozenset("""all and any as asc between by case check column constraint create cross current_date
+current_time current_timestamp current_user default delete desc distinct drop else end except exists false for foreign
+from full grant group having in inner insert intersect into is join key left like limit natural not null offset on or
+order outer primary references right select session_user set some table then to true union unique update user using
+values when where with""".split())
 
 
-def _qt(table: str) -> str:
-    return ".".join(_q(p) for p in table.split("."))
+def _q(ident: str, dialect: str | None = None) -> str:
+    if (dialect or "").lower() in _BACKTICK:
+        return "`" + ident.replace("`", "``") + "`"
+    if re.fullmatch(r"[a-z_][a-z0-9_]*", ident) and ident not in _SQL_WORDS:
+        return ident
+    return '"' + ident.replace('"', '""') + '"'
 
 
-def _lit(v: Any) -> str:
+def _qt(table: str, dialect: str | None = None) -> str:
+    return ".".join(_q(p, dialect) for p in table.split("."))
+
+
+def _lit(v: Any, dialect: str | None = None) -> str:
     if isinstance(v, bool):
         return "true" if v else "false"
     if isinstance(v, (int, float)):
         return str(v)
-    return "'" + str(v).replace("'", "''") + "'"
+    text, d = str(v), (dialect or "").lower()
+    if d in _BACKTICK:  # a backslash escapes inside their strings
+        text = text.replace("\\", "\\\\")
+        if d not in _MYSQL:  # and a doubled quote does not mean a quote (BigQuery, Spark)
+            return "'" + text.replace("'", "\\'") + "'"
+    return "'" + text.replace("'", "''") + "'"
 
 
-def to_sql(r: Rule) -> str:
-    """A query returning ``failures``: the number of rows that break the rule (0 means it holds)."""
-    t = _qt(r.table)
-    c = _q(r.columns[0]) if r.columns else ""
+def to_sql(r: Rule, dialect: str | None = None) -> str:
+    """A query returning ``failures``: the number of rows that break the rule (0 means it holds). ``dialect`` (an
+    AgentFrontier source type, such as ``mysql``) decides how names and strings are quoted; without it, ANSI."""
+    def q(ident: str) -> str:
+        return _q(ident, dialect)
+
+    def lit(v: Any) -> str:
+        return _lit(v, dialect)
+
+    t = _qt(r.table, dialect)
+    c = q(r.columns[0]) if r.columns else ""
     if r.kind == "not_null":
         return "select count(*) as failures from " + t + " where " + c + " is null"
     if r.kind in ("unique", "unique_combination"):
-        cols = ", ".join(_q(x) for x in r.columns)
-        nn = " and ".join(_q(x) + " is not null" for x in r.columns)
+        cols = ", ".join(q(x) for x in r.columns)
+        nn = " and ".join(q(x) + " is not null" for x in r.columns)
         return ("select count(*) as failures from (select " + cols + " from " + t + " where " + nn + " group by "
                 + cols + " having count(*) > 1) d")
     if r.kind == "accepted_values":
         return ("select count(*) as failures from " + t + " where " + c + " is not null and " + c + " not in ("
-                + ", ".join(_lit(v) for v in r.params.get("values", [])) + ")")
+                + ", ".join(lit(v) for v in r.params.get("values", [])) + ")")
     if r.kind == "range":
         conds = []
         if r.params.get("min") is not None:
-            conds.append(c + (" <= " if r.params.get("strict") else " < ") + _lit(r.params["min"]))
+            conds.append(c + (" <= " if r.params.get("strict") else " < ") + lit(r.params["min"]))
         if r.params.get("max") is not None:
-            conds.append(c + (" >= " if r.params.get("strict") else " > ") + _lit(r.params["max"]))
+            conds.append(c + (" >= " if r.params.get("strict") else " > ") + lit(r.params["max"]))
         return "select count(*) as failures from " + t + " where " + " or ".join(conds or ["1 = 0"])
     if r.kind == "relationship":
-        p, f = _qt(r.params["to"]), _q(r.params["field"])
+        p, f = _qt(r.params["to"], dialect), q(r.params["field"])
         return ("select count(*) as failures from " + t + " c where c." + c + " is not null and not exists "
                 "(select 1 from " + p + " p where p." + f + " = c." + c + ")")
     if r.kind == "row_count":
@@ -180,7 +210,7 @@ def to_sql(r: Rule) -> str:
         return "select count(*) as failures from " + t + " where not (" + str(r.params["expression"]) + ")"
     if r.kind == "regex":
         return ("select count(*) as failures from " + t + " where " + c + " is not null and not regexp_like(" + c
-                + ", " + _lit(r.params["pattern"]) + ")")
+                + ", " + lit(r.params["pattern"]) + ")")
     raise ValueError("no SQL check for rule kind " + r.kind)
 
 
